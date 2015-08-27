@@ -1,6 +1,5 @@
 grammar uniformSQL;
 
-
 fragment A_ :	'a' | 'A';
 fragment B_ :	'b' | 'B';
 fragment C_ :	'c' | 'C';
@@ -29,9 +28,312 @@ fragment Y_ :	'y' | 'Y';
 fragment Z_ :	'z' | 'Z';
 
 keyword
- : USE
+ : TRUE
+ | FALSE
+ | ALL
+ | NOT
+ | LIKE
+ | IF
+ | EXISTS
+ | ASC
+ | DESC
+ | ORDER
+ | GROUP
+ | BY
+ | HAVING
+ | WHERE
+ | FROM
+ | AS
+ | SELECT
+ | DISTINCT
+ | INSERT
+ | OVERWRITE
+ | OUTER
+ | UNIQUEJOIN
+ | PRESERVE
+ | JOIN
+ | LEFT
+ | RIGHT
+ | FULL
+ | ON
+ | PARTITION
+ | PARTITIONS
+ | TABLE
+ | TABLES
+ | COLUMNS
+ | INDEX
+ | INDEXES
+ | REBUILD
+ | FUNCTIONS
+ | SHOW
+ | MSCK
+ | REPAIR
+ | DIRECTORY
+ | LOCAL
+ | TRANSFORM
+ | USING
+ | CLUSTER
+ | DISTRIBUTE
+ | SORT
+ | UNION
+ | LOAD
+ | EXPORT
+ | IMPORT
+ | DATA
+ | INPATH
+ | IS
+ | NULL
+ | CREATE
+ | EXTERNAL
+ | ALTER
+ | CHANGE
+ | COLUMN
+ | FIRST
+ | AFTER
+ | DESCRIBE
+ | DROP
+ | RENAME
+ | IGNORE
+ | PROTECTION
+ | TO
+ | COMMENT
+ | BOOLEAN
+ | TINYINT
+ | SMALLINT
+ | INT
+ | BIGINT
+ | FLOAT
+ | DOUBLE
+ | DATE
+ | DATETIME
+ | TIMESTAMP
+ | DECIMAL
+ | STRING
+ | VARCHAR
+ | ARRAY
+ | STRUCT
+ | MAP
+ | UNIONTYPE
+ | REDUCE
+ | PARTITIONED
+ | CLUSTERED
+ | SORTED
+ | INTO
+ | BUCKETS
+ | ROW
+ | ROWS
+ | FORMAT
+ | DELIMITED
+ | FIELDS
+ | TERMINATED
+ | ESCAPED
+ | COLLECTION
+ | ITEMS
+ | KEYS
+ | KEY
+ | LINES
+ | STORED
+ | FILEFORMAT
+ | SEQUENCEFILE
+ | TEXTFILE
+ | RCFILE
+ | ORCFILE
+ | INPUTFORMAT
+ | OUTPUTFORMAT
+ | INPUTDRIVER
+ | OUTPUTDRIVER
+ | OFFLINE
+ | ENABLE
+ | DEFAULT
+ | DISABLE
+ | READONLY
+ | LOCATION
+ | TABLESAMPLE
+ | BUCKET
+ | OUT
+ | OF
+ | PERCENT
+ | CAST
+ | ADD
+ | REPLACE
+ | RLIKE
+ | REGEXP
+ | TEMPORARY
+ | FUNCTION
+ | MACRO
+ | EXPLAIN
+ | EXTENDED
+ | FORMATTED
+ | PRETTY
+ | DEPENDENCY
+ | LOGICAL
+ | SERDE
+ | WITH
+ | DEFERRED
+ | SERDEPROPERTIES
+ | DBPROPERTIES
+ | LIMIT
+ | SET
+ | UNSET
+ | TBLPROPERTIES
+ | IDXPROPERTIES
+ | CASCADED
+ | THEN
+ | ELSE
+ | END
+ | MAPJOIN
+ | STREAMTABLE
+ | CLUSTERSTATUS
+ | UTC
+ | LONG
+ | DELETE
+ | FETCH
+ | INTERSECT
+ | VIEW
+ | IN
+ | DATABASE
+ | DATABASES
+ | MATERIALIZED
+ | SCHEMA
+ | SCHEMAS
+ | GRANT
+ | REVOKE
+ | SSL
+ | UNDO
+ | LOCK
+ | LOCKS
+ | UNLOCK
+ | SHARED
+ | EXCLUSIVE
+ | PROCEDURE
+ | UNSIGNED
+ | WHILE
+ | READ
+ | READS
+ | PURGE
+ | RANGE
+ | ANALYZE
+ | BEFORE
+ | BETWEEN
+ | BOTH
+ | BINARY
+ | CROSS
+ | CONTINUE
+ | CURSOR
+ | TRIGGER
+ | RECORDREADER
+ | RECORDWRITER
+ | LATERAL
+ | TOUCH
+ | ARCHIVE
+ | UNARCHIVE
+ | COMPUTE
+ | STATISTICS
+ | USE
+ | OPTION
+ | CONCATENATE
+ | UPDATE
+ | RESTRICT
+ | CASCADE
+ | SKEWED
+ | ROLLUP
+ | CUBE
+ | DIRECTORIES
+ | FOR
+ | WINDOW
+ | UNBOUNDED
+ | PRECEDING
+ | FOLLOWING
+ | CURRENT
+ | LESS
+ | MORE
+ | OVER
+ | GROUPING
+ | SETS
+ | TRUNCATE
+ | NOSCAN
+ | PARTIALSCAN
  | USER
+ | ROLE
+ | INNER
+ | EXCHANGE
+ | IDENTIFIED
+ | CHAR
+ | ABS
+ | ACOS
+ | ASIN
+ | ATAN
+ | CEIL
+ | COS
+ | COT
+ | EXP
+ | FLOOR
+ | LN
+ | POW
+ | RAND
+ | ROUND
+ | SIN
+ | SQRT
+ | TAN
+ | LCASE
+ | LOWER
+ | LTRIM
+ | RTRIM
+ | CONCAT
+ | SUBSTR
+ | TRIM
+ | UCASE
+ | UPPER
+ | INTERVAL
+ | TO_DATE
+ | DAY
+ | HOUR
+ | MINUTE
+ | MONTH
+ | SECOND
+ | FROM_UNIXTIME
+ | YEAR
+ | DATE_ADD
+ | DATE_SUB
+ | COLLATE
+ | AVG
+ | COUNT
+ | MAX
+ | MIN
+ | SUM
+ | COALESCE
+ | DUPLICATE
+ | SERVER
+ | ALIASES
+ | ALIAS
+ | VALUES
+ | VALUE
+ | LOW_PRIORITY
+ | HIGH_PRIORITY
+ | HASH
+ | REFERENCES
+ | TO_CHAR
+ | DATE_FORMAT
+ | SIGNED
+ | INTEGER
+ | LENGTH
+ | REVERSE
+ | IFNULL
+ | DIVIDE
+ | MOD
+ | OR
+ | AND
+ | XOR
+ | ARROW
+ | EQ
+ | NOT_EQ
+ | LET
+ | GET
+ | SET_VAR
+ | SHIFT_LEFT
+ | SHIFT_RIGHT
  ;
+
 
 TRUE : 	T_ R_ U_ E_ ;
 FALSE : F_ A_ L_ S_ E_ ;
@@ -344,7 +646,6 @@ GET	: '>=' ;
 SET_VAR	: ':=' ;
 SHIFT_LEFT	: '<<' ;
 SHIFT_RIGHT	: '>>' ;
-ALL_FIELDS	: '.*' ;
 
 SEMI	: ';' ;
 COLON	: ':' ;
@@ -402,7 +703,13 @@ ID:
      ( 'A'..'Z' | 'a'..'z' | '_' | '$' | '0'..'9' )+
 ;
 
+LINE_COMMENT
+    :   '//' ~[\r\n]* -> skip
+    ;
 
+BLOCKCOMMENT
+    :   '/*' .*? '*/' -> skip
+;
 
 
 
@@ -666,6 +973,8 @@ principal_name      : any_name ;
 any_name
  : ID
  | keyword
+ | string_literal
+ | function_call
  ;
 
 
@@ -749,7 +1058,7 @@ case_when_statement1:
         CASE
         ( WHEN expression THEN bit_expr )+
         ( ELSE bit_expr )?
-        END
+        END alias
 ;
 case_when_statement2:
         CASE bit_expr
@@ -767,8 +1076,10 @@ column_spec:
 
 //expresstion without Lparen or Rparen
 raw_expression_list:
-     column_name (OR column_name)+
-     |column_name (AND column_name)+
+       column_name (OR column_spec)+
+     | column_name (AND column_name)+
+
+     function_call
 ;
 
 expression_list:
@@ -791,19 +1102,17 @@ table_reference:
 	table_factor1 | table_atom
 ;
 table_factor1:
-	table_factor2 (  (CROSS)? JOIN table_atom (join_condition)?  )?
+	table_factor2  ((CROSS)? (LEFT|RIGHT|FULL)? (OUTER)? JOIN table_atom (join_condition)? )*
 ;
-//table_factor2:
-//	table_factor3 (  STRAIGHT_JOIN table_atom (ON expression)?  )?
-//;
+
 table_factor2:
-	table_factor3 (  (LEFT|RIGHT|FULL) (OUTER)? JOIN table_factor3 join_condition  )*?
+	table_factor3 (  (LEFT|RIGHT|FULL) (OUTER)? JOIN table_factor3 join_condition  )*
 ;
 table_factor3:
-	table_atom (  ( (LEFT|RIGHT|FULL) (OUTER)? )? JOIN table_atom )?
+	table_atom (alias)?  (( (LEFT|RIGHT|FULL) (OUTER)? )? JOIN table_atom )?
 ;
 table_atom:
-	  ( table_spec (alias)?  )
+	  ( table_spec (alias)?)
 	| ( subquery (alias)? )
 	| ( LPAREN table_references RPAREN )
 	|  ID
@@ -921,8 +1230,7 @@ offset:		INTEGER_NUM ;
 row_count:	INTEGER_NUM ;
 
 select_list:
-	  displayed_column ( COMMA displayed_column )*
-	//|   ASTERISK   //TODO:注释这里
+	  displayed_column (  COMMA displayed_column )*
 ;
 
 column_list:
@@ -940,12 +1248,11 @@ table_spec:
 
 //-----------displayed_column------------------------
 displayed_column :
-      ASTERISK
-	| table_spec DOT ASTERISK      //TODO:实现table.*，但是读不出来
-	|
-	( column_spec (alias)? )
-	|
-	( bit_expr (alias)? )
+       ASTERISK
+	| table_spec  DOT ASTERISK
+	| ( column_spec (alias)? )
+	| ( bit_expr (alias)? )
+	// (column_spec IS NULL OR function_call relational_op INTEGER_NUM THEN any_name OR column_spec ELSE column_spec END AS any_name)?   (not flexible)
 ;
 
 
@@ -1195,14 +1502,14 @@ show_specification:
          CREATE (TABLE | VIEW) (database_name DOT)? table_name
 //    | ABLES (IN database_name)? (IDENTIFIER_WITH_WILDCARDS)?
        | COLUMNS FROM table_name (FROM database_name)?
-       | (DATABASES | SCHEMAS) (LIKE  TEXT_STRING)?     //TODO:这里使用通配符
+       | (DATABASES | SCHEMAS) (LIKE  TEXT_STRING)?
        | SERVER ALIASES
        | TABLES (IN database_name)? (TEXT_STRING)?   //这里也是通配符
        | GRANT (principal_name | principal_specification)?  ON  (ALL | (TABLE)? table_name)
 ;
 
 
-// ---------------------------- set_event_statement--------------------------------------注意这里面使用root_statement
+// ---------------------------- set_event_statement--------------------------------------
 set_event_statement:
      SET TABLE table_name TO server_alias DOT database_name
 ;
@@ -1213,17 +1520,17 @@ use_event_statement:
     USE database_name
 ;
 
-// ---------------------------- service_event_statement--------------------------------------注意这里面使用root_statement
+// ---------------------------- service_event_statement--------------------------------------
 server_event_statement:
     SERVER ALIAS server_alias root_statement
 ;
 
-//----------------------------update_statement--------------------------------------注意这里面使用root_statement
+//----------------------------update_statement--------------------------------------
 update_statements:
         UPDATE (database_name DOT)? user_name  set_columns_cluase where_clause
 ;
 
 //------------------------------delete_statements-----------------------------------
 delete_statements:
-    DELETE FROM table_name where_clause
+    DELETE FROM table_name (where_clause)?
 ;
