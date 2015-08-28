@@ -90,6 +90,8 @@ public abstract class CommandAdapter {
 
     public String SELECT = "SELECT %s %s FROM %s %s %s %s %s";
 
+    public String DEFAULT = "%s";
+
     public String DELETE = "DELETE FROM %s %s";
 
     public String UPDATE = "UPDATE %s %s %s";
@@ -384,4 +386,13 @@ public abstract class CommandAdapter {
      * @return SQL 命令
      */
     public String insert(Object... args) { return String.format(INSERT, args); }
+
+    /**
+     * defaultSQL
+     *
+     * @param args 参数列表
+     * @return SQL 命令
+     */
+    public String defaultSQL(Object... args) { return String.format(DEFAULT, args); }
+
 }
