@@ -315,6 +315,17 @@ public class SQLCommandBuilder {
     }
 
     /**
+     * DEFAULT(不作任何改动)
+     *
+     * @param dbType 底层库类型
+     * @param args   参数列表
+     * @return SQL命令
+     */
+    public InnerSQLCommand defaultSQL(Database.DBType dbType, Object... args) {
+        return new InnerSQLCommand(dbType, commandAdapters[dbType.ordinal()].defaultSQL(args), args);
+    }
+
+    /**
      * DELETE Statement
      *
      * @param dbType 底层库类型
@@ -336,6 +347,16 @@ public class SQLCommandBuilder {
         return new InnerSQLCommand(dbType, commandAdapters[dbType.ordinal()].update(args), args);
     }
 
+    /**
+     * INSERT Statement
+     *
+     * @param dbType 底层库类型
+     * @param args   参数列表
+     * @return SQL命令
+     */
+    public InnerSQLCommand insert(Database.DBType dbType, Object... args) {
+        return new InnerSQLCommand(dbType, commandAdapters[dbType.ordinal()].insert(args), args);
+    }
     /**
      * 测试函数
      *

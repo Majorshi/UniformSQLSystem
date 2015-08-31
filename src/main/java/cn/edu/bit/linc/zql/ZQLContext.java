@@ -41,7 +41,7 @@ public class ZQLContext {
                 .withSocketHandlerFactory(uniformSQLSocketHandlerFactory)
                 .build();
 
-        server.start();
+        //server.start();
 
     }
 

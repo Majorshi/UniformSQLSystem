@@ -90,9 +90,14 @@ public abstract class CommandAdapter {
 
     public String SELECT = "SELECT %s %s FROM %s %s %s %s %s";
 
+    public String DEFAULT = "%s";
+
     public String DELETE = "DELETE FROM %s %s";
 
     public String UPDATE = "UPDATE %s %s %s";
+
+    public String INSERT = "INSERT %s %s %s";
+
     /**
      * 删除用户
      *
@@ -373,4 +378,21 @@ public abstract class CommandAdapter {
     public String update(Object... args) {
         return String.format(UPDATE, args);
     }
+
+    /**
+     * INSERT
+     *
+     * @param args 参数列表
+     * @return SQL 命令
+     */
+    public String insert(Object... args) { return String.format(INSERT, args); }
+
+    /**
+     * defaultSQL
+     *
+     * @param args 参数列表
+     * @return SQL 命令
+     */
+    public String defaultSQL(Object... args) { return String.format(DEFAULT, args); }
+
 }

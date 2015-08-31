@@ -14,6 +14,7 @@ import cn.edu.bit.linc.zql.parser.uniformSQLBaseVisitor;
 import cn.edu.bit.linc.zql.parser.uniformSQLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.mortbay.log.Log;
 
 import java.util.ArrayList;
@@ -82,6 +83,52 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
     public ASTNodeVisitResult visitPassword(uniformSQLParser.PasswordContext ctx) {
         String value = ctx.any_name().getText();
         return new ASTNodeVisitResult(value, null, null);
+    }
+
+    /**
+     * 遍历某个节点的子节点，获取ASTNodeVisitResult
+     *
+     * @param childrenNodes 要遍历的节点的子节点数组
+     * @return 访问结果
+     */
+    public ASTNodeVisitResult visitChildrenNodes (List<ParseTree> childrenNodes) {
+        String valueStr = "";
+        ArrayList<InnerSQLCommand> commands = new ArrayList<InnerSQLCommand>();
+        ArrayList<Integer> dbIds = new ArrayList<Integer>();
+        boolean keywordsFlag = false;
+        for (int i = 0; i < childrenNodes.size(); i++) {
+            if (childrenNodes.get(i).getClass() == TerminalNodeImpl.class) {
+                if (childrenNodes.size() == 1) {
+                    //只有一个子节点，可以认为是非关键字节点，无需添加空格
+                    valueStr += childrenNodes.get(i).getText();
+                } else {
+                    if (!keywordsFlag && !childrenNodes.get(i).getText().equals(".")) {
+                        valueStr += " ";
+                    }
+                    valueStr += childrenNodes.get(i).getText();
+                    if (!(childrenNodes.get(i).getText().equals("'") || childrenNodes.get(i).getText().equals(".")
+                            || childrenNodes.get(i).getText().equals("\""))) {
+                        valueStr += " ";
+                    }
+                    keywordsFlag = true;
+                }
+            } else {
+                ASTNodeVisitResult whateverResult = visit(childrenNodes.get(i));
+                if (whateverResult.getValue() != null) {
+                    valueStr += whateverResult.getValue();
+                }
+                if (whateverResult.getCommands() != null) {
+                    commands.addAll(whateverResult.getCommands());
+                }
+                if (whateverResult.getDbIds() != null) {
+                    dbIds.addAll(whateverResult.getDbIds());
+                }
+                keywordsFlag = false;
+            }
+        }
+        if (commands.size() == 0) commands = null;
+        if (dbIds.size() == 0) dbIds = null;
+        return new ASTNodeVisitResult(valueStr, commands, dbIds);
     }
 
     /**
@@ -954,6 +1001,44 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
+    @Override public ASTNodeVisitResult visitSelect_statement(uniformSQLParser.Select_statementContext ctx) {
+        ArrayList<InnerSQLCommand> commands = new ArrayList<InnerSQLCommand>();
+        ArrayList<Integer> dbIds = new ArrayList<Integer>();
+        boolean keywordFlag = false;
+        String valueStr = "";
+        for (int i = 0; i < ctx.children.size(); i++) {
+            if (ctx.children.get(i).getClass() == TerminalNodeImpl.class) {
+                if (!keywordFlag) {
+                    valueStr += " ";
+                }
+                valueStr += ctx.children.get(i).getText() + " ";
+                keywordFlag = true;
+            } else {
+                ASTNodeVisitResult whateverResult = visit(ctx.children.get(i));
+                if (whateverResult.getCommands().size() != 0) {
+                    valueStr += whateverResult.getCommands().get(0).getCommandStr();
+                    if (whateverResult.getDbIds().size() != 0) {
+                        dbIds.addAll(whateverResult.getDbIds());
+                    }
+                }
+                keywordFlag = false;
+            }
+        }
+        Database.DBType dbType = null;
+        if (dbIds.size() != 0) {
+             dbType = innerDatabasesArrayList.get(dbIds.get(0) - 1).getDbType();
+        }
+        InnerSQLCommand innerDBcommands = sqlCommandBuilder.defaultSQL(dbType, valueStr);
+        commands.add(innerDBcommands);
+        return new ASTNodeVisitResult(null, commands, dbIds);
+    }
+
+    /**
+     * SELECT Expression
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
     @Override
     public ASTNodeVisitResult visitSelect_expression(uniformSQLParser.Select_expressionContext ctx) {
         ArrayList<InnerSQLCommand> commands = new ArrayList<InnerSQLCommand>();
@@ -975,34 +1060,51 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         // SELECT ITEMS
         // TODO: 应该进一步分析
         String selectList = "";
-        for (ParseTree selectItemNode : ctx.select_list().children) {
-            ASTNodeVisitResult visitResult = visit(selectItemNode);
-            String selectItem = visitResult.getValue();
-            selectList += selectItem + ", ";
+        if (ctx.select_list() != null) {
+            ASTNodeVisitResult visitResult = visit(ctx.select_list());
+            String selectListeStr = visitResult.getValue();
+            selectList += selectListeStr;
         }
-        selectList = selectList.substring(0, selectList.length());
 
         // FROM TABLES
         String fromTables = "";
-        for (ParseTree fromTableNode : ctx.table_references().children) {
-            ASTNodeVisitResult visitResult = visit(fromTableNode);
-            String fromTable = visitResult.getValue();
-            fromTables += fromTable + ",";
+        if (ctx.table_references() != null) {
+            ASTNodeVisitResult visitResult = visit(ctx.table_references());
+            String fromTablesStr = visitResult.getValue();
+            fromTables += fromTablesStr;
         }
-        fromTables = fromTables.substring(0, fromTables.length());
 
         // WHERE CONDITIONS
         String whereConditions = "";
+        if (ctx.where_clause() != null) {
+            ASTNodeVisitResult visitResult = visit(ctx.where_clause());
+            String whereStr = visitResult.getValue();
+            whereConditions += whereStr;
+        }
 
         // GROUP BY
         String groupBy = "";
+        if (ctx.groupby_clause() != null) {
+            ASTNodeVisitResult visitResult = visit(ctx.groupby_clause());
+            String groupStr = visitResult.getValue();
+            groupBy += groupStr;
+        }
 
         // ORDER BY
         String orderBy = "";
+        if (ctx.orderby_clause() != null) {
+            ASTNodeVisitResult visitResult = visit(ctx.orderby_clause());
+            String orderStr = visitResult.getValue();
+            orderBy += orderStr;
+        }
 
         // LIMIT
         String limit = "";
-
+        if (ctx.limit_clause() != null) {
+            ASTNodeVisitResult visitResult = visit(ctx.limit_clause());
+            String limitStr = visitResult.getValue();
+            limit += limitStr;
+        }
 
         /* 底层库命令 */
         InnerSQLCommand innerDBcommands = sqlCommandBuilder.select(dbType, allOrDistinct, selectList,
@@ -1015,6 +1117,186 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
     }
 
     /**
+     * Select_list
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override public ASTNodeVisitResult visitSelect_list(uniformSQLParser.Select_listContext ctx) {
+        return visitChildrenNodes(ctx.children);
+    }
+
+    /**
+     * Table_references
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override public ASTNodeVisitResult visitTable_references(uniformSQLParser.Table_referencesContext ctx) {
+        String valueStr = "";
+        for (int i = 0; i < ctx.children.size(); i++) {
+            if (ctx.children.get(i).getText().equals(",")) {
+                valueStr += " " + ctx.children.get(i).getText() + " ";
+            } else {
+                ASTNodeVisitResult whateverResult = visit(ctx.children.get(i));
+                if (whateverResult.getValue() != null) {
+                    valueStr += whateverResult.getValue();
+                }
+            }
+        }
+        return new ASTNodeVisitResult(valueStr, null, null);
+    }
+
+    /**
+     * Groupby_clause
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override public ASTNodeVisitResult visitGroupby_clause(uniformSQLParser.Groupby_clauseContext ctx) {
+        String valueStr = "";
+        for (int i = 0; i < ctx.children.size(); i++) {
+            if (ctx.children.get(i).getText().equals("GROUP") || ctx.children.get(i).getText().equals("BY") || ctx.children.get(i).getText().equals(",")
+                    || ctx.children.get(i).getText().equals("WITH") || ctx.children.get(i).getText().equals("ROLLUP")) {
+                valueStr += " " + ctx.children.get(i).getText() + " ";
+            } else {
+                ASTNodeVisitResult whateverResult = visit(ctx.children.get(i));
+                if (whateverResult.getValue() != null) {
+                    valueStr += whateverResult.getValue();
+                }
+            }
+        }
+        return new ASTNodeVisitResult(valueStr, null, null);
+    }
+
+    /**
+     * Groupby_item
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override public ASTNodeVisitResult visitGroupby_item(uniformSQLParser.Groupby_itemContext ctx) {
+        String valueStr = "";
+        if (ctx.column_spec() != null) {
+            ASTNodeVisitResult whateverResult = visit(ctx.column_spec());
+            if (whateverResult.getValue() != null) {
+                valueStr += whateverResult.getValue();
+            }
+        }
+        if (ctx.INTEGER_NUM() != null) {
+            valueStr += ctx.INTEGER_NUM();
+        }
+        if (ctx.bit_expr() != null) {
+            ASTNodeVisitResult whateverResult = visit(ctx.bit_expr());
+            if (whateverResult.getValue() != null) {
+                valueStr += whateverResult.getValue();
+            }
+        }
+        return new ASTNodeVisitResult(valueStr, null, null);
+    }
+
+    /**
+     * Having_clause
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override public ASTNodeVisitResult visitHaving_clause(uniformSQLParser.Having_clauseContext ctx) {
+        String valueStr = "";
+        for (int i = 0; i < ctx.children.size(); i++) {
+            if (ctx.children.get(i).getText().equals("HAVING")) {
+                valueStr += " " + ctx.children.get(i).getText() + " ";
+            } else {
+                ASTNodeVisitResult whateverResult = visit(ctx.children.get(i));
+                if (whateverResult.getValue() != null) {
+                    valueStr += whateverResult.getValue();
+                }
+            }
+        }
+        return new ASTNodeVisitResult(valueStr, null, null);
+    }
+
+    /**
+     * Orderby_clause
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override public ASTNodeVisitResult visitOrderby_clause(uniformSQLParser.Orderby_clauseContext ctx) {
+        String valueStr = "";
+        for (int i = 0; i < ctx.children.size(); i++) {
+            if (ctx.children.get(i).getText().equals("ORDER") || ctx.children.get(i).getText().equals("BY")
+                    || ctx.children.get(i).getText().equals(",")) {
+                valueStr += " " + ctx.children.get(i).getText() + " ";
+            } else {
+                ASTNodeVisitResult whateverResult = visit(ctx.children.get(i));
+                if (whateverResult.getValue() != null) {
+                    valueStr += whateverResult.getValue();
+                }
+            }
+        }
+        return new ASTNodeVisitResult(valueStr, null, null);
+    }
+
+    /**
+     * Orderby_item
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override public ASTNodeVisitResult visitOrderby_item(uniformSQLParser.Orderby_itemContext ctx) {
+        String valueStr = "";
+        for (int i = 0; i < ctx.children.size(); i++) {
+            if (ctx.children.get(i).getText().equals("ASC") || ctx.children.get(i).getText().equals("DESC")) {
+                valueStr += " " + ctx.children.get(i).getText() + " ";
+            } else {
+                ASTNodeVisitResult whateverResult = visit(ctx.children.get(i));
+                if (whateverResult.getValue() != null) {
+                    valueStr += whateverResult.getValue();
+                }
+            }
+        }
+        return new ASTNodeVisitResult(valueStr, null, null);
+    }
+
+    /**
+     * Limit_clause
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override public ASTNodeVisitResult visitLimit_clause(uniformSQLParser.Limit_clauseContext ctx) {
+        return visitChildrenNodes(ctx.children);
+    }
+
+    /**
+     * Offset
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override public ASTNodeVisitResult visitOffset(uniformSQLParser.OffsetContext ctx) {
+        String valueStr = "";
+        for (int i = 0; i < ctx.children.size(); i++) {
+            ASTNodeVisitResult whateverResult = visit(ctx.children.get(i));
+            if (whateverResult.getValue() != null) {
+                valueStr += whateverResult.getValue();
+            }
+        }
+        return new ASTNodeVisitResult(valueStr, null, null);
+    }
+
+    /**
+     * Row_count
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override public ASTNodeVisitResult visitRow_count(uniformSQLParser.Row_countContext ctx) {
+        return new ASTNodeVisitResult(ctx.INTEGER_NUM().getText(), null, null);
+    }
+
+    /**
      * 获取 Displayed Column 数据
      *
      * @param ctx 节点上下文
@@ -1022,9 +1304,24 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      */
     @Override
     public ASTNodeVisitResult visitDisplayed_column(uniformSQLParser.Displayed_columnContext ctx) {
-        // String value = ctx.column_spec().column_name().any_name().keyword().getText();
-        String value = "";
-        return new ASTNodeVisitResult(value, null, null);
+        String valueStr = "";
+        TerminalNode dot = ctx.DOT();
+        TerminalNode AK = ctx.ASTERISK();
+        for (int i = 0; i < ctx.children.size(); i++) {
+            if (ctx.children.get(i).getText().equals(".") || ctx.children.get(i).getText().equals("*")) {
+                if (ctx.children.get(i).getText().equals(".")) {
+                    valueStr += ctx.children.get(i).getText();
+                } else {
+                    valueStr += ctx.children.get(i).getText() + " ";
+                }
+            } else {
+                ASTNodeVisitResult whateverResult = visit(ctx.children.get(i));
+                if (whateverResult.getValue() != null) {
+                    valueStr += whateverResult.getValue();
+                }
+            }
+        }
+        return new ASTNodeVisitResult(valueStr, null, null);
     }
 
     /**
@@ -1139,10 +1436,81 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      */
     @Override
     public ASTNodeVisitResult visitTable_reference(uniformSQLParser.Table_referenceContext ctx) {
-        String value = ctx.table_factor1().table_factor2().table_factor3().get(0).table_atom().get(0).table_spec().table_name().any_name().keyword().getText();
-        return new ASTNodeVisitResult(value, null, null);
+//        String value = ctx.table_factor1().table_factor2().table_factor3().get(0).table_atom().get(0).table_spec().table_name().any_name().keyword().getText();
+        String valueStr = "";
+        if (ctx.table_atom() != null) {
+            ASTNodeVisitResult whateverResult = visit(ctx.table_atom());
+            if (whateverResult.getValue() != null) {
+                valueStr += whateverResult.getValue();
+            }
+        }
+        if (ctx.table_factor1() != null) {
+            ASTNodeVisitResult whateverResult = visit(ctx.table_factor1());
+            if (whateverResult.getValue() != null) {
+                valueStr += whateverResult.getValue();
+            }
+        }
+        return new ASTNodeVisitResult(valueStr, null, null);
     }
 
+    /**
+     * Table_factor1
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override public ASTNodeVisitResult visitTable_factor1(uniformSQLParser.Table_factor1Context ctx) {
+        return visitChildrenNodes(ctx.children);
+    }
+
+    /**
+     * Table_factor2
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override public ASTNodeVisitResult visitTable_factor2(uniformSQLParser.Table_factor2Context ctx) {
+        return visitChildrenNodes(ctx.children);
+    }
+
+    /**
+     * Table_factor3
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override public ASTNodeVisitResult visitTable_factor3(uniformSQLParser.Table_factor3Context ctx) {
+        return visitChildrenNodes(ctx.children);
+    }
+
+    /**
+     * Table_atom
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override public ASTNodeVisitResult visitTable_atom(uniformSQLParser.Table_atomContext ctx) {
+//        if (ctx.table_spec() == null) {
+            return visitChildrenNodes(ctx.children);
+//        }
+//        String valueStr = "";
+//        ASTNodeVisitResult whateverResult = visit(ctx.table_spec());
+//        if (whateverResult.getValue() != null) {
+//            valueStr += whateverResult.getValue();
+//        }
+//        if (ctx.alias() != null) {
+//            ASTNodeVisitResult aliasResult = visit(ctx.alias());
+//            if (aliasResult.getValue() != null) {
+//                valueStr += " " + aliasResult.getValue();
+//            }
+//        }
+//        return new ASTNodeVisitResult(valueStr, null, null);
+    }
+
+    @Override public ASTNodeVisitResult visitAlias(uniformSQLParser.AliasContext ctx) {
+        ASTNodeVisitResult whateverResult = visitChildrenNodes(ctx.children);
+        return new ASTNodeVisitResult(" " + whateverResult.getValue(), whateverResult.getCommands(), whateverResult.getDbIds());
+    }
 
     /**
      * DELETE STATEMENT
@@ -1936,18 +2304,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @return 节点访问结果
      */
     @Override public ASTNodeVisitResult visitCase_when_statement2(uniformSQLParser.Case_when_statement2Context ctx) {
-        String valueStr = "";
-        for (int i = 0; i < ctx.children.size(); i++) {
-            if (ctx.children.get(i).getText().equals("WHEN") || ctx.children.get(i).getText().equals("THEN") || ctx.children.get(i).getText().equals("ELSE") || ctx.children.get(i).getText().equals("END")) {
-                valueStr += " " + ctx.children.get(i).getText() + " ";
-            } else {
-                ASTNodeVisitResult whateverResult = visit(ctx.children.get(i));
-                if (whateverResult.getValue() != null) {
-                    valueStr += whateverResult.getValue();
-                }
-            }
-        }
-        return new ASTNodeVisitResult(valueStr, null, null);
+        return visitChildrenNodes(ctx.children);
     }
 
     /**
@@ -2151,5 +2508,341 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         return new ASTNodeVisitResult(valueStr, null, null);
     }
 
+    /**
+     * Insert_statements
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override public ASTNodeVisitResult visitInsert_statements(uniformSQLParser.Insert_statementsContext ctx) {
+        ArrayList<InnerSQLCommand> commands = new ArrayList<InnerSQLCommand>();
+        ArrayList<Integer> dbIds = new ArrayList<Integer>();
+        if (ctx.insert_statement() != null) {
+            ASTNodeVisitResult insertResult = visit(ctx.insert_statement());
+            commands = insertResult.getCommands();
+            dbIds = insertResult.getDbIds();
+        }
+        return new ASTNodeVisitResult(null, commands, dbIds);
+    }
 
+    /**
+     * Insert_statement
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override public ASTNodeVisitResult visitInsert_statement(uniformSQLParser.Insert_statementContext ctx) {
+        ArrayList<InnerSQLCommand> commands = new ArrayList<InnerSQLCommand>();
+        ArrayList<Integer> dbIds = new ArrayList<Integer>();
+        /* 底层库 */
+        if (ZQLEnv.get("innerdb.dafault.innerdb") == null) {
+            session.setErrorMessage("没有指定底层库");
+            return null;
+        }
+        String database = session.getDatabase();
+        /* 确定数据库所在底层库以及底层库类型 */
+        int dbId;
+        try {
+            dbId = metaDatabase.getInnerDatabaseId(database);
+        } catch (MetaDatabaseOperationsException e) {
+            session.setDatabase("获取数据库所在底层库失败，错误原因：" + e.getMessage());
+            return null;
+        }
+        Database.DBType dbType = getInnerDatabaseByDBID(dbId).getDbType();
+
+        String insert_headerStr = "";
+        if (ctx.insert_header() != null) {
+            ASTNodeVisitResult whateverResult = visit(ctx.insert_header());
+            if (whateverResult.getValue() != null) {
+                insert_headerStr += whateverResult.getValue();
+            }
+            if (whateverResult.getDbIds() != null) {
+                dbIds = whateverResult.getDbIds();
+            }
+        }
+
+        String column_listStr = "";
+        if (ctx.column_list() != null) {
+            ASTNodeVisitResult whateverResult = visit(ctx.column_list());
+            if (whateverResult.getValue() != null) {
+                column_listStr += whateverResult.getValue();
+            }
+        }
+
+        String select_expressionStr = "";
+        if (ctx.select_expression() != null) {
+            ASTNodeVisitResult whateverResult = visit(ctx.select_expression());
+            if (whateverResult.getValue() != null) {
+                select_expressionStr += whateverResult.getValue();
+            }
+        }
+
+        String value_list_clauseStr = "";
+        if (ctx.value_list_clause() != null) {
+            ASTNodeVisitResult whateverResult = visit(ctx.value_list_clause());
+            if (whateverResult.getValue() != null) {
+                value_list_clauseStr += whateverResult.getValue();
+            }
+        }
+
+        String insert_subfixStr = "";
+        if (ctx.insert_subfix() != null) {
+            ASTNodeVisitResult whateverResult = visit(ctx.insert_subfix());
+            if (whateverResult.getValue() != null) {
+                insert_subfixStr += whateverResult.getValue();
+            }
+        }
+
+        /* 底层库命令 */
+        InnerSQLCommand innerDbCommand = sqlCommandBuilder.insert(dbType,insert_headerStr, column_listStr, select_expressionStr + value_list_clauseStr, insert_subfixStr);
+        commands.add(innerDbCommand);
+        dbIds.add(dbId);
+        return new ASTNodeVisitResult(null, commands, dbIds);
+    }
+
+    /**
+     * Insert_header
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override public ASTNodeVisitResult visitInsert_header(uniformSQLParser.Insert_headerContext ctx) {
+        ArrayList<Integer> dbIds = new ArrayList<Integer>();
+        String valueStr = "";
+        if (ctx.LOW_PRIORITY() != null) {
+            valueStr += " " + ctx.LOW_PRIORITY() + " ";
+        }
+        if (ctx.HIGH_PRIORITY() != null) {
+            valueStr += " " + ctx.HIGH_PRIORITY() + " ";
+        }
+        if (ctx.IGNORE() != null) {
+            valueStr += " " + ctx.IGNORE() + " ";
+        }
+        if (ctx.INTO() != null) {
+            valueStr += " " + ctx.INTO() + " ";
+        }
+        if (ctx.table_spec() != null) {
+            ASTNodeVisitResult tableResult = visit(ctx.table_spec());
+            if (tableResult.getValue() != null) {
+                valueStr += tableResult.getValue();
+            }
+        }
+        if (ctx.partition_clause() != null) {
+            ASTNodeVisitResult partition_clauseResult = visit(ctx.partition_clause());
+            if (partition_clauseResult.getValue() != null) {
+                valueStr += partition_clauseResult.getValue();
+            }
+        }
+        return new ASTNodeVisitResult(valueStr, null, dbIds);
+    }
+
+    /**
+     * Table_spec
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override public ASTNodeVisitResult visitTable_spec(uniformSQLParser.Table_specContext ctx) {
+        ArrayList<Integer> dbIds = new ArrayList<Integer>();
+        String valueStr = "";
+        if (ctx.schema_name() != null) {
+            //databasename
+            ASTNodeVisitResult schema_nameResult = visit(ctx.schema_name());
+            String database = "";
+            if (schema_nameResult.getValue() != null) {
+                valueStr += schema_nameResult.getValue();
+                database = schema_nameResult.getValue();
+            }
+
+            int dbId;
+            try {
+                dbId = metaDatabase.getInnerDatabaseId(database);
+            } catch (MetaDatabaseOperationsException e) {
+                session.setDatabase("获取数据库所在底层库失败，错误原因：" + e.getMessage());
+                return null;
+            }
+            dbIds.add(dbId);
+            if (ctx.DOT() != null) {
+                valueStr += ctx.DOT();
+            }
+        } else {
+            dbIds = null;
+            valueStr += session.getDatabase() + ".";
+        }
+        if (ctx.table_name() != null) {
+            ASTNodeVisitResult table_nameResult = visit(ctx.table_name());
+            if (table_nameResult.getValue() != null) {
+                valueStr += table_nameResult.getValue();
+            }
+        }
+
+        return new ASTNodeVisitResult(valueStr, null, dbIds);
+    }
+
+    /**
+     * Partition_clause
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override public ASTNodeVisitResult visitPartition_clause(uniformSQLParser.Partition_clauseContext ctx) {
+        String valueStr = "";
+        if (ctx.PARTITION() != null) {
+            valueStr += " " + ctx.PARTITION() + " ";
+        }
+        if (ctx.LPAREN() != null) {
+            valueStr += ctx.LPAREN();
+        }
+
+        if (ctx.partition_names() != null) {
+            ASTNodeVisitResult partition_namesResult = visit(ctx.partition_names());
+            if (partition_namesResult.getValue() != null) {
+                valueStr += partition_namesResult.getValue();
+            }
+        }
+        if (ctx.RPAREN() != null) {
+            valueStr += ctx.RPAREN();
+        }
+        return new ASTNodeVisitResult(valueStr, null, null);
+    }
+
+    /**
+     * Partition_names
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override public ASTNodeVisitResult visitPartition_names(uniformSQLParser.Partition_namesContext ctx) {
+        String valueStr = "";
+        for (int i = 0; i < ctx.children.size(); i++) {
+            if (ctx.children.get(i).getText().equals(",")) {
+                valueStr += ctx.children.get(i).getText() + " ";
+            } else {
+                ASTNodeVisitResult whateverResult = visit(ctx.children.get(i));
+                if (whateverResult.getValue() != null) {
+                    valueStr += whateverResult.getValue();
+                }
+            }
+        }
+        return new ASTNodeVisitResult(valueStr, null, null);
+    }
+
+    /**
+     * Partition_name
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override public ASTNodeVisitResult visitPartition_name(uniformSQLParser.Partition_nameContext ctx) {
+        return new ASTNodeVisitResult(ctx.any_name().getText(), null, null);
+    }
+
+    /**
+     * Column_list
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override public ASTNodeVisitResult visitColumn_list(uniformSQLParser.Column_listContext ctx) {
+        String valueStr = "";
+        for (int i = 0; i < ctx.children.size(); i++) {
+            if (ctx.children.get(i).getText().equals(",") || ctx.children.get(i).getText().equals("(") || ctx.children.get(i).getText().equals(")")) {
+                valueStr += " " + ctx.children.get(i).getText() + " ";
+            } else {
+                ASTNodeVisitResult whateverResult = visit(ctx.children.get(i));
+                if (whateverResult.getValue() != null) {
+                    valueStr += whateverResult.getValue();
+                }
+            }
+        }
+        return new ASTNodeVisitResult(valueStr, null, null);
+    }
+
+    /**
+     * Value_list_clause
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override public ASTNodeVisitResult visitValue_list_clause(uniformSQLParser.Value_list_clauseContext ctx) {
+        String valueStr = "";
+        for (int i = 0; i < ctx.children.size(); i++) {
+            if (ctx.children.get(i).getText().equals("VALUES") || ctx.children.get(i).getText().equals("VALUE") || ctx.children.get(i).getText().equals(",")) {
+                valueStr += " " + ctx.children.get(i).getText() + " ";
+            } else {
+                ASTNodeVisitResult whateverResult = visit(ctx.children.get(i));
+                if (whateverResult.getValue() != null) {
+                    valueStr += whateverResult.getValue();
+                }
+            }
+        }
+        return new ASTNodeVisitResult(valueStr, null, null);
+    }
+
+    /**
+     * Value_list_clause
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override public ASTNodeVisitResult visitColumn_value_list(uniformSQLParser.Column_value_listContext ctx) {
+        String valueStr = "";
+        for (int i = 0; i < ctx.children.size(); i++) {
+            if (ctx.children.get(i).getText().equals("(") || ctx.children.get(i).getText().equals(")") || ctx.children.get(i).getText().equals(",") || ctx.children.get(i).getText().equals("DEFAULT")) {
+                valueStr += " " + ctx.children.get(i).getText() + " ";
+            } else {
+                ASTNodeVisitResult whateverResult = visit(ctx.children.get(i));
+                if (whateverResult.getValue() != null) {
+                    valueStr += whateverResult.getValue();
+                }
+            }
+        }
+        return new ASTNodeVisitResult(valueStr, null, null);
+    }
+
+    /**
+     * Insert_subfix
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override public ASTNodeVisitResult visitInsert_subfix(uniformSQLParser.Insert_subfixContext ctx) {
+//        String valueStr = "";
+//        for (int i = 0; i < ctx.children.size(); i++) {
+//            if (ctx.children.get(i).getText().equals("ON") || ctx.children.get(i).getText().equals("DUPLICATE") || ctx.children.get(i).getText().equals("KEY")
+//                    || ctx.children.get(i).getText().equals("UPDATE") || ctx.children.get(i).getText().equals(",") || ctx.children.get(i).getText().equals("=")
+//                    || ctx.children.get(i).getText().equals("<=>")) {
+//                valueStr += " " + ctx.children.get(i).getText() + " ";
+//            } else {
+//                ASTNodeVisitResult whateverResult = visit(ctx.children.get(i));
+//                if (whateverResult.getValue() != null) {
+//                    valueStr += whateverResult.getValue();
+//                }
+//            }
+//        }
+//        return new ASTNodeVisitResult(valueStr, null, null);
+        return visitChildrenNodes(ctx.children);
+    }
+
+    /**
+     * Subquery
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override public ASTNodeVisitResult visitSubquery(uniformSQLParser.SubqueryContext ctx) {
+        ASTNodeVisitResult whateverResult = visitChildrenNodes(ctx.children);
+        String valueStr = "(" + whateverResult.getCommands().get(0).getCommandStr() + ")";
+        return new ASTNodeVisitResult(valueStr, null, whateverResult.getDbIds());
+    }
+
+    /**
+     * Join_condition
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override public ASTNodeVisitResult visitJoin_condition(uniformSQLParser.Join_conditionContext ctx) {
+        return visitChildrenNodes(ctx.children);
+    }
 }
