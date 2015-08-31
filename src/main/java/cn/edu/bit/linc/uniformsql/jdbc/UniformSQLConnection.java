@@ -19,36 +19,37 @@ public class UniformSQLConnection implements Connection {
     private boolean                 closed;
 
     /**
-     * ¹¹Ôìº¯Êı£¬½¨Á¢ºÍÊı¾İ¿â·şÎñ¶ËµÄÁ¬½Ó
-     * @param url       Á¬½ÓÊı¾İ¿âµÄÍêÕûµØÖ·
-     * @param info      ´æ·ÅÓÃ»§ÃûÃÜÂëµÈĞÅÏ¢
+     * æ„é€ å‡½æ•°ï¼Œå»ºç«‹å’Œæ•°æ®åº“æœåŠ¡ç«¯çš„è¿æ¥
+     * @param url       è¿æ¥æ•°æ®åº“çš„å®Œæ•´åœ°å€
+     * @param info      å­˜æ”¾ç”¨æˆ·åå¯†ç ç­‰ä¿¡æ¯
      */
     public UniformSQLConnection(String url, Properties info) {
 
-        //url ÔÚDriverManagerÖĞÒÑ¾­ÅĞ¶ÏÊÇ·ñÎª¿ÕÁË£¬ÕâÀï²»ĞèÒªÔÙÑéÖ¤Ò»´Î
+        //url åœ¨DriverManagerä¸­å·²ç»åˆ¤æ–­æ˜¯å¦ä¸ºç©ºäº†ï¼Œè¿™é‡Œä¸éœ€è¦å†éªŒè¯ä¸€æ¬¡
         System.out.println("url     : " +  url);
 
         String[] strs = url.replace("jdbc:uniformsql:","").split(":");
         if(strs.length < 2) {
-            System.out.println("url is error£¡");
+            System.out.println("url is errorï¼");
             return;
         }
-        final String host = strs[0]; // TODO ÅĞ¶ÏipµØÖ·ÊÇ·ñºÏ·¨
+        final String host = strs[0]; // TODO åˆ¤æ–­ipåœ°å€æ˜¯å¦åˆæ³•
         final int port;
         try{
             port = Integer.parseInt(strs[1]);
         }catch(Exception e){
-            System.out.println("½âÎö¶Ë¿Ú³ö´í£¡");
+            System.out.println("è§£æç«¯å£å‡ºé”™ï¼");
             return;
         }
         System.out.println("hots    : " + host + "\nport    : " + port);
 
         final String user = info.getProperty("user", "admin");
         final String password = info.getProperty("password", "");
+        System.out.println("username: " + user + "\n" + "password: " + password);
 
         UniformSQLClientSocketHandlerFactory uniformSQLClientSocketHandlerFactory = new UniformSQLClientSocketHandlerFactory();
         client = new UniformSQLClient.Builder()
-                .onPort(port).toServer(host)
+                .onPort(port).toServer(host).setAccount(user, password)
                 .withSocketHandlerFactory(uniformSQLClientSocketHandlerFactory)
                 .build();
 
@@ -103,7 +104,7 @@ public class UniformSQLConnection implements Connection {
     }
 
     public boolean isClosed() throws SQLException {
-        return false;
+        return closed;
     }
 
     public DatabaseMetaData getMetaData() throws SQLException {

@@ -7,4 +7,6 @@ import java.net.Socket;
  */
 public interface ClientSocketHandlerFactory {
     public ClientSocketHandler newSocketHandler(Socket socket);
+
+    public ClientSocketHandler newSocketHandler(Socket socket, String username, String password);
 }

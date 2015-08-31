@@ -24,7 +24,7 @@ public class UniformSQLStatement implements Statement {
     protected int                           resultSetHoldability;
 
     /**
-     * ¹¹Ôìº¯Êı
+     * æ„é€ å‡½æ•°
      */
     public UniformSQLStatement(final UniformSQLConnection connection){
         this(connection, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
@@ -35,7 +35,7 @@ public class UniformSQLStatement implements Statement {
     }
 
     /**
-     * TODO Ôö¼Ó×´Ì¬£¬°Ñ ResultSet ¸Ä³É¿ÉÒÔÉèÖÃ×´Ì¬µÄ
+     * TODO å¢åŠ çŠ¶æ€ï¼ŒæŠŠ ResultSet æ”¹æˆå¯ä»¥è®¾ç½®çŠ¶æ€çš„
      * @param connection
      * @param resultSetType
      * @param resultSetConcurrency
@@ -45,14 +45,14 @@ public class UniformSQLStatement implements Statement {
         this.connection = connection;
         this.client = this.connection.getClient();
 
-        // Ä¿Ç° ResultSet Ä¬ÈÏÉèÖÃ³ÉÒÔÏÂ×´Ì¬
+        // ç›®å‰ ResultSet é»˜è®¤è®¾ç½®æˆä»¥ä¸‹çŠ¶æ€
         this.resultSetType = ResultSet.TYPE_FORWARD_ONLY;
         this.resultSetConcurrency = ResultSet.CONCUR_READ_ONLY;
         this.resultSetHoldability = ResultSet.HOLD_CURSORS_OVER_COMMIT;
     }
 
     /**
-     * TODO Ö´ĞĞÒ»¸ösqlÓï¾ä£¬·µ»ØResultSet½á¹û¼¯
+     * TODO æ‰§è¡Œä¸€ä¸ªsqlè¯­å¥ï¼Œè¿”å›ResultSetç»“æœé›†
      * @param sql
      * @return
      * @throws SQLException

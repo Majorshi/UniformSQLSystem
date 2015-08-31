@@ -29,7 +29,7 @@ public class JDBCDriverTest {
         assertTrue(drv.acceptsURL("jdbc:uniformsql:local:./working/db/test"));
         assertFalse(drv.acceptsURL("local:./working/db/test"));
 
-        Connection conn = DriverManager.getConnection("jdbc:uniformsql:127.0.0.1:9527");
+        Connection conn = DriverManager.getConnection("jdbc:uniformsql:127.0.0.1:9527", "wyq", "123456");
         Statement stat = conn.createStatement();
         ResultSet rs = stat.executeQuery("SHOW TABLES");
         assertNotNull(rs);
@@ -43,7 +43,7 @@ public class JDBCDriverTest {
                 System.out.println(rsmd.getColumnLabel(i) + "   :   " + rs.getObject(i));
             }
         }
-//        boolean b = rsmd.isSearchable(1);
+        // boolean b = rsmd.isSearchable(1);
         rs.close();
         stat.close();
         conn.close();
@@ -53,7 +53,7 @@ public class JDBCDriverTest {
     @Test
     public void statementTest() throws SQLException, ClassNotFoundException {
         Class.forName("cn.edu.bit.linc.uniformsql.jdbc.UniformSQLDriver");
-        Connection conn = DriverManager.getConnection("jdbc:uniformsql:127.0.0.1:9527");
+        Connection conn = DriverManager.getConnection("jdbc:uniformsql:127.0.0.1:9527", "ihainan", "12345");
         Statement stat = conn.createStatement();
         assertNotNull(stat);
 
@@ -62,7 +62,7 @@ public class JDBCDriverTest {
 
 
         String userOne = "User_" + StringUtil.RandomStringGenerator.generateRandomString
-                (5, StringUtil.RandomStringGenerator.Mode.ALPHA);           // ”√ªß“ª
+                (5, StringUtil.RandomStringGenerator.Mode.ALPHA);
         b = stat.execute("CREATE USER " + userOne + " IDENTIFIED BY '123456'");
         assertEquals(true, b);
 

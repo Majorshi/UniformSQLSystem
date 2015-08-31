@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="Encoding" useUTFGuessing="true" native2AsciiForPropertiesFiles="false" />
+  <component name="Encoding" useUTFGuessing="true" native2AsciiForPropertiesFiles="false" defaultCharsetForPropertiesFiles="UTF-8">
+    <file url="file://$PROJECT_DIR$/src/main/java/cn/edu/bit/linc/uniformsql/jdbc/RowData.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/cn/edu/bit/linc/uniformsql/jdbc/RowDataEntry.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/cn/edu/bit/linc/uniformsql/jdbc/UniformSQLConnection.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/cn/edu/bit/linc/uniformsql/jdbc/UniformSQLDriver.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/cn/edu/bit/linc/uniformsql/jdbc/UniformSQLResultSet.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/cn/edu/bit/linc/uniformsql/jdbc/UniformSQLResultSetMetaData.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java/cn/edu/bit/linc/uniformsql/jdbc/UniformSQLStatement.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/test/java/JDBCDriverTest.java" charset="UTF-8" />
+    <file url="PROJECT" charset="UTF-8" />
+  </component>
 </project>

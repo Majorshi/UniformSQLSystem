@@ -16,7 +16,7 @@ public class UniformSQLDriver implements java.sql.Driver {
     public static final int MINOR_VERSION = 1;
 
     /**
-     * ×¢²áÇı¶¯
+     * æ³¨å†Œé©±åŠ¨
      */
     static {
         try{
@@ -33,7 +33,7 @@ public class UniformSQLDriver implements java.sql.Driver {
     }
 
     /**
-     * uniformsql Çı¶¯ url Ç°×º±ØĞëÎª£ºjdbc:uniformsql:
+     * uniformsql é©±åŠ¨ url å‰ç¼€å¿…é¡»ä¸ºï¼šjdbc:uniformsql:
      * @param url
      * @return
      * @throws SQLException
@@ -47,7 +47,7 @@ public class UniformSQLDriver implements java.sql.Driver {
     }
 
     /**
-     * Ö÷Òª°æ±¾ºÅ 0
+     * ä¸»è¦ç‰ˆæœ¬å· 0
      * @return
      */
     public int getMajorVersion() {
@@ -55,7 +55,7 @@ public class UniformSQLDriver implements java.sql.Driver {
     }
 
     /**
-     * ´ÎÒª°æ±¾ºÅ 1
+     * æ¬¡è¦ç‰ˆæœ¬å· 1
      * @return
      */
     public int getMinorVersion() {

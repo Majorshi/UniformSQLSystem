@@ -32,6 +32,9 @@ public class UniformSQLClientSocketHandler implements ClientSocketHandler {
     private InputStream in;
     private OutputStream out;
 
+    private String username;
+    private String password;
+
     private List<RowData> results;
 
     /**
@@ -41,6 +44,12 @@ public class UniformSQLClientSocketHandler implements ClientSocketHandler {
      */
     public UniformSQLClientSocketHandler(Socket clientSocket) {
         this.clientSocket = clientSocket;
+    }
+
+    public UniformSQLClientSocketHandler(Socket clientSocket, String username, String password) {
+        this.clientSocket = clientSocket;
+        this.username = username;
+        this.password = password;
     }
 
     /**
@@ -531,8 +540,8 @@ public class UniformSQLClientSocketHandler implements ClientSocketHandler {
         IntegerType capabilities = IntegerType.getIntegerType(5, CredentialsPacket.LENGTH_CLIENT_CAPABILITIES);
         IntegerType maxPacketLength = IntegerType.getIntegerType(10, CredentialsPacket.LENGTH_MAX_PACKET_LENGTH);
         IntegerType characterSet = IntegerType.getIntegerType(1, CredentialsPacket.LENGTH_CHARACTER_SET);
-        StringType userName = StringType.getStringType("ihainan");
-        String password = "12345";
+        StringType userName = StringType.getStringType(this.username); //"ihainan"
+        String password = this.password; //"12345"
         String scramble = "12345678901234567890";
         String tokenStr = CHAP.calcToken(password, scramble);
         LengthCodeStringType token = LengthCodeStringType.getLengthCodeString(tokenStr);
@@ -559,4 +568,5 @@ public class UniformSQLClientSocketHandler implements ClientSocketHandler {
 
         return packet;
     }
+
 }

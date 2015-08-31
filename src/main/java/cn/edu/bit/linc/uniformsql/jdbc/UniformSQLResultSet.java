@@ -229,7 +229,7 @@ public class UniformSQLResultSet implements ResultSet {
     }
 
     /**
-     * TODO »ñÈ¡Êı¾İ¿â±íÁĞÃû
+     * TODO è·å–æ•°æ®åº“è¡¨åˆ—å
      * @return
      * @throws SQLException
      */
@@ -288,7 +288,7 @@ public class UniformSQLResultSet implements ResultSet {
     }
 
     public void afterLast() throws SQLException {
-        // µ½×îºóÒ»ĞĞµÄÏÂÒ»ĞĞ
+        // åˆ°æœ€åä¸€è¡Œçš„ä¸‹ä¸€è¡Œ
         cursor = rowCount;
     }
 
@@ -305,7 +305,7 @@ public class UniformSQLResultSet implements ResultSet {
     }
 
     /**
-     * ÒÆ¶¯Ö¸Õëµ½µÚ row ĞĞ
+     * ç§»åŠ¨æŒ‡é’ˆåˆ°ç¬¬ row è¡Œ
      * @param row
      * @return
      * @throws SQLException
@@ -857,7 +857,7 @@ public class UniformSQLResultSet implements ResultSet {
     }
 
     /**
-     * TODO Àí½â
+     * TODO ç†è§£
      * @param iface
      * @param <T>
      * @return

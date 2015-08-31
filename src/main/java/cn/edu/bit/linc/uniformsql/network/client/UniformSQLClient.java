@@ -11,6 +11,8 @@ import cn.edu.bit.linc.zql.util.StringUtil;
 public class UniformSQLClient {
     private final int port;             // 服务器端口
     private final String serverHost;    // 服务器地址
+    private final String username;
+    private final String password;
     private final ClientSocketHandlerFactory socketHandlerFactory;
     private static ClientSocketHandler handler = null;
 
@@ -21,10 +23,12 @@ public class UniformSQLClient {
      * @param port                 远程服务器端口
      * @param socketHandlerFactory Socket Handler 工厂
      */
-    private UniformSQLClient(String serverHost, int port, ClientSocketHandlerFactory socketHandlerFactory) {
+    private UniformSQLClient(String serverHost, int port, ClientSocketHandlerFactory socketHandlerFactory, String username, String password) {
         this.port = port;
         this.serverHost = serverHost;
         this.socketHandlerFactory = socketHandlerFactory;
+        this.username = username;
+        this.password = password;
     }
 
     public ClientSocketHandler getHandler() {
@@ -38,7 +42,7 @@ public class UniformSQLClient {
      */
     public void connect() throws IOException {
         Socket clientSocket = new Socket(serverHost, port);
-        handler = socketHandlerFactory.newSocketHandler(clientSocket);
+        handler = socketHandlerFactory.newSocketHandler(clientSocket, username, password);
         handler.handleSocket();
     }
 
@@ -48,6 +52,8 @@ public class UniformSQLClient {
     public static class Builder {
         private Integer port;         // 服务器端口
         private String serverHost;    // 服务器地址
+        private String username;
+        private String password;
         private ClientSocketHandlerFactory socketHandlerFactory;
 
         /**
@@ -84,6 +90,18 @@ public class UniformSQLClient {
         }
 
         /**
+         * 设置账户信息
+         * @param username 数据库用户名
+         * @param password 数据库密码
+         * @return
+         */
+        public Builder setAccount(String username, String password){
+            this.username = username;
+            this.password = password;
+            return this;
+        }
+
+        /**
          * 构建 UniformSQLClient 对象
          *
          * @return UniformSQLClient 对象
@@ -92,7 +110,10 @@ public class UniformSQLClient {
             if (port == null || serverHost == null) {
                 throw new IllegalStateException("port and server host do not have defaults");
             }
-            return new UniformSQLClient(serverHost, port, socketHandlerFactory);
+            if (username == null || password == null){
+                throw new IllegalStateException("account do not have defaults");
+            }
+            return new UniformSQLClient(serverHost, port, socketHandlerFactory, username, password);
         }
     }
 
@@ -106,7 +127,7 @@ public class UniformSQLClient {
         String host = "127.0.0.1";
         UniformSQLClientSocketHandlerFactory uniformSQLClientSocketHandlerFactory = new UniformSQLClientSocketHandlerFactory();
         UniformSQLClient client = new UniformSQLClient.Builder()
-                .onPort(port).toServer(host)
+                .onPort(port).toServer(host).setAccount("ihainan", "12345")
                 .withSocketHandlerFactory(uniformSQLClientSocketHandlerFactory)
                 .build();
 

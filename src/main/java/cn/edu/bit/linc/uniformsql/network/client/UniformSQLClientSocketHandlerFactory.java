@@ -10,4 +10,8 @@ public class UniformSQLClientSocketHandlerFactory implements ClientSocketHandler
     public ClientSocketHandler newSocketHandler(Socket socket) {
         return new UniformSQLClientSocketHandler(socket);
     }
+
+    public ClientSocketHandler newSocketHandler(Socket socket, String username, String password) {
+        return new UniformSQLClientSocketHandler(socket,username, password);
+    }
 }
