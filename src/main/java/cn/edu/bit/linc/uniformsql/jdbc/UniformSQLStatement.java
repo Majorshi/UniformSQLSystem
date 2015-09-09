@@ -86,7 +86,10 @@ public class UniformSQLStatement implements Statement {
     }
 
     public int executeUpdate(String sql) throws SQLException {
-        return 0;
+        UniformSQLClientSocketHandler handler = (UniformSQLClientSocketHandler) client.getHandler();
+        List<RowData> results = handler.execute(sql);
+        resultSet = new UniformSQLResultSet(this, results, resultSetType, resultSetConcurrency, resultSetHoldability);
+        return results.size();
     }
 
     public void close() throws SQLException {
