@@ -174,7 +174,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         }
 
         /* 获取子节点数据 */
-        String tbName = visit(ctx.table_name()).getValue();
+        String tbName = visit(ctx.table_spec()).getValue();
 
         // 权限表
         ArrayList<String> privilegesArray = new ArrayList<String>();
@@ -319,7 +319,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         ArrayList<Integer> dbIds = new ArrayList<Integer>();
 
         /* 获取子节点数据 */
-        String tbName = visit(ctx.table_name()).getValue();
+        String tbName = visit(ctx.table_spec()).getValue();
 
         // 权限表
         ArrayList<String> privilegesArray = new ArrayList<String>();
@@ -409,8 +409,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
             /* 查看授权 */
             String userName = specificationContext.principal_name() == null ? "true "
                     : "User = '" + visit(specificationContext.principal_name()).getValue() + "'";    // 用户名
-            String tableName = specificationContext.table_name() == null ? "true"
-                    : "Tb = '" + visit(specificationContext.table_name()).getValue() + "'";
+            String tableName = specificationContext.table_spec() == null ? "true"
+                    : "Tb = '" + visit(specificationContext.table_spec()).getValue() + "'";
 
             /* 元数据库命令 */
             InnerSQLCommand metaDbCommand = sqlCommandBuilder.showGrant(Database.DBType.MySQL, metaDatabase.getMetaDbName()
@@ -445,7 +445,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         } else if (specificationContext.CREATE() != null && specificationContext.TABLE() != null) {
             /* 查看创建表语句 */
             /* 获取子节点数据 */
-            String tableName = visit(specificationContext.table_name()).getValue();
+            String tableName = visit(specificationContext.table_spec()).getValue();
 
             // 获取数据库所在底层库编号
             int dbId;
@@ -464,7 +464,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         } else if (specificationContext.COLUMNS() != null) {
             /* 查看列 */
             /* 获取子节点数据 */
-            String tableName = visit(specificationContext.table_name()).getValue();
+            String tableName = visit(specificationContext.table_spec()).getValue();
             String databaseName = specificationContext.database_name() != null
                     ? visit(specificationContext.database_name()).getValue() : session.getDatabase();
             if (databaseName == null) {
@@ -663,8 +663,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         String temporary = ctx.TEMPORARY() == null ? "" : "TEMPORARY";
         String external = ctx.EXTERNAL() == null ? "" : "EXTERNAL";
         String checkExists = ctx.IF() == null ? "" : "IF NOT EXISTS";
-        String tableName = visit(ctx.table_name()).getValue();
-        String databaseName = (ctx.database_name() != null ? visit(ctx.database_name()).getValue() :
+        String tableName = visit(ctx.table_spec().table_name()).getValue();
+        String databaseName = (ctx.table_spec().schema_name() != null ? visit(ctx.table_spec().schema_name()).getValue() :
                 (session.getDatabase() != null ? session.getDatabase() : null));
         if (databaseName == null) {
             session.setErrorMessage("未指定数据库");
@@ -783,13 +783,14 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      */
     @Override
     public ASTNodeVisitResult visitColumn_data_type_header(uniformSQLParser.Column_data_type_headerContext ctx) {
-        String value = ctx.getChild(0).getText();
-        if (value.equals("VARCHAR")) {
-            value += "(" + visit(ctx.getChild(2)).getValue() + ")";
-        } else if (value.equals("DECIMAL")) {
-            value += "(" + visit(ctx.getChild(2)).getValue() + "," + visit(ctx.getChild(4)).getValue() + ")";
-        }
-        return new ASTNodeVisitResult(value, null, null);
+//        String value = ctx.getChild(0).getText();
+//        if (value.equals("VARCHAR")) {
+//            value += "(" + visit(ctx.getChild(2)).getValue() + ")";
+//        } else if (value.equals("DECIMAL")) {
+//            value += "(" + visit(ctx.getChild(2)).getValue() + "," + visit(ctx.getChild(4)).getValue() + ")";
+//        }
+//        return new ASTNodeVisitResult(value, null, null);
+        return visitChildrenNodes(ctx.children);
     }
 
     /**
@@ -820,7 +821,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         }
 
         /* 获取子节点数据 */
-        ASTNodeVisitResult visitTableNameNodeResult = visit(ctx.table_name());
+        //TODO: 9月9日g4改动后可能会有点问题，待修正
+        ASTNodeVisitResult visitTableNameNodeResult = visit(ctx.table_spec().table_name());
         String dropTableName = visitTableNameNodeResult.getValue();
         String checkExists = ctx.IF() == null ? "" : "IF EXISTS";
 
@@ -875,8 +877,9 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         Database.DBType dbType = innerDatabasesArrayList.get(dbId - 1).getDbType();
 
         /* 获取子节点数据 */
-        ASTNodeVisitResult visitTableNameNodeResult = visit(ctx.table_name());
-        String tableName = visitTableNameNodeResult.getValue();
+        //TODO: 9月9日g4修改后待修改
+        ASTNodeVisitResult visitTableSepcNodeResult = visit(ctx.table_spec().table_name());
+        String tableName = visitTableSepcNodeResult.getValue();
         List<uniformSQLParser.Alter_table_specificationContext> alter_table_specificationContext = ctx.alter_table_specification();
         if (alter_table_specificationContext.get(0).children.get(0).getText().equals("RENAME")) {
             /* 修改表名 */
@@ -1291,8 +1294,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         ArrayList<Integer> dbIds = new ArrayList<Integer>();
 
         /* 获取子节点数据 */
-        String tableName = visit(ctx.table_name()).getValue();
-        String serverAlias = visit(ctx.server_alias()).getValue();
+        String tableName = visit(ctx.table_spec().table_name()).getValue();
+        String serverAlias = visit(ctx.server_alias_name()).getValue();
         String databaseName = visit(ctx.database_name()).getValue();
 
         /* 检查底层库是否存在 */
@@ -1337,7 +1340,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @return 节点访问结果
      */
     @Override
-    public ASTNodeVisitResult visitServer_alias(uniformSQLParser.Server_aliasContext ctx) {
+    public ASTNodeVisitResult visitServer_alias_name(uniformSQLParser.Server_alias_nameContext ctx) {
         return new ASTNodeVisitResult(ctx.any_name().getText(), null, null);
     }
 
@@ -1353,7 +1356,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         ArrayList<Integer> dbIds = new ArrayList<Integer>();
 
         /* 获取子节点数据 */
-        String serverAlias = visit(ctx.server_alias()).getValue();
+        String serverAlias = visit(ctx.server_alias_name()).getValue();
 
         /* 检查底层库是否存在 */
         int dbId;
@@ -1485,7 +1488,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         }
         String database = session.getDatabase();
         /* 获取子节点数据 */
-        ASTNodeVisitResult visitSchemaNameNodeResult = visit(ctx.table_name());
+        ASTNodeVisitResult visitSchemaNameNodeResult = visit(ctx.table_spec().table_name());
         String tableName = visitSchemaNameNodeResult.getValue();     // 数据库名
         /* 确定数据库所在底层库以及底层库类型 */
         int dbId;
@@ -2114,18 +2117,11 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      */
     @Override public ASTNodeVisitResult visitColumn_spec(uniformSQLParser.Column_specContext ctx) {
         String valueStr = "";
-        if (ctx.schema_name() != null) {
-            ASTNodeVisitResult whateverResult = visit(ctx.schema_name());
+        if (ctx.table_spec() != null) {
+            ASTNodeVisitResult whateverResult = visit(ctx.table_spec());
             if (whateverResult.getValue() != null) {
                 valueStr += whateverResult.getValue();
-                valueStr += ctx.DOT(0);
-            }
-        }
-        if (ctx.table_name() != null) {
-            ASTNodeVisitResult whateverResult = visit(ctx.table_name());
-            if (whateverResult.getValue() != null) {
-                valueStr += whateverResult.getValue();
-                valueStr += ctx.DOT(0);
+                valueStr += ".";
             }
         }
         ASTNodeVisitResult whateverResult = visit(ctx.column_name());

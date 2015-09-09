@@ -246,11 +246,11 @@ public interface uniformSQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitPassword(uniformSQLParser.PasswordContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link uniformSQLParser#server_alias}.
+	 * Visit a parse tree produced by {@link uniformSQLParser#server_alias_name}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitServer_alias(uniformSQLParser.Server_aliasContext ctx);
+	T visitServer_alias_name(uniformSQLParser.Server_alias_nameContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link uniformSQLParser#role_name}.
 	 * @param ctx the parse tree
