@@ -74,14 +74,14 @@ public class UniformSQLServerSocketHandler implements ServerSocketHandler {
         credentialsPacket.setData(credentialsPacketBytes);
         logger.i("Received credentials packet from server " + clientSocket.getInetAddress());
         logger.i("credentialsPacket : " + credentialsPacket);
-        System.out.println("Character Set       : " + IntegerType.getIntegerValue(credentialsPacket.getCharacterSet()));
-        System.out.println("Max Packet Length   : " + IntegerType.getIntegerValue(credentialsPacket.getMaxPacketLength()));
-        System.out.println("Server Capabilities : " + IntegerType.getIntegerValue(credentialsPacket.getClientCapabilities()));
+        logger.d("Character Set       : " + IntegerType.getIntegerValue(credentialsPacket.getCharacterSet()));
+        logger.d("Max Packet Length   : " + IntegerType.getIntegerValue(credentialsPacket.getMaxPacketLength()));
+        logger.d("Server Capabilities : " + IntegerType.getIntegerValue(credentialsPacket.getClientCapabilities()));
         CredentialsPacket.CredentialInformation credentialInformation1 = credentialsPacket.getCredentialInformation();
-        System.out.println("User Name           : " + StringType.getString(credentialInformation1.userName));
-        System.out.println("Token               : " + LengthCodeStringType.getString(credentialInformation1.token));
-        System.out.println("Database Name       : " + StringType.getString(credentialInformation1.dbName));
-        System.out.println();
+        logger.d("User Name           : " + StringType.getString(credentialInformation1.userName));
+        logger.d("Token               : " + LengthCodeStringType.getString(credentialInformation1.token));
+        logger.d("Database Name       : " + StringType.getString(credentialInformation1.dbName));
+        logger.d("");
 
         // TODO: 验证
         // TODO: 发送认证结果包
@@ -118,8 +118,8 @@ public class UniformSQLServerSocketHandler implements ServerSocketHandler {
                 break;
             }
 
-            System.out.println("Command Code      : " + IntegerType.getIntegerValue(commandPacket.getCommandCode()));
-            System.out.println("Command           : " + LengthCodeStringType.getString(commandPacket.getCommand()));
+            logger.d("Command Code      : " + IntegerType.getIntegerValue(commandPacket.getCommandCode()));
+            logger.d("Command           : " + LengthCodeStringType.getString(commandPacket.getCommand()));
             //System.out.println();
 
             Packet packet =  ZQLContext.executeSQL(LengthCodeStringType.getString(commandPacket.getCommand()), session);

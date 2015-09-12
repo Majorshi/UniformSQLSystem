@@ -17,6 +17,7 @@ public class UniformSQLConnection implements Connection {
 
     private static UniformSQLClient client;
     private boolean                 closed;
+    private String                  username;
 
     /**
      * 构造函数，建立和数据库服务端的连接
@@ -28,7 +29,7 @@ public class UniformSQLConnection implements Connection {
         //url 在DriverManager中已经判断是否为空了，这里不需要再验证一次
         System.out.println("url     : " +  url);
 
-        String[] strs = url.replace("jdbc:uniformsql:","").split(":");
+        String[] strs = url.replace("jdbc:zql://","").split(":");
         if(strs.length < 2) {
             System.out.println("url is error！");
             return;
@@ -43,13 +44,13 @@ public class UniformSQLConnection implements Connection {
         }
         System.out.println("hots    : " + host + "\nport    : " + port);
 
-        final String user = info.getProperty("user", "admin");
+        username = info.getProperty("user", "admin");
         final String password = info.getProperty("password", "");
-        System.out.println("username: " + user + "\n" + "password: " + password);
+        System.out.println("username: " + username + "\n" + "password: " + password);
 
         UniformSQLClientSocketHandlerFactory uniformSQLClientSocketHandlerFactory = new UniformSQLClientSocketHandlerFactory();
         client = new UniformSQLClient.Builder()
-                .onPort(port).toServer(host).setAccount(user, password)
+                .onPort(port).toServer(host).setAccount(username, password)
                 .withSocketHandlerFactory(uniformSQLClientSocketHandlerFactory)
                 .build();
 
@@ -108,7 +109,7 @@ public class UniformSQLConnection implements Connection {
     }
 
     public DatabaseMetaData getMetaData() throws SQLException {
-        return null;
+        return new UniformSQLDatabaseMetaData(this, username);
     }
 
     public void setReadOnly(boolean readOnly) throws SQLException {

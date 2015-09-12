@@ -53,7 +53,7 @@ public class SQLCommandManager {
     static {
         try {
             Class.forName("cn.edu.bit.linc.zql.jdbc.UniformSQLDriver");
-            connection = DriverManager.getConnection("jdbc:uniformsql:127.0.0.1:9527", "wyq", "123456");
+            connection = DriverManager.getConnection("jdbc:zql://127.0.0.1:9527", "wyq", "123456");
         } catch (Exception e){
             e.printStackTrace();
         }

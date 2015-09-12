@@ -7,6 +7,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import cn.edu.bit.linc.zql.network.utils.*;
+import cn.edu.bit.linc.zql.util.Logger;
+import cn.edu.bit.linc.zql.util.LoggerFactory;
 
 /**
  * 服务器端
@@ -16,6 +18,7 @@ public class UniformSQLServer {
     private final int timeout;
     private final ServerSocketHandlerFactory socketHandlerFactory;
     private final ExecutorService handlerService = Executors.newCachedThreadPool();
+    private static final Logger logger = LoggerFactory.getLogger(UniformSQLServer.class);
 
     /**
      * 构造函数
@@ -37,9 +40,9 @@ public class UniformSQLServer {
      */
     public void start() throws IOException {
         ServerSocket serverSocket = new ServerSocket(port);
-        serverSocket.setSoTimeout(timeout); // TODO: 对 Socket 超时机制的完善
+        //serverSocket.setSoTimeout(timeout); // TODO: 对 Socket 超时机制的完善
 
-        Log.info("Network: Waiting for connection on port " + port);
+        logger.i("Network: Waiting for connection on port " + port);
 
         //while (true) {
             Socket clientSocket = serverSocket.accept();

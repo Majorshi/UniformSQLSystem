@@ -8,7 +8,7 @@ import java.util.Properties;
 import java.util.logging.Logger;
 
 /**
- * Created by wyq on 2015/8/7.
+ * zql驱动类
  */
 public class UniformSQLDriver implements java.sql.Driver {
 
@@ -22,7 +22,7 @@ public class UniformSQLDriver implements java.sql.Driver {
         try{
             java.sql.DriverManager.registerDriver(new UniformSQLDriver());
         } catch (SQLException e) {
-            System.err.println("Can't registering the UniformSQL JDBC Driver!");
+            System.err.println("Can't registering the ZQL JDBC Driver!");
             e.printStackTrace();
         }
 
@@ -33,13 +33,13 @@ public class UniformSQLDriver implements java.sql.Driver {
     }
 
     /**
-     * uniformsql 驱动 url 前缀必须为：jdbc:uniformsql:
+     * uniformsql 驱动 url 前缀必须为：jdbc:zql://
      * @param url
      * @return
      * @throws SQLException
      */
     public boolean acceptsURL(String url) throws SQLException {
-        return url.startsWith("jdbc:uniformsql:");
+        return url.startsWith("jdbc:zql://");
     }
 
     public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) throws SQLException {
@@ -63,7 +63,7 @@ public class UniformSQLDriver implements java.sql.Driver {
     }
 
     public static String getVersion(){
-        return "UniformSQL JDBC Driver " + MAJOR_VERSION + "." + MINOR_VERSION;
+        return "ZQL JDBC Driver " + MAJOR_VERSION + "." + MINOR_VERSION;
     }
 
     public boolean jdbcCompliant() {
