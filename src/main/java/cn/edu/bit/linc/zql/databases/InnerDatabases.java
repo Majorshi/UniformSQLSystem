@@ -160,4 +160,48 @@ public class InnerDatabases {
         }
         return "INT";
     }
+
+    public HashMap<String, String> getColumnTypeInTable (int dbNo, String databaseName, String tableName) throws ZQLCommandExecutionError {
+        /* 连接底层库并执行命令 */
+        ConnectionPools connectionPools = ConnectionPools.getInstance();
+        Connection connection = null;
+        Statement statement = null;
+        try {
+            CommandAdapter adapterAdapter = CommandAdapter.getAdapterInstance(innerDatabaseArray.get(dbNo - 1).getDbType());
+            connection = connectionPools.getConnection(dbNo);
+            statement = connection.createStatement();
+            // USE db_name
+            InnerSQLCommand command = sqlCommandBuilder.useDatabase(adapterAdapter.dbType, databaseName);
+            statement.execute(command.getCommandStr());
+            // GET COLUMN_TYPE
+            command = sqlCommandBuilder.getColumnInfo(adapterAdapter.dbType, tableName);
+            ResultSet resultSet = statement.executeQuery(command.getCommandStr());
+            HashMap<String, String> types = new HashMap<String, String>();
+            if (resultSet.next()) {
+                 types.put(resultSet.getString("field"), resultSet.getString(adapterAdapter.TYPE_FILED_NAME)) ;
+            }
+            return types;
+        } catch (Exception e) {
+            ZQLCommandExecutionError zqlCommandExecutionError = new ZQLCommandExecutionError("获取数据列 " +
+                    databaseName + "." + tableName + "的类型失败");
+            zqlCommandExecutionError.initCause(e);
+            throw zqlCommandExecutionError;
+        } finally {
+            if (statement != null) try {
+                statement.close();
+            } catch (SQLException e) {
+                ZQLCommandExecutionError zqlCommandExecutionError = new ZQLCommandExecutionError("关闭 Statement 失败");
+                zqlCommandExecutionError.initCause(e);
+                throw zqlCommandExecutionError;
+            }
+
+            if (connection != null) try {
+                connection.close();
+            } catch (SQLException e) {
+                ZQLCommandExecutionError zqlCommandExecutionError = new ZQLCommandExecutionError("关闭 Connection 失败");
+                zqlCommandExecutionError.initCause(e);
+                throw zqlCommandExecutionError;
+            }
+        }
+    }
 }

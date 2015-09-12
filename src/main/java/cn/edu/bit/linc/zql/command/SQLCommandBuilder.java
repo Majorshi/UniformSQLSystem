@@ -181,6 +181,17 @@ public class SQLCommandBuilder {
     }
 
     /**
+     * 跨库 - 获取某一张表内所有列的数据类型
+     *
+     * @param dbType 底层库类型
+     * @param args   参数列表
+     * @return SQL命令
+     */
+    public InnerSQLCommand getColumnInfo(Database.DBType dbType, Object... args) {
+        return new InnerSQLCommand(dbType, commandAdapters[dbType.ordinal()].getColumnInfo(args), args);
+    }
+
+    /**
      * 显示数据表
      *
      * @param dbType 底层库类型

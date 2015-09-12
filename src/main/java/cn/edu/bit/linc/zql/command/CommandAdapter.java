@@ -67,6 +67,7 @@ public abstract class CommandAdapter {
 
     public String ALTER_COLUMN_NAME = "ALTER TABLE %s CHANGE COLUMN %s %s %s"; // ALTER TABLE table_name CHANGE COLUMN old_name new_name type
     public String SELECT_FIELD_TYPE = "SHOW FIELDS FROM %s where Field ='%s'";
+    public String SELECT_FIELD_INFO = "SHOW FIELDS FROM %s";
     public String TYPE_FILED_NAME = "type";
 
     public String SHOW_TABLES = "SELECT * FROM %s.zql_tables WHERE %s and %s";    // SHOW TABLES [IN db_test] [LIKE "db_*"]
@@ -228,6 +229,17 @@ public abstract class CommandAdapter {
     public String getColumnType(Object... args) {
         return String.format(SELECT_FIELD_TYPE, args);
     }
+
+    /**
+     * 跨库 - 获取一张表内所有列的数据信息
+     *
+     * @param args 参数列表
+     * @return SQL 命令
+     */
+    public String getColumnInfo(Object... args) {
+        return String.format(SELECT_FIELD_INFO, args);
+    }
+
 
     /**
      * 显示数据表
