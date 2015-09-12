@@ -1,15 +1,13 @@
 package cn.edu.bit.linc.zql;
 
-import cn.edu.bit.linc.uniformsql.network.packets.*;
-import cn.edu.bit.linc.uniformsql.network.server.UniformSQLServer;
-import cn.edu.bit.linc.uniformsql.network.server.UniformSQLServerSocketHandlerFactory;
+import cn.edu.bit.linc.zql.network.packets.*;
+import cn.edu.bit.linc.zql.network.server.UniformSQLServer;
+import cn.edu.bit.linc.zql.network.server.UniformSQLServerSocketHandlerFactory;
 import cn.edu.bit.linc.zql.command.SQLCommandManager;
 import cn.edu.bit.linc.zql.connections.*;
-import cn.edu.bit.linc.zql.databases.Database;
 import cn.edu.bit.linc.zql.databases.MetaDatabase;
 import cn.edu.bit.linc.zql.util.Logger;
 import cn.edu.bit.linc.zql.util.LoggerFactory;
-import cn.edu.bit.linc.zql.util.StringUtil;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -41,8 +39,7 @@ public class ZQLContext {
                 .withSocketHandlerFactory(uniformSQLSocketHandlerFactory)
                 .build();
 
-        //server.start();
-
+        server.start();
     }
 
     public static Packet executeSQL(String commandStr, ZQLSession session) {

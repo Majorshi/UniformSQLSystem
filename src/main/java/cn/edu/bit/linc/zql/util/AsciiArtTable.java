@@ -118,6 +118,8 @@ public class AsciiArtTable {
     }
 
     public String getOutput() {
+        if(headerCols.size() == 0)
+            return "";
         // prepare data
         while (contentCols.size() % headerCols.size() != 0) {
             contentCols.add("");

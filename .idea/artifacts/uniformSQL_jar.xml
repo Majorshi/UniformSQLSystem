@@ -1,6 +1,6 @@
 <component name="ArtifactManager">
-  <artifact type="jar" name="uniformSQL:jar">
-    <output-path>$USER_HOME$/tmp/ZQLSystemDemo</output-path>
+  <artifact type="jar" build-on-make="true" name="uniformSQL:jar">
+    <output-path>$PROJECT_DIR$/target</output-path>
     <root id="archive" name="uniformSQL.jar">
       <element id="module-output" name="uniformSQL" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/net/sf/jpam/jpam/1.1/jpam-1.1.jar" path-in-jar="/" />
