@@ -142,7 +142,7 @@ public class SQLCommandManager {
                 assert rsmd != null;
                 String[] rowData = new String[rsmd.getColumnCount()];
                 for (int j = 1; j <= rsmd.getColumnCount(); ++j) {
-                    String result = resultSet.getString(j);
+                    String result = (String)resultSet.getObject(j);
                     if (result == null) result = "";
                     rowData[j - 1] = result;
                 }

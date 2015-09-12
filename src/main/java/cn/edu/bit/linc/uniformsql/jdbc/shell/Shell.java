@@ -1,8 +1,5 @@
 package cn.edu.bit.linc.uniformsql.jdbc.shell;
 
-import cn.edu.bit.linc.zql.ZQLContext;
-import cn.edu.bit.linc.zql.command.SQLCommandManager;
-import cn.edu.bit.linc.zql.connections.ZQLSession;
 import cn.edu.bit.linc.zql.util.Logger;
 import cn.edu.bit.linc.zql.util.LoggerFactory;
 import cn.edu.bit.linc.zql.util.StringUtil;
@@ -21,7 +18,6 @@ public class Shell {
     private final static Logger logger = LoggerFactory.getLogger(Shell.class);
 
     public void doInputSQLCommand() {
-        ZQLSession session = new ZQLSession(user, database, password);
 
         /* 确定输入源 */
         BufferedReader reader = null;
@@ -94,7 +90,7 @@ public class Shell {
                 System.out.println("Query Command: " + queryStr);
 
                 /* 执行 SQL 语句 */
-                SQLCommandManager sqlCommandManager = new SQLCommandManager(queryStr, session);
+                SQLCommandManager sqlCommandManager = new SQLCommandManager(queryStr);
                 sqlCommandManager.execute();
                 System.out.println(sqlCommandManager.getOutput());
 
@@ -179,8 +175,6 @@ public class Shell {
     }
 
     public static void main(String[] args) throws IOException {
-        ZQLContext zqlContext = new ZQLContext();
-        //zqlContext.initializeSystem();
         Shell shell = new Shell();
         shell.parseArgs(args);
         shell.doInputSQLCommand();
