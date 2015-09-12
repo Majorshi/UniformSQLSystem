@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/ZQLJDBCDriver/ZQLJDBCDriver.iml" filepath="$PROJECT_DIR$/ZQLJDBCDriver/ZQLJDBCDriver.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ZQLUnitTest/ZQLUnitTest.iml" filepath="$PROJECT_DIR$/ZQLUnitTest/ZQLUnitTest.iml" />
       <module fileurl="file://$PROJECT_DIR$/uniformSQL.iml" filepath="$PROJECT_DIR$/uniformSQL.iml" />
     </modules>
   </component>

@@ -24,12 +24,12 @@
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="true" />
         <module name="uniformSQL" />
-        <module name="ZQLJDBCDriver" />
+        <module name="ZQLUnitTest" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="uniformSQL" target="1.5" />
-      <module name="ZQLJDBCDriver" target="1.5" />
+      <module name="uniformSQL" target="1.6" />
+      <module name="ZQLJDBCDriver" target="1.6" />
     </bytecodeTargetLevel>
   </component>
 </project>
