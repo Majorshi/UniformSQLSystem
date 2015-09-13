@@ -8,7 +8,6 @@ import org.dbunit.PropertiesBasedJdbcDatabaseTester;
 import org.dbunit.database.DatabaseConfig;
 import org.dbunit.database.IDatabaseConnection;
 import org.dbunit.dataset.IDataSet;
-import org.dbunit.dataset.ITable;
 import org.dbunit.dataset.ReplacementDataSet;
 import org.dbunit.dataset.xml.FlatXmlDataSetBuilder;
 import org.dbunit.ext.mysql.MySqlDataTypeFactory;
@@ -18,13 +17,15 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.sql.ResultSet;
+import java.util.Arrays;
 
 /**
- * SELECT 语句单元测试.
+ * 表格相关操作单元测试.
  */
-public class SelectTest extends DBTestCase {
-    public final static String DB_NAME = "db_test";   // 测试用的数据库
-    public final static String ORIGINAL_DATA_FILE = "../test_data/subquery_1_db.xml";   // 原始数据
+public class TableOperationsTest extends DBTestCase {
+    public final static String DB_NAME = "db_table_test";   // 测试用的数据库
+    public final static String ORIGINAL_DATA_FILE = "../test_data/createTable_1_original.xml";   // 原始数据
 
     /**
      * 构造函数，用于初始化数据库连接
@@ -32,7 +33,7 @@ public class SelectTest extends DBTestCase {
      * @param name 测试用例名
      * @throws Exception 创建到数据库的连接失败
      */
-    public SelectTest(String name) throws Exception {
+    public TableOperationsTest(String name) throws Exception {
         super(name);
 
         // 数据库连接信息
@@ -49,6 +50,7 @@ public class SelectTest extends DBTestCase {
                     new MySqlDataTypeFactory());
             dbConn.getConfig().setProperty(DatabaseConfig.PROPERTY_METADATA_HANDLER,
                     new MySqlMetadataHandler());
+            dbConn.getConfig().setFeature(DatabaseConfig.FEATURE_CASE_SENSITIVE_TABLE_NAMES, Boolean.TRUE);
         }
     }
 
@@ -73,6 +75,14 @@ public class SelectTest extends DBTestCase {
      * @throws Exception 获取恢复的操作失败
      */
     protected DatabaseOperation getSetUpOperation() throws Exception {
+        // 删除掉原始数据中没有的数据表
+        ResultSet resultSet = getConnection().getConnection().createStatement().executeQuery("SHOW TABLES");
+        while (resultSet.next()) {
+            String realTbName = resultSet.getString(1);
+            if (!Arrays.asList(getDataSet().getTableNames()).contains(realTbName)) {
+                getConnection().getConnection().createStatement().execute("DROP TABLE " + realTbName);
+            }
+        }
         return DatabaseOperation.CLEAN_INSERT;  // 清除数据文件中涉及到的数据表，重新插入数据
     }
 
@@ -86,47 +96,20 @@ public class SelectTest extends DBTestCase {
         return DatabaseOperation.NONE;
     }
 
-    public final static String SUBQUERY_ONE_EXPECTED_DATA_FILE = "../test_data/subquery_1.xml";   // 期待得到的结果数据
-    public final static String SUBQUERY_TWO_EXPECTED_DATA_FILE = "../test_data/subquery_2.xml";   // 期待得到的结果数据
+    public final static String CREATE_TABLE_ONE_EXPECTED_DATA_FILE = "../test_data/createTable_1_expected.xml";   // 期待得到的结果数据
 
-
-    /**
-     * 测试子查询
-     *
-     * @throws Exception 测试子查询出现异常
-     */
     @Test
-    public void testSubquery() throws Exception {
-        /* 测试子查询语句一 */
-        ITable actualSelectTable = getConnection().createQueryTable("RESULT",
-                GenerateXMLFile.SUBQUERY_COMMAND_ONE);
-        IDataSet expectedDataSet = new FlatXmlDataSetBuilder().build(new File(SUBQUERY_ONE_EXPECTED_DATA_FILE));
-        ITable expectedTable = expectedDataSet.getTable("result");
-        Assertion.assertEquals(expectedTable, actualSelectTable);
+    public void testCreateTable() throws Exception {
+        getConnection().getConnection().createStatement().execute(GenerateXMLFile.CREATE_TABLE_COMMAND_ONE);
 
-        /* 测试子查询语句二 */
-        actualSelectTable = getConnection().createQueryTable("RESULT",
-                GenerateXMLFile.SUBQUERY_COMMAND_TWO);
-        expectedDataSet = new FlatXmlDataSetBuilder().build(new File(SUBQUERY_TWO_EXPECTED_DATA_FILE));
-        expectedTable = expectedDataSet.getTable("result");
-        Assertion.assertEquals(expectedTable, actualSelectTable);
-    }
+        // 从远程数据库中获取数据
+        IDataSet databaseDataSet = getConnection().createDataSet();
 
+        // 读取期望的 XML 数据
+        IDataSet expectedDataSet = new FlatXmlDataSetBuilder().build(new File(CREATE_TABLE_ONE_EXPECTED_DATA_FILE));
+        ReplacementDataSet replacementExpectedDataSet = new ReplacementDataSet(expectedDataSet);
+        replacementExpectedDataSet.addReplacementObject("[NULL]", null);
 
-    public final static String JOIN_ONE_EXPECTED_DATA_FILE = "../test_data/join_1.xml";   // 期待得到的结果数据
-
-    /**
-     * 测试 Join
-     *
-     * @throws Exception 测试 JOIN 出现异常
-     */
-    @Test
-    public void testJoin() throws Exception {
-        /* 测试 Join 语句一 */
-        ITable actualSelectTable = getConnection().createQueryTable("RESULT",
-                GenerateXMLFile.JOIN_COMMAND_ONE);
-        IDataSet expectedDataSet = new FlatXmlDataSetBuilder().build(new File(JOIN_ONE_EXPECTED_DATA_FILE));
-        ITable expectedTable = expectedDataSet.getTable("result");
-        Assertion.assertEquals(expectedTable, actualSelectTable);
+        Assertion.assertEquals(databaseDataSet, replacementExpectedDataSet);
     }
 }

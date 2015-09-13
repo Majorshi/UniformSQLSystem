@@ -35,9 +35,9 @@ public class DataExporter {
      */
     public static void databaseExport(String dbName, String outputName, String[] sqlCommands) throws ClassNotFoundException, SQLException, DatabaseUnitException, IOException {
         // 连接数据库
-        Class.forName("com.mysql.jdbc.Driver");
+        Class.forName(CONFIG.DBUNIT_DRIVER_CLASS);
         Connection jdbcConnection = DriverManager.getConnection(
-                "jdbc:mysql://lab2.ihainan.me/" + dbName, "ihainan", "123456");
+                CONFIG.DBUNIT_CONNECTION_URL + dbName, CONFIG.DBUNIT_USERNAME, CONFIG.DBUNIT_PASSWORD);
         IDatabaseConnection connection = new DatabaseConnection(jdbcConnection);
 
         // 导出原始数据
@@ -70,6 +70,7 @@ public class DataExporter {
                     new MySqlDataTypeFactory());
             connection.getConfig().setProperty(DatabaseConfig.PROPERTY_METADATA_HANDLER,
                     new MySqlMetadataHandler());
+            connection.getConfig().setFeature(DatabaseConfig.FEATURE_CASE_SENSITIVE_TABLE_NAMES, Boolean.TRUE);
         }
         IDataSet fullDataSet = connection.createDataSet();
         ReplacementDataSet replacementExpectedDataSet = new ReplacementDataSet(fullDataSet);
@@ -83,15 +84,16 @@ public class DataExporter {
 
     public static void partialExport(String dbName, String[] sqlCommand, String[] newTableName, String outputName) throws SQLException, ClassNotFoundException, DatabaseUnitException, IOException {
         if (sqlCommand.length == 0 || newTableName.length == 0 || sqlCommand.length != newTableName.length) return;
-        Class.forName("com.mysql.jdbc.Driver");
+        Class.forName(CONFIG.DBUNIT_DRIVER_CLASS);
         Connection jdbcConnection = DriverManager.getConnection(
-                "jdbc:mysql://lab2.ihainan.me/" + dbName, "ihainan", "123456");
+                CONFIG.DBUNIT_CONNECTION_URL + dbName, CONFIG.DBUNIT_USERNAME, CONFIG.DBUNIT_PASSWORD);
         IDatabaseConnection connection = new DatabaseConnection(jdbcConnection);
         if (CONFIG.IS_MYSQL) {
             connection.getConfig().setProperty(DatabaseConfig.PROPERTY_DATATYPE_FACTORY,
                     new MySqlDataTypeFactory());
             connection.getConfig().setProperty(DatabaseConfig.PROPERTY_METADATA_HANDLER,
                     new MySqlMetadataHandler());
+            connection.getConfig().setFeature(DatabaseConfig.FEATURE_CASE_SENSITIVE_TABLE_NAMES, Boolean.TRUE);
         }
         databaseExport(connection, "test_data/" + outputName + "_db.xml");
 

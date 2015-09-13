@@ -39,15 +39,49 @@ public class GenerateXMLFile {
         String dbName = "db_test";  // 设置测试用途数据库名
         String fileName = "join_1"; // 需要保存原始数据 / 结果数据的文件名
         try {
-            DataExporter.partialExport(dbName, new String[]{SUBQUERY_COMMAND_ONE}, new String[]{"result"}, fileName);
+            DataExporter.partialExport(dbName, new String[]{JOIN_COMMAND_ONE}, new String[]{"result"}, fileName);
+        } catch (Exception e) {
+            logger.e("创建 XML 文件失败", e);
+        }
+    }
+
+    public final static String IN_COMMAND_ONE = "SELECT id,age,num FROM student WHERE age in (20,21);";
+
+    /**
+     * 创建子查询测试 XML 数据文件
+     */
+    public static void generateINXMLFile() {
+        String dbName = "db_test";  // 设置测试用途数据库名
+        String fileName = "in_1"; // 需要保存原始数据 / 结果数据的文件名
+        try {
+            DataExporter.partialExport(dbName, new String[]{IN_COMMAND_ONE}, new String[]{"result"}, fileName);
+        } catch (Exception e) {
+            logger.e("创建 XML 文件失败", e);
+        }
+    }
+
+    public final static String CREATE_TABLE_COMMAND_ONE = "CREATE TABLE student(id int primary key not NULL, name varchar(30), age int, sex boolean, num varchar(15))";
+
+    /**
+     * 生成创建数据表测试 XML 数据文件
+     */
+    public static void generateCreateTableXMLFile() {
+        String dbName = "db_table_test";  // 设置测试用途数据库名
+        String fileName = "createTable_1"; // 需要保存原始数据 / 结果数据的文件名
+        try {
+            DataExporter.databaseExport(dbName, fileName, new String[]{CREATE_TABLE_COMMAND_ONE});
         } catch (Exception e) {
             logger.e("创建 XML 文件失败", e);
         }
     }
 
     public static void main(String[] args) {
+        /* 数据表操作相关 */
+        generateCreateTableXMLFile();
+
         /* 查询相关 */
-        // generateSubqueryXMLFile();
-        generateJoinXMLFile();
+//        generateSubqueryXMLFile();
+//        generateJoinXMLFile();
+//        generateINXMLFile();
     }
 }
