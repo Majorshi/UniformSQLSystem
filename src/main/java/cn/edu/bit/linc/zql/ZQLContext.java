@@ -39,7 +39,7 @@ public class ZQLContext {
                 .withSocketHandlerFactory(uniformSQLSocketHandlerFactory)
                 .build();
 
-        server.start();
+//        server.start();
     }
 
     public static Packet executeSQL(String commandStr, ZQLSession session) {
@@ -90,7 +90,7 @@ public class ZQLContext {
 
     }
 
-    private static void mySQLTest() {
+    public static void mySQLTest() {
         /* 伪造会话用于测试，实际过程是每与客户端建立连接便创建一个会话 */
         ZQLSession session = new ZQLSession("root", null, "12345");
 
@@ -115,7 +115,7 @@ public class ZQLContext {
         */
 
         // 创建、使用数据库、数据表
-        /*
+
         executeSQL("CREATE DATABASE IF NOT EXISTS db_1", session);  // 创建数据库
         executeSQL("CREATE DATABASE IF NOT EXISTS db_2", session);  // 创建数据库
         executeSQL("CREATE DATABASE IF NOT EXISTS db_3", session);  // 创建数据库
@@ -140,7 +140,7 @@ public class ZQLContext {
         executeSQL("ALTER TABLE tb_2 RENAME TO tb_N", session); // 修改数据表名
         executeSQL("ALTER TABLE tb_N CHANGE COLUMN C2 C2_NEW", session);    // 修改列名
         executeSQL("ALTER TABLE tb_N CHANGE C3 C3_NEW", session);    // 修改列名
-        */
+
 
         // 查看数据库、数据表、数据列、创建表语句
         /*
