@@ -183,6 +183,10 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         return new ASTNodeVisitResult(null, commands, dbIds);
     }
 
+    @Override public ASTNodeVisitResult visitData_definition_statements(uniformSQLParser.Data_definition_statementsContext ctx) {
+        return visitChildrenNodes(ctx.children);
+    }
+
     /**
      * 遍历某个节点的子节点，获取ASTNodeVisitResult
      *
@@ -502,6 +506,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         uniformSQLParser.Show_specificationContext specificationContext = ctx.show_specification();
         ArrayList<InnerSQLCommand> commands = new ArrayList<InnerSQLCommand>();
         ArrayList<Integer> dbIds = new ArrayList<Integer>();
+        commandStack.add("SHOW");
         if (specificationContext.GRANT() != null) {
             /* 查看授权 */
             String userName = specificationContext.principal_name() == null ? "true "
@@ -562,8 +567,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
             /* 查看列 */
             /* 获取子节点数据 */
             String tableName = visit(specificationContext.table_spec()).getValue();
-            String databaseName = specificationContext.database_name() != null
-                    ? visit(specificationContext.database_name()).getValue() : session.getDatabase();
+            String databaseName = specificationContext.table_spec().schema_name() != null
+                    ? visit(specificationContext.table_spec().schema_name()).getValue() : session.getDatabase();
             if (databaseName == null) {
                 session.setErrorMessage("未指定数据库");
                 return null;
@@ -595,7 +600,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
             commands.add(innerDbCommand);
             dbIds.add(dbId);
         }
-
+        if (commandStack.size() > 1) commandStack.remove(commandStack.size() - 1);
         return new ASTNodeVisitResult(null, commands, dbIds);
     }
 
@@ -2655,8 +2660,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
     @Override public ASTNodeVisitResult visitTable_spec(uniformSQLParser.Table_specContext ctx) {
         ArrayList<Integer> dbIds = new ArrayList<Integer>();
         String valueStr = "";
-        tableSpecNodes.add(ctx);
-        commandType.put(ctx,commandStack.get(commandStack.size() - 1));
+//        tableSpecNodes.add(ctx);
+//        commandType.put(ctx,commandStack.get(commandStack.size() - 1));
         if (ctx.schema_name() != null) {
             //databasename
             ASTNodeVisitResult schema_nameResult = visit(ctx.schema_name());
