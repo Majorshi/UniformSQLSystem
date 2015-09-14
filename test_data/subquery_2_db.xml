@@ -1,7 +1,45 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <dataset>
-  <course/>
-  <stu_class/>
-  <stu_course/>
-  <student/>
+  <course c_id="2201" credit="6.0" course="??" c_introduction="??????" week="1" sequence="3"/>
+  <course c_id="2202" credit="3.0" course="????" c_introduction="????????" week="1" sequence="4"/>
+  <course c_id="2203" credit="4.0" course="??" c_introduction="????????" week="2" sequence="3"/>
+  <course c_id="2204" credit="3.5" course="????" c_introduction="?????????" week="2" sequence="1"/>
+  <course c_id="2205" credit="2.0" course="java" c_introduction="???????" week="1" sequence="2"/>
+  <course c_id="2215" credit="3.0" course="C??" c_introduction="?????????" week="3" sequence="3"/>
+  <stu_class cla_id="0811101" id="20150010"/>
+  <stu_class cla_id="0811101" id="20150101"/>
+  <stu_class cla_id="0811101" id="20150302"/>
+  <stu_class cla_id="0811101" id="20150367"/>
+  <stu_class cla_id="0811102" id="20150001"/>
+  <stu_class cla_id="0811102" id="20150002"/>
+  <stu_class cla_id="0811102" id="20150003"/>
+  <stu_class cla_id="0811103" id="20150450"/>
+  <stu_class cla_id="0811103" id="20150786"/>
+  <stu_course c_id="2201" id="20150001" score="89.0"/>
+  <stu_course c_id="2201" id="20150002" score="80.0"/>
+  <stu_course c_id="2201" id="20150003" score="79.0"/>
+  <stu_course c_id="2201" id="20150010" score="81.0"/>
+  <stu_course c_id="2201" id="20150101" score="82.0"/>
+  <stu_course c_id="2201" id="20150302" score="85.0"/>
+  <stu_course c_id="2201" id="20150367" score="59.0"/>
+  <stu_course c_id="2201" id="20150450" score="56.0"/>
+  <stu_course c_id="2201" id="20150786" score="90.0"/>
+  <stu_course c_id="2202" id="20150001" score="81.0"/>
+  <stu_course c_id="2202" id="20150002" score="83.0"/>
+  <stu_course c_id="2202" id="20150003" score="74.0"/>
+  <stu_course c_id="2202" id="20150010" score="82.0"/>
+  <stu_course c_id="2202" id="20150101" score="81.0"/>
+  <stu_course c_id="2202" id="20150302" score="86.0"/>
+  <stu_course c_id="2202" id="20150367" score="52.0"/>
+  <stu_course c_id="2202" id="20150450" score="51.0"/>
+  <stu_course c_id="2202" id="20150786" score="92.0"/>
+  <student id="20150001" name="??" age="20" sex="false" num="18810402345"/>
+  <student id="20150002" name="Tony" age="21" sex="true" num="18810403710"/>
+  <student id="20150003" name="Adam" age="23" sex="false" num="18810409888"/>
+  <student id="20150010" name="??" age="22" sex="true" num="18810409432"/>
+  <student id="20150101" name="??" age="21" sex="true" num="18810456721"/>
+  <student id="20150302" name="Tina" age="20" sex="false" num="07667899000"/>
+  <student id="20150367" name="??" age="22" sex="true" num="01077223311"/>
+  <student id="20150450" name="??" age="21" sex="true" num="18810409837"/>
+  <student id="20150786" name="??" age="21" sex="false" num="18810407836"/>
 </dataset>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<property>
+    <!-- _________________________________ 元数据库相关 _________________________________ -->
+    <!-- 元数据库服务器地址 -->
+    <entry key="metadb.host">lab2.ihainan.me</entry>
+
+    <!-- 元数据库用户名 -->
+    <entry key="metadb.username">ihainan</entry>
+
+    <!-- 元数据库用户密码 -->
+    <entry key="metadb.password">123456</entry>
+
+    <!-- 元数据库的数据库名 -->
+    <entry key="metadb.dbname">meta_db</entry>
+
+
+    <!-- _________________________________ 底层库相关 _________________________________ -->
+    <!-- 是否开启底层库 1 -->
+    <entry key="innerdb.db1">enable</entry>
+
+    <!-- 底层库 1 别名 -->
+    <entry key="innerdb.db1.alias">db_mysql</entry>
+
+    <!-- 底层库 1 类型，可填：MySQL / Hive -->
+    <entry key="innerdb.db1.type">MySQL</entry>
+
+    <!-- 底层库 1 地址 -->
+    <entry key="innerdb.db1.host">lab2.ihainan.me</entry>
+
+    <!-- 底层库 1 用户名 -->
+    <entry key="innerdb.db1.username">ihainan</entry>
+
+    <!-- 底层库 1 用户密码 -->
+    <entry key="innerdb.db1.password">123456</entry>
+
+    <!-- 底层库 2 类型，可填：MySQL / Hive -->
+    <entry key="innerdb.db2">disable</entry>
+
+    <!-- 底层库 2 别名 -->
+    <entry key="innerdb.db2.alias">db_hive</entry>
+
+    <entry key="innerdb.db2.type">Hive</entry>
+
+    <!-- 底层库 2 地址 -->
+    <entry key="innerdb.db2.host">10.4.21.220:10000</entry>
+
+    <!-- 底层库 2 用户名 -->
+    <entry key="innerdb.db2.username">hadoop</entry>
+
+    <!-- 底层库 2 用户密码 -->
+    <entry key="innerdb.db2.password">hadoop</entry>
+
+    <!-- _________________________________ 默认底层库相关 _________________________________ -->
+    <!-- 默认底层库的编号，如果不设置 -->
+    <!-- <entry key="innerdb.dafault.innerdb">1</entry> -->
+</property>

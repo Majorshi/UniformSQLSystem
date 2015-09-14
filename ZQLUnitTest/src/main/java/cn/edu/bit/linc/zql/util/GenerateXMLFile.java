@@ -13,6 +13,7 @@ public class GenerateXMLFile {
      * 创建子查询测试 XML 数据文件
      */
     public static void generateSubqueryXMLFile() {
+        /* 测试一 */
         String dbName = "db_test";  // 设置测试用途数据库名
         String fileName = "subquery_1"; // 需要保存原始数据（subquery_1_db.xml） / 结果数据的文件名 (subquery_1.xml)
         try {
@@ -21,6 +22,7 @@ public class GenerateXMLFile {
             logger.e("创建 XML 文件失败", e);
         }
 
+        /* 测试二 */
         dbName = "db_test";  // 设置测试用途数据库名
         fileName = "subquery_2"; // 需要保存原始数据（subquery_1_db.xml） / 结果数据的文件名 (subquery_1.xml)
         try {
@@ -77,10 +79,10 @@ public class GenerateXMLFile {
 
     public static void main(String[] args) {
         /* 数据表操作相关 */
-        generateCreateTableXMLFile();
+        // generateCreateTableXMLFile();
 
         /* 查询相关 */
-//        generateSubqueryXMLFile();
+        generateSubqueryXMLFile();
 //        generateJoinXMLFile();
 //        generateINXMLFile();
     }

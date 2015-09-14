@@ -98,20 +98,19 @@ public class SelectTest extends DBTestCase {
     @Test
     public void testSubquery() throws Exception {
         /* 测试子查询语句一 */
-        ITable actualSelectTable = getConnection().createQueryTable("RESULT",
+        ITable actualSelectTable = getConnection().createQueryTable("result",
                 GenerateXMLFile.SUBQUERY_COMMAND_ONE);
         IDataSet expectedDataSet = new FlatXmlDataSetBuilder().build(new File(SUBQUERY_ONE_EXPECTED_DATA_FILE));
         ITable expectedTable = expectedDataSet.getTable("result");
         Assertion.assertEquals(expectedTable, actualSelectTable);
 
         /* 测试子查询语句二 */
-        actualSelectTable = getConnection().createQueryTable("RESULT",
+        actualSelectTable = getConnection().createQueryTable("result",
                 GenerateXMLFile.SUBQUERY_COMMAND_TWO);
         expectedDataSet = new FlatXmlDataSetBuilder().build(new File(SUBQUERY_TWO_EXPECTED_DATA_FILE));
         expectedTable = expectedDataSet.getTable("result");
         Assertion.assertEquals(expectedTable, actualSelectTable);
     }
-
 
     public final static String JOIN_ONE_EXPECTED_DATA_FILE = "../test_data/join_1.xml";   // 期待得到的结果数据
 
@@ -123,7 +122,7 @@ public class SelectTest extends DBTestCase {
     @Test
     public void testJoin() throws Exception {
         /* 测试 Join 语句一 */
-        ITable actualSelectTable = getConnection().createQueryTable("RESULT",
+        ITable actualSelectTable = getConnection().createQueryTable("result",
                 GenerateXMLFile.JOIN_COMMAND_ONE);
         IDataSet expectedDataSet = new FlatXmlDataSetBuilder().build(new File(JOIN_ONE_EXPECTED_DATA_FILE));
         ITable expectedTable = expectedDataSet.getTable("result");

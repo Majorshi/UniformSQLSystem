@@ -1,4 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <dataset>
-  <result/>
+  <result id="20150001" max(score)="92.0" sex="false"/>
+  <result id="20150010" max(score)="83.0" sex="true"/>
 </dataset>
