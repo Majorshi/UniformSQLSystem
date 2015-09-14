@@ -15,6 +15,7 @@ import cn.edu.bit.linc.zql.parser.visitor.ZQLVisitor;
 import cn.edu.bit.linc.zql.util.AsciiArtTable;
 import cn.edu.bit.linc.zql.util.Logger;
 import cn.edu.bit.linc.zql.util.LoggerFactory;
+import cn.edu.bit.linc.zql.util.UnitTestUtils;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -149,6 +150,8 @@ public class SQLCommandManager {
             if (isQuery) {
                 try {
                     this.resultSet = statement.getResultSet();
+//                    UnitTestUtils test = new UnitTestUtils();
+//                    test.exportResultToXML(this.resultSet, "testXML.xml");
                 } catch (SQLException e) {
                     ZQLCommandExecutionError zqlCommandExecutionError = new ZQLCommandExecutionError();
                     zqlCommandExecutionError.initCause(e);
