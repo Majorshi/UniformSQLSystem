@@ -1,0 +1,20 @@
+[
+  {
+    "title": "select_query1",
+    "initFile": "select_query1_init.sql",
+    "executeSQL": "select * from student where id = 1;",
+    "useShowSQL": 0,
+    "showSQL": "",
+    "exportFile": "select_query1_result.xml",
+    "expectFile": "select_query1_expect.xml"
+  },
+  {
+    "title": "insert_query1",
+    "initFile": "insert_query1_init.sql",
+    "executeSQL": "insert into student values (20150001,'吴成',23,1,18810578907)",
+    "useShowSQL": 1,
+    "showSQL": "select * from student;",
+    "exportFile": "insert_query1_result.xml",
+    "expectFile": "insert_query1_expect.xml"
+  }
+]
