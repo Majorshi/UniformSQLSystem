@@ -1,6 +1,8 @@
 package cn.edu.bit.linc.zql.util;
 //import org.codehaus.jettison.json.JSONArray;
+import org.custommonkey.xmlunit.Diff;
 import org.json.*;
+import org.xml.sax.SAXException;
 
 import java.io.*;
 import java.sql.Connection;
@@ -120,13 +122,11 @@ public class UnitTestUtils {
     /**
      * This method gets the value of the specified column
      * 通用的读取结果集某一列的值并转化为String表达
-     *
-     * @param ResultSet
-     *            rs 输入的纪录集
-     * @param int
-     *            colNum 第几列
-     * @param int
-     *            type 数据类型
+     * @param rs rs 输入的纪录集
+     * @param colNum colNum 第几列
+     * @param type type 数据类型
+     * @return
+     * @throws SQLException
      */
     private String getValue(final ResultSet rs, int colNum, String type)
             throws SQLException {
@@ -158,7 +158,31 @@ public class UnitTestUtils {
         return true;
     }
 
-    // 比较两个 XML 文件是否一致
+
+    /**
+     * 比较两个路径下的 XML 文件是否一致
+     * @param path 需要比较的XML文件的路径
+     * @param expectedPath 期待的结果路径
+     * @return
+     */
+    public boolean compare(String path,String expectedPath){
+        Reader oldXML=null,newXML=null;
+        try {
+            oldXML = new FileReader(new File(path));
+            newXML = new FileReader(new File(expectedPath));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        Diff diff = null;
+        try {
+            diff = new Diff(oldXML, newXML);
+        } catch (SAXException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return diff.identical();
+    }
 
     // 导入 SQL 脚本
 
