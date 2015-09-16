@@ -6,7 +6,6 @@ import cn.edu.bit.linc.zql.network.packets.type.LengthCodeBinaryType;
 import cn.edu.bit.linc.zql.network.packets.type.LengthCodeStringType;
 import cn.edu.bit.linc.zql.network.packets.type.StringType;
 import cn.edu.bit.linc.zql.network.utils.CHAP;
-import cn.edu.bit.linc.zql.network.utils.Log;
 import cn.edu.bit.linc.zql.util.Logger;
 import cn.edu.bit.linc.zql.util.LoggerFactory;
 import cn.edu.bit.linc.zql.util.StringUtil;
@@ -525,7 +524,7 @@ public class UniformSQLClientSocketHandler implements ClientSocketHandler {
             closeable.close();
         } catch (IOException e) {
             // TODO: do something
-            Log.error("Close stream failed", e);
+            logger.e("Close stream failed", e);
         } finally { /* we tried! */ }
     }
 

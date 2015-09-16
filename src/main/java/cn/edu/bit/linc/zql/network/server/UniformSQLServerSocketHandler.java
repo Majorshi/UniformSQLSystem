@@ -1,16 +1,16 @@
 package cn.edu.bit.linc.zql.network.server;
 
+import cn.edu.bit.linc.zql.ZQLContext;
+import cn.edu.bit.linc.zql.ZQLEnv;
+import cn.edu.bit.linc.zql.connections.ZQLSession;
 import cn.edu.bit.linc.zql.network.packets.*;
 import cn.edu.bit.linc.zql.network.packets.type.IntegerType;
 import cn.edu.bit.linc.zql.network.packets.type.LengthCodeBinaryType;
 import cn.edu.bit.linc.zql.network.packets.type.LengthCodeStringType;
 import cn.edu.bit.linc.zql.network.packets.type.StringType;
-import cn.edu.bit.linc.zql.network.utils.Log;
-import cn.edu.bit.linc.zql.ZQLContext;
 import cn.edu.bit.linc.zql.util.Logger;
 import cn.edu.bit.linc.zql.util.LoggerFactory;
 import org.apache.commons.lang.RandomStringUtils;
-import cn.edu.bit.linc.zql.connections.*;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -26,6 +26,7 @@ public class UniformSQLServerSocketHandler implements ServerSocketHandler {
 
     private final int id;
     private final Socket clientSocket;
+    int packetNumber = 0;
 
     /**
      * 构造函数，初始化 Socket Handler
@@ -38,112 +39,79 @@ public class UniformSQLServerSocketHandler implements ServerSocketHandler {
         this.clientSocket = clientSocket;
     }
 
-
     /**
      * handle Socket 连接
      *
-     * @throws IOException 获取 InputStream 或者 OutputStream 失败
+     * @throws IOException                                    获取 InputStream 或者 OutputStream 失败
+     * @throws PacketExceptions.NecessaryFieldNotSetException 必要字段没有正确设置
      */
-
-    public void handleSocket() throws IOException {
+    public void handleSocket() throws IOException, PacketExceptions.NecessaryFieldNotSetException {
         logger.i(clientSocket.getInetAddress() + " has been connected to server with ID " + id);
 
         InputStream in = clientSocket.getInputStream();
         OutputStream out = clientSocket.getOutputStream();
 
-        // TODO: 发送握手数据包
-        Packet handShakePacket = null;
-        try {
-            handShakePacket = buildHandShakePacket();
-            byte[] data = new byte[handShakePacket.getSize()];
-            handShakePacket.getData(data);
-            out.write(data);
-            logger.i("Send hand shake packet to client " + clientSocket.getInetAddress());
-            logger.i("handShakePacket : " + handShakePacket + "\r\n");
-        } catch (PacketExceptions.NecessaryFieldNotSetException ex) {
-            // TODO: 正确处理异常
-            Log.error("必要字段 var_len 尚未确定", ex);
-            return;
-        }
+        // 发送握手数据包
+        Packet handShakePacket;
+        handShakePacket = buildHandShakePacket();
+        byte[] data = new byte[handShakePacket.getSize()];
+        handShakePacket.getData(data);
+        out.write(data);
+        logger.d("(TID " + Thread.currentThread().getId() + ") 正在握手数据包给客户端 " + clientSocket.getInetAddress());
+        logger.d("(TID " + Thread.currentThread().getId() + ") 握手数据包内容 : " + handShakePacket);
 
-
-        // TODO: 接收客户端验证包
+        // 客户端验证包
         Packet packer = readPacket(in);
         byte[] credentialsPacketBytes = packer.getPacketBody();
         CredentialsPacket credentialsPacket = new CredentialsPacket(credentialsPacketBytes.length);
         credentialsPacket.setData(credentialsPacketBytes);
-        logger.i("Received credentials packet from server " + clientSocket.getInetAddress());
-        logger.i("credentialsPacket : " + credentialsPacket);
+        logger.i("(TID " + Thread.currentThread().getId() + ") 接收来自客户端的验证报文");
+        logger.d("(TID " + Thread.currentThread().getId() + ") 报文内容 : " + credentialsPacket);
         logger.d("Character Set       : " + IntegerType.getIntegerValue(credentialsPacket.getCharacterSet()));
         logger.d("Max Packet Length   : " + IntegerType.getIntegerValue(credentialsPacket.getMaxPacketLength()));
         logger.d("Server Capabilities : " + IntegerType.getIntegerValue(credentialsPacket.getClientCapabilities()));
-        CredentialsPacket.CredentialInformation credentialInformation1 = credentialsPacket.getCredentialInformation();
-        logger.d("User Name           : " + StringType.getString(credentialInformation1.userName));
-        logger.d("Token               : " + LengthCodeStringType.getString(credentialInformation1.token));
-        logger.d("Database Name       : " + StringType.getString(credentialInformation1.dbName));
-        logger.d("");
+        CredentialsPacket.CredentialInformation credentialInformation = credentialsPacket.getCredentialInformation();
+        logger.d("User Name           : " + StringType.getString(credentialInformation.userName));
+        logger.d("Token               : " + LengthCodeStringType.getString(credentialInformation.token));
+        logger.d("Database Name       : " + StringType.getString(credentialInformation.dbName));
 
-        // TODO: 验证
-        // TODO: 发送认证结果包
-        Packet successPacket = null;
-        try {
-            successPacket = buildSuccessPacket("OK");
-            byte[] data = new byte[successPacket.getSize()];
-            successPacket.getData(data);
-            out.write(data);
-            logger.i("Send success packet to client " + clientSocket.getInetAddress());
-            logger.i("successPacket : " + successPacket + "\r\n");
-        } catch (Exception ex) {
-            // TODO: 正确处理异常
-            return;
-        }
+        // TODO: 用户信息认证
+        Packet successPacket;
+        successPacket = buildSuccessPacket("OK");
+        data = new byte[successPacket.getSize()];
+        successPacket.getData(data);
+        out.write(data);
+        logger.i("(TID " + Thread.currentThread().getId() + ") 发送验证成功报文给客户端 " + clientSocket.getInetAddress());
+        logger.d("(TID " + Thread.currentThread().getId() + ") 成功报文内容: " + successPacket);
 
         /* 生成会话 */
         ZQLSession session = new ZQLSession("root", null, "12345");
 
-        // TODO: 接收结果包
+        /* 接收命令包和返回结果包 */
         while (true) {
-
-            // 接收命令包
             packer = readPacket(in);
             byte[] commandBytes = packer.getPacketBody();
             CommandPacket commandPacket = new CommandPacket(commandBytes.length);
             commandPacket.setData(commandBytes);
-            logger.i("Received command packet from server " + clientSocket.getInetAddress());
-            logger.i("commandPacket : " + commandPacket);
+            logger.i("(TID " + Thread.currentThread().getId() + ") 接收来自客户端的命令报文");
+            logger.i("(TID " + Thread.currentThread().getId() + ") 命令报文内容 : " + commandPacket);
 
             // 接收到断开连接请求
-            if(IntegerType.getIntegerValue(commandPacket.getCommandCode()) == CommandPacket.COM_QUIT) {
-                logger.i("COMMAND_QUIT");
+            if (IntegerType.getIntegerValue(commandPacket.getCommandCode()) == CommandPacket.COM_QUIT) {
+                logger.i("(TID " + Thread.currentThread().getId() + ") 接收到退出命令，准备断开连接");
                 break;
             }
 
-            logger.d("Command Code      : " + IntegerType.getIntegerValue(commandPacket.getCommandCode()));
-            logger.d("Command           : " + LengthCodeStringType.getString(commandPacket.getCommand()));
-            //System.out.println();
+            logger.d("(TID " + Thread.currentThread().getId() + ") 命令编号: " + IntegerType.getIntegerValue(commandPacket.getCommandCode()));
+            logger.d("(TID " + Thread.currentThread().getId() + ") 命令内容: " + LengthCodeStringType.getString(commandPacket.getCommand()));
 
-            Packet packet =  ZQLContext.executeSQL(LengthCodeStringType.getString(commandPacket.getCommand()), session);
+            // TODO: 执行命令，若失败则封装错误报文
+            Packet packet = ZQLContext.executeSQL(LengthCodeStringType.getString(commandPacket.getCommand()), session);
 
-            // 发送结果包（测试）
-            try {
-                /*
-                if(ret.contains("\r\n"))
-                    ret = ret.substring(0, ret.indexOf("\r\n"));
-                successPacket = buildSuccessPacket(ret);
-                byte[] data = new byte[successPacket.getSize()];
-                successPacket.getData(data);
-                out.write(data);
-                logger.i("Send success packet to client " + clientSocket.getInetAddress());
-                logger.i("successPacket : " + successPacket + "\r\n");
-                */
-                byte[] data = new byte[packet.getSize()];
-                packet.getData(data);
-                out.write(data);
-            } catch (Exception ex) {
-                // TODO: 正确处理异常
-                return;
-            }
-
+            // 返回结果包
+            data = new byte[packet.getSize()];
+            packet.getData(data);
+            out.write(data);
         }
 
         // 关闭连接
@@ -179,12 +147,8 @@ public class UniformSQLServerSocketHandler implements ServerSocketHandler {
      *
      * @param closeable 需要关闭的流
      */
-    private void closeQuietly(Closeable closeable) {
-        if (closeable != null) try {
-            closeable.close();
-        } catch (IOException e) {
-            // TODO: do something
-        } finally { /* we tried! */ }
+    private void closeQuietly(Closeable closeable) throws IOException {
+        closeable.close();
     }
 
     /**
@@ -195,15 +159,12 @@ public class UniformSQLServerSocketHandler implements ServerSocketHandler {
      */
     private Packet buildHandShakePacket() throws PacketExceptions.NecessaryFieldNotSetException {
         /* 构建握手包 */
-
-        // TODO: 从系统全局变量中读取协议版本和服务器版本
-
-        IntegerType protocolVersion = IntegerType.getIntegerType(2, HandShakePacket.LENGTH_PROTOCOL_VERSION);
-        StringType serverVersion = StringType.getStringType("Version 0.1");
-        IntegerType threadID = IntegerType.getIntegerType(3, HandShakePacket.LENGTH_THREAD_ID);
-        IntegerType serverCapabilities = IntegerType.getIntegerType(4, HandShakePacket.LENGTH_SERVER_CAPABILITIES);
-        IntegerType characterSet = IntegerType.getIntegerType(5, HandShakePacket.LENGTH_CHARACTER_SET);
-        IntegerType serverStatus = IntegerType.getIntegerType(6, HandShakePacket.LENGTH_SERVER_STATUS);
+        IntegerType protocolVersion = IntegerType.getIntegerType(Integer.valueOf(ZQLEnv.get("protocol.version")), HandShakePacket.LENGTH_PROTOCOL_VERSION);
+        StringType serverVersion = StringType.getStringType(ZQLEnv.get("server.version"));
+        IntegerType threadID = IntegerType.getIntegerType((int) Thread.currentThread().getId(), HandShakePacket.LENGTH_THREAD_ID);
+        IntegerType serverCapabilities = IntegerType.getIntegerType(0, HandShakePacket.LENGTH_SERVER_CAPABILITIES);
+        IntegerType characterSet = IntegerType.getIntegerType(0, HandShakePacket.LENGTH_CHARACTER_SET);
+        IntegerType serverStatus = IntegerType.getIntegerType(0, HandShakePacket.LENGTH_SERVER_STATUS);
 
         String randomStr = RandomStringUtils.randomAlphanumeric(HandShakePacket.LENGTH_SCRAMBLE_ONE + HandShakePacket.LENGTH_SCRAMBLE_TWO - 2);    // 随机字符串
         StringType randomStrPartOneST = StringType.getStringType(randomStr.substring(0, 8));
@@ -228,7 +189,7 @@ public class UniformSQLServerSocketHandler implements ServerSocketHandler {
         /* 构建包头 */
         PacketHeader packetHeader = new PacketHeader(4);
         packetHeader.setPacketLength(handShakePacket.getSize());
-        packetHeader.setPacketID((byte) 0);     // TODO: 包序列号
+        packetHeader.setPacketID((byte) packetNumber++);
 
         /* 构建数据包 */
         Packet packet = new Packet(packetHeader.getSize() + body.length);
@@ -236,7 +197,6 @@ public class UniformSQLServerSocketHandler implements ServerSocketHandler {
         packet.setPacketBody(body);
 
         return packet;
-        //return null;
     }
 
     /**
@@ -245,10 +205,9 @@ public class UniformSQLServerSocketHandler implements ServerSocketHandler {
      * @return 构建得到的响应成功数据包
      */
     private Packet buildSuccessPacket(String ret) {
-
         IntegerType packetIdentifier = IntegerType.getIntegerType(0x00, SuccessPacket.LENGTH_PACKET_IDENTIFIER);
         LengthCodeBinaryType changedRows = LengthCodeBinaryType.getLengthCodeBinaryType(new byte[]{1, 2, 3, 4, 5, 6, 7, 8});
-        LengthCodeBinaryType indexID = LengthCodeBinaryType.getLengthCodeBinaryType(new byte[] {4, 3, 2, 1});
+        LengthCodeBinaryType indexID = LengthCodeBinaryType.getLengthCodeBinaryType(new byte[]{4, 3, 2, 1});
         IntegerType serverStatus = IntegerType.getIntegerType(200, SuccessPacket.LENGTH_SERVER_STATUS);
         IntegerType warningNumber = IntegerType.getIntegerType(2, SuccessPacket.LENGTH_WARNING_NUMBER);
         LengthCodeStringType serverMessage = LengthCodeStringType.getLengthCodeString(ret);
@@ -266,7 +225,7 @@ public class UniformSQLServerSocketHandler implements ServerSocketHandler {
         /* 构建包头 */
         PacketHeader packetHeader = new PacketHeader(4);
         packetHeader.setPacketLength(successPacket.getSize());
-        packetHeader.setPacketID((byte) 0);     // TODO: 包序列号
+        packetHeader.setPacketID((byte) packetNumber++);
 
         /* 构建数据包 */
         Packet packet = new Packet(packetHeader.getSize() + body.length);
@@ -274,7 +233,6 @@ public class UniformSQLServerSocketHandler implements ServerSocketHandler {
         packet.setPacketBody(body);
 
         return packet;
-
     }
 
 }

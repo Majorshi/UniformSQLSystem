@@ -21,10 +21,11 @@ import java.util.Map;
  * 数据库底层库管理类
  */
 public class InnerDatabases {
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final static Logger logger = LoggerFactory.getLogger(InnerDatabases.class);
 
-    private ArrayList<InnerDatabase> innerDatabaseArray = new ArrayList<InnerDatabase>();  // 底层库数组
-    public final static SQLCommandBuilder sqlCommandBuilder;
+    private ArrayList<InnerDatabase> innerDatabaseArray = new ArrayList<InnerDatabase>();  // 底层库数组，用于存储底层库的信息
+    public final static SQLCommandBuilder sqlCommandBuilder;                   // SQL 命令构造器，用于构造到底层库的命令
+
     static {
         sqlCommandBuilder = new SQLCommandBuilder();
         sqlCommandBuilder.addAdapter(new MySQLCommandAdapter());
@@ -65,7 +66,7 @@ public class InnerDatabases {
     /**
      * 从系统配置中读取底层库信息
      */
-    private void getInnerDatabasesFromConfigurationFile() {
+    private synchronized void getInnerDatabasesFromConfigurationFile() {
         logger.i("正在从配置文件中读取底层库信息");
         int dbNo = 1;
         Map<String, Integer> aliasHashMap = new HashMap<String, Integer>();
@@ -153,7 +154,7 @@ public class InnerDatabases {
             if (connection != null) try {
                 connection.close();
             } catch (SQLException e) {
-                ZQLCommandExecutionError zqlCommandExecutionError = new ZQLCommandExecutionError("关闭 Connection 失败");
+                ZQLCommandExecutionError zqlCommandExecutionError = new ZQLCommandExecutionError("关闭到底层库 " + dbNo + " 的连接失败");
                 zqlCommandExecutionError.initCause(e);
                 throw zqlCommandExecutionError;
             }
@@ -161,7 +162,7 @@ public class InnerDatabases {
         return "INT";
     }
 
-    public HashMap<String, String> getColumnTypeInTable (int dbNo, String databaseName, String tableName) throws ZQLCommandExecutionError {
+    public HashMap<String, String> getColumnTypeInTable(int dbNo, String databaseName, String tableName) throws ZQLCommandExecutionError {
         /* 连接底层库并执行命令 */
         ConnectionPools connectionPools = ConnectionPools.getInstance();
         Connection connection = null;
@@ -178,7 +179,7 @@ public class InnerDatabases {
             ResultSet resultSet = statement.executeQuery(command.getCommandStr());
             HashMap<String, String> types = new HashMap<String, String>();
             if (resultSet.next()) {
-                 types.put(resultSet.getString("field"), resultSet.getString(adapterAdapter.TYPE_FILED_NAME)) ;
+                types.put(resultSet.getString("field"), resultSet.getString(adapterAdapter.TYPE_FILED_NAME));
             }
             return types;
         } catch (Exception e) {
@@ -198,7 +199,7 @@ public class InnerDatabases {
             if (connection != null) try {
                 connection.close();
             } catch (SQLException e) {
-                ZQLCommandExecutionError zqlCommandExecutionError = new ZQLCommandExecutionError("关闭 Connection 失败");
+                ZQLCommandExecutionError zqlCommandExecutionError = new ZQLCommandExecutionError("关闭到底层库 " + dbNo + " 的连接失败");
                 zqlCommandExecutionError.initCause(e);
                 throw zqlCommandExecutionError;
             }

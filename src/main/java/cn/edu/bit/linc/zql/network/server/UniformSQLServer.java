@@ -1,21 +1,20 @@
 package cn.edu.bit.linc.zql.network.server;
 
+import cn.edu.bit.linc.zql.exceptions.ZQLServerError;
+import cn.edu.bit.linc.zql.util.Logger;
+import cn.edu.bit.linc.zql.util.LoggerFactory;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import cn.edu.bit.linc.zql.network.utils.*;
-import cn.edu.bit.linc.zql.util.Logger;
-import cn.edu.bit.linc.zql.util.LoggerFactory;
-
 /**
  * 服务器端
  */
 public class UniformSQLServer {
     private final int port;
-    private final int timeout;
     private final ServerSocketHandlerFactory socketHandlerFactory;
     private final ExecutorService handlerService = Executors.newCachedThreadPool();
     private static final Logger logger = LoggerFactory.getLogger(UniformSQLServer.class);
@@ -24,12 +23,10 @@ public class UniformSQLServer {
      * 构造函数
      *
      * @param port                 服务器端口
-     * @param timeout              Socket 连接超时
      * @param socketHandlerFactory Socket Handler 工厂
      */
-    private UniformSQLServer(int port, int timeout, ServerSocketHandlerFactory socketHandlerFactory) {
+    private UniformSQLServer(int port, ServerSocketHandlerFactory socketHandlerFactory) {
         this.port = port;
-        this.timeout = timeout;
         this.socketHandlerFactory = socketHandlerFactory;
     }
 
@@ -40,26 +37,25 @@ public class UniformSQLServer {
      */
     public void start() throws IOException {
         ServerSocket serverSocket = new ServerSocket(port);
-        //serverSocket.setSoTimeout(timeout); // TODO: 对 Socket 超时机制的完善
+        logger.i("系统正在监听 " + port + " 端口");
 
-        logger.i("Network: Waiting for connection on port " + port);
-
-        //while (true) {
-            Socket clientSocket = serverSocket.accept();
+        while (true) {
+            final Socket clientSocket = serverSocket.accept();
             final ServerSocketHandler handler = socketHandlerFactory.newSocketHandler(clientSocket);
 
             handlerService.submit(new Runnable() {
-
                 public void run() {
                     try {
+                        logger.i("(TID " + Thread.currentThread().getId() + ") 客户端 " + clientSocket.getInetAddress() + " 已经连接到服务器");
                         handler.handleSocket();
-                    } catch (IOException ex) {
-                        // TODO: 异常处理
-                        Log.error("** Error", ex);
+                    } catch (Exception ex) {
+                        ZQLServerError zqlServerError = new ZQLServerError();
+                        zqlServerError.initCause(ex);
+                        logger.e("(TID " + Thread.currentThread().getId() + ") " + "连接发生异常", zqlServerError);
                     }
                 }
             });
-        //}
+        }
     }
 
     /**
@@ -67,19 +63,7 @@ public class UniformSQLServer {
      */
     public static class Builder {
         private Integer port;
-        private Integer timeout;
         private ServerSocketHandlerFactory socketHandlerFactory;
-
-        /**
-         * 配置超时时长
-         *
-         * @param timeout 超时时长，单位为 ms
-         * @return Builder
-         */
-        public Builder withTimeout(int timeout) {
-            this.timeout = timeout;
-            return this;
-        }
 
         /**
          * 配置服务器开放端口
@@ -109,10 +93,10 @@ public class UniformSQLServer {
          * @return Uniform SQL Server 对象
          */
         public UniformSQLServer build() {
-            if (port == null || timeout == null) {
+            if (port == null) {
                 throw new IllegalStateException("port and timeout do not have defaults");
             }
-            return new UniformSQLServer(port, timeout, socketHandlerFactory);
+            return new UniformSQLServer(port, socketHandlerFactory);
         }
     }
 
@@ -124,13 +108,11 @@ public class UniformSQLServer {
      */
     public static void main(String[] args) throws IOException {
         int port = 9527;
-        int timeout = 100000;
         UniformSQLServerSocketHandlerFactory uniformSQLSocketHandlerFactory = new UniformSQLServerSocketHandlerFactory();
 
         UniformSQLServer server = new UniformSQLServer
                 .Builder()
                 .onPort(port)
-                .withTimeout(timeout)
                 .withSocketHandlerFactory(uniformSQLSocketHandlerFactory)
                 .build();
 

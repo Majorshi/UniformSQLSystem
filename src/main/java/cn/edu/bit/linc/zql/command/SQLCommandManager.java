@@ -1,13 +1,10 @@
 package cn.edu.bit.linc.zql.command;
 
 import cn.edu.bit.linc.zql.connections.ZQLSession;
-import cn.edu.bit.linc.zql.connections.connector.ConnectionPools;
-import cn.edu.bit.linc.zql.databases.Database;
-import cn.edu.bit.linc.zql.databases.InnerDatabases;
-import cn.edu.bit.linc.zql.databases.MetaDatabase;
 import cn.edu.bit.linc.zql.exceptions.ZQLCommandExecutionError;
 import cn.edu.bit.linc.zql.exceptions.ZQLConnectionException;
 import cn.edu.bit.linc.zql.exceptions.ZQLSyntaxErrorException;
+import cn.edu.bit.linc.zql.network.packets.*;
 import cn.edu.bit.linc.zql.parser.uniformSQLLexer;
 import cn.edu.bit.linc.zql.parser.uniformSQLParser;
 import cn.edu.bit.linc.zql.parser.visitor.ASTNodeVisitResult;
@@ -15,7 +12,6 @@ import cn.edu.bit.linc.zql.parser.visitor.ZQLVisitor;
 import cn.edu.bit.linc.zql.util.AsciiArtTable;
 import cn.edu.bit.linc.zql.util.Logger;
 import cn.edu.bit.linc.zql.util.LoggerFactory;
-import cn.edu.bit.linc.zql.util.UnitTestUtils;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -26,8 +22,6 @@ import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-
-import cn.edu.bit.linc.zql.network.packets.*;
 
 /**
  * SQL 命令类，用于执行 SQL 命令并保存执行结果
@@ -41,8 +35,7 @@ public class SQLCommandManager {
     private long runningTime;           // SQL 命令运行时间
     private ResultSetPacket resultSetPacket; //结果集报文
     private ResultSetMetaData rsmd;     // ResultSetMetaData
-    public static ArrayList<Connection> connections = new ArrayList<Connection>();      // 到数据库的连接
-    private static ArrayList<Database> databases = new ArrayList<Database>();
+    private ArrayList<Connection> connections = null;      // 到数据库的连接
 
     /**
      * 构造器
@@ -53,26 +46,7 @@ public class SQLCommandManager {
     public SQLCommandManager(String sqlCommand, ZQLSession session) {
         this.sqlCommand = sqlCommand;
         this.session = session;
-    }
-
-
-    static {
-        ConnectionPools connectionPools = ConnectionPools.getInstance();
-
-        databases.add(MetaDatabase.getInstance());
-        databases.addAll(InnerDatabases.getInstance().getInnerDatabaseArray());
-        for (int i = 0; i < databases.size(); ++i) {
-            try {
-                logger.i("正在建立到数据库 " + databases.get(i) + " 的连接");
-                connections.add(connectionPools.getConnection(i));
-                logger.i("成功连接到数据库 " + databases.get(i));
-            } catch (SQLException e) {
-                ZQLConnectionException zqlConnectionException = new ZQLConnectionException("建立到数据库 " + databases.get(i) + " 的连接失败");
-                zqlConnectionException.initCause(zqlConnectionException);
-                logger.f("建立到数据库 " + databases.get(i) + " 的连接失败", zqlConnectionException);
-                System.exit(0);
-            }
-        }
+        connections = session.getConnections();
     }
 
     /**
@@ -119,7 +93,6 @@ public class SQLCommandManager {
         ArrayList<Integer> dbIds = visitResult.getDbIds();
 
         /* 通过连接池连接底层库 */
-        // TODO: 事务处理
         for (int i = 0; i < commands.size(); ++i) {
             int dbId = dbIds.get(i);
             InnerSQLCommand innerSQLCommand = commands.get(i);
@@ -150,8 +123,6 @@ public class SQLCommandManager {
             if (isQuery) {
                 try {
                     this.resultSet = statement.getResultSet();
-//                    UnitTestUtils test = new UnitTestUtils();
-//                    test.exportResultToXML(this.resultSet, "testXML.xml");
                 } catch (SQLException e) {
                     ZQLCommandExecutionError zqlCommandExecutionError = new ZQLCommandExecutionError();
                     zqlCommandExecutionError.initCause(e);
@@ -223,14 +194,14 @@ public class SQLCommandManager {
 
             /* 域报文 */
             FieldPacket[] fieldPacketArray = new FieldPacket[header.length];
-            for(int i = 0; i < header.length; ++i)
+            for (int i = 0; i < header.length; ++i)
                 fieldPacketArray[i] = FieldPacket.getFieldPacket("def", "DATABASE", "TABLE ALIAS NAME", "TABLE NAME", "FIELD ALIAS NAME", header[i], 0xC0, 0, 10000, 3, 0x0002, 1, 0, "DEFAULT");
             EOFPacket eofPacket1 = EOFPacket.getEOFPacket(2, 0xFFFF);
 
             /* 获取表中数据并存放在二维数据中 */
             int i = 0;
             int numberOfRows = 0;
-            List<String[]> rowDataList = new ArrayList<String[]> ();
+            List<String[]> rowDataList = new ArrayList<String[]>();
             while (resultSet.next()) {
                 assert rsmd != null;
                 String[] rowData = new String[rsmd.getColumnCount()];
@@ -245,7 +216,7 @@ public class SQLCommandManager {
             }
 
             RowDataPacket[] rowDataPacketArray = new RowDataPacket[rowDataList.size()];
-            for(int j = 0; j < rowDataList.size(); ++j) {
+            for (int j = 0; j < rowDataList.size(); ++j) {
                 rowDataPacketArray[j] = RowDataPacket.getRowDataPacket(rowDataList.get(j));
             }
             EOFPacket eofPacket2 = EOFPacket.getEOFPacket(1, 0xFFFF);

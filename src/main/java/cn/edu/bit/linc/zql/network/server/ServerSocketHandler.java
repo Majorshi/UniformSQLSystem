@@ -10,5 +10,5 @@ public interface ServerSocketHandler {
      * 控制 Socket 连接
      * @throws IOException 获取 InputStream 或者 OutputStream 失败
      */
-    public void handleSocket() throws IOException;
+    public void handleSocket() throws Exception;
 }

@@ -31,7 +31,7 @@ public class ZQLEnv {
 
         /* 默认系统配置项 */
         if (CONF_MAP.get("innerdb.dafault.innerdb") == null) {
-            logger.i("默认底层库 innerdb.dafault.innerdb 未设置，使用默认值 1");
+            logger.w("默认底层库 innerdb.dafault.innerdb 未设置，使用默认值 1");
             CONF_MAP.put("innerdb.dafault.innerdb", "1");   // 默认底层库编号
         }
 

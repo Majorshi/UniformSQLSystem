@@ -1,5 +1,6 @@
 package cn.edu.bit.linc.zql.connections.connector;
 
+import cn.edu.bit.linc.zql.ZQLContext;
 import cn.edu.bit.linc.zql.databases.Database;
 import cn.edu.bit.linc.zql.databases.InnerDatabase;
 import cn.edu.bit.linc.zql.databases.InnerDatabases;
@@ -26,9 +27,17 @@ public class ConnectionPools {
      */
     private ConnectionPools() {
         // 获取底层库和元数据库
-        InnerDatabases innerDatabases = InnerDatabases.getInstance();
+        if (ZQLContext.innerDatabases == null) {
+            logger.e("尚未初始化底层库");
+            System.exit(0);
+        }
+        InnerDatabases innerDatabases = ZQLContext.innerDatabases;
         ArrayList<InnerDatabase> innerDatabaseArray = innerDatabases.getInnerDatabaseArray();
-        MetaDatabase metaDatabase = MetaDatabase.getInstance();
+        if (ZQLContext.metaDatabase == null) {
+            logger.e("尚未初始化元数据库");
+            System.exit(0);
+        }
+        MetaDatabase metaDatabase = ZQLContext.metaDatabase;
 
         // 初始化连接池
         int size = innerDatabaseArray.size() + 1;
@@ -74,13 +83,20 @@ public class ConnectionPools {
     }
 
     /**
+     * 实例化单例
+     */
+    private static synchronized void initSync() {
+        connectionPools = new ConnectionPools();
+    }
+
+    /**
      * 获取 ConnectionPools 实例
      *
      * @return ConnectionPools 实例
      */
     public static ConnectionPools getInstance() {
         if (connectionPools == null) {
-            connectionPools = new ConnectionPools();
+            initSync();
         }
         return connectionPools;
     }

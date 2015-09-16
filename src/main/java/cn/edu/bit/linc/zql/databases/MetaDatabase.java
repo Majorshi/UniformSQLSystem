@@ -25,27 +25,6 @@ public class MetaDatabase extends Database {
     public final static String META_DB_ALIAS = "db_meta";       // 元数据库的别名固定为 db_meta
     public final static DBType META_DB_TYPE = DBType.MySQL;     // 元数据的数据库类型固定为 MySQL
     private static MetaDatabase metaDatabase = null;            // 元数据库实例
-    private static Connection connection = null;
-
-    /**
-     * 初始化 connection 对象
-     */
-    public static void initConnection() {
-        if (connection == null) {
-            ConnectionPools connectionPools = ConnectionPools.getInstance();
-            try {
-                logger.i("正在建立到元数据库 " + metaDatabase + " 的连接");
-                connection = connectionPools.getConnection(0);
-                logger.i("成功连接到元数据库 " + metaDatabase);
-            } catch (SQLException e) {
-                ZQLConnectionException connectionException = new ZQLConnectionException("到元数据库 " + metaDatabase + " 的连接失败");
-                connectionException.initCause(e);
-                logger.f("到元数据库 " + metaDatabase.toString() + " 的连接失败", connectionException);
-                System.exit(0);
-            }
-            createMetaDatabase();
-        }
-    }
 
     /**
      * 获取元数据库中，存储元数据的数据库的名字
@@ -85,7 +64,7 @@ public class MetaDatabase extends Database {
     /**
      * 从系统配置中读取元数据库信息
      */
-    private static void readMetaDatabaseFromConfigurationFile() {
+    private static synchronized void readMetaDatabaseFromConfigurationFile() {
         logger.i("正在从配置文件中读取元数据库信息");
         String host = ZQLEnv.get("metadb.host");
         String user = ZQLEnv.get("metadb.username");
@@ -121,14 +100,15 @@ public class MetaDatabase extends Database {
     private final static String CREATE_ROOT_USER = "INSERT IGNORE INTO %s.zql_users VALUES('root', 'root')";
 
     /**
-     * 创建元数据库
+     * 创建元数据库，只能在 ZQLContext.initializeSystem 方法中被调用
      */
-    private static void createMetaDatabase() {
+    public static void createMetaDatabase() {
         logger.i("正在创建和初始化元数据库");
 
         /* 连接元数据库 */
+        Connection connection = null;
         try {
-            initConnection();
+            connection = ConnectionPools.getInstance().getConnection(0);
             Statement statement = connection.createStatement();
             statement.execute(String.format(CREATE_META_DB_SQL, metaDatabase.getMetaDbName()));
             statement.execute(String.format(CREATE_ZQL_INNER_DBS_TB_SQL, metaDatabase.getMetaDbName()));
@@ -146,6 +126,14 @@ public class MetaDatabase extends Database {
         } catch (SQLException e) {
             logger.f("创建元数据库失败，错误原因：", e);
             System.exit(0);
+        } finally {
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    logger.e("关闭到元数据库的连接失败", e);
+                }
+            }
         }
     }
 
@@ -160,8 +148,9 @@ public class MetaDatabase extends Database {
      */
     public int getInnerDatabaseId(String dbName) throws MetaDatabaseOperationsException {
         /* 连接元数据库并执行命令 */
+        Connection connection = null;
         try {
-            initConnection();
+            connection = ConnectionPools.getInstance().getConnection(0);
             Statement statement = connection.createStatement();
             String sqlCommand = String.format(SELECT_DB_FORM_ZQL_DBS_SQL, metaDatabase.getMetaDbName(), dbName);
             logger.d("从元数据库中查询某数据库所在的底层库：" + sqlCommand);
@@ -173,6 +162,14 @@ public class MetaDatabase extends Database {
             MetaDatabaseOperationsException metaDatabaseOperationsException = new MetaDatabaseOperationsException("从元数据库中查询数据库" + dbName + " 所在的底层库失败");
             metaDatabaseOperationsException.initCause(e);
             throw metaDatabaseOperationsException;
+        } finally {
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    logger.e("关闭到元数据库的连接失败", e);
+                }
+            }
         }
         return -1;   // 默认使用第 1 个底层库
     }
@@ -191,8 +188,9 @@ public class MetaDatabase extends Database {
      */
     public Map<String, String> getPrivilegesOfASpecifiedUserAndTable(String databaseName, String tableName, String user) throws MetaDatabaseOperationsException {
         /* 连接元数据库并执行命令 */
+        Connection connection = null;
         try {
-            initConnection();
+            connection = ConnectionPools.getInstance().getConnection(0);
             Statement statement = connection.createStatement();
             String sqlCommand = String.format(SELECT_PRIVILEGES_SQL, metaDatabase.getMetaDbName(), databaseName,
                     tableName, user);
@@ -211,6 +209,14 @@ public class MetaDatabase extends Database {
             MetaDatabaseOperationsException metaDatabaseOperationsException = new MetaDatabaseOperationsException("从元数据库中获取用户 " + user + " 对于数据表" + databaseName + "." + tableName + " 的权限失败");
             metaDatabaseOperationsException.initCause(e);
             throw metaDatabaseOperationsException;
+        } finally {
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    logger.e("关闭到元数据库的连接失败", e);
+                }
+            }
         }
 
         return null;
