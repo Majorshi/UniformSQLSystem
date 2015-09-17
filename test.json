@@ -1,8 +1,9 @@
 [
   {
     "title": "select_query1",
-    "initFile": "select_query1_init.sql",
-    "executeSQL": "select * from student where id = 1;",
+    "initFile": "test.sql",
+    "useDatabase": "testSQLtest",
+    "executeSQL": "select * from student where sex = 1;",
     "useShowSQL": 0,
     "showSQL": "",
     "exportFile": "select_query1_result.xml",
@@ -10,11 +11,22 @@
   },
   {
     "title": "insert_query1",
-    "initFile": "insert_query1_init.sql",
+    "initFile": "test.sql",
+    "useDatabase": "testSQLtest",
     "executeSQL": "insert into student values (20150001,'吴成',23,1,18810578907)",
     "useShowSQL": 1,
     "showSQL": "select * from student;",
     "exportFile": "insert_query1_result.xml",
     "expectFile": "insert_query1_expect.xml"
+  },
+  {
+    "title": "delete_query1",
+    "initFile": "test.sql",
+    "useDatabase": "testSQLtest",
+    "executeSQL": "delete from student where id = 20150001",
+    "useShowSQL": 1,
+    "showSQL": "select * from student;",
+    "exportFile": "delete_query1_result.xml",
+    "expectFile": "delete_query1_expect.xml"
   }
 ]

@@ -216,6 +216,9 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
                 }
             } else {
                 ASTNodeVisitResult whateverResult = visit(childrenNodes.get(i));
+                if (whateverResult == null) {
+                    System.out.println(childrenNodes.get(i).getClass() + " return NULL.");
+                }
                 if (whateverResult.getValue() != null) {
                     valueStr += whateverResult.getValue();
                 }
@@ -698,7 +701,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
 
         // TODO: 数据库已经被删除
         if (dbId == -1) {
-
+            return new ASTNodeVisitResult(null, commands, dbIds);
         }
 
         /* 底层库命令 */
@@ -750,6 +753,17 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         return new ASTNodeVisitResult(null, commands, dbIds);
     }
 
+
+    /**
+     * Create_table_statement
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override public ASTNodeVisitResult visitCreate_table_statement(uniformSQLParser.Create_table_statementContext ctx) {
+        return visitChildrenNodes(ctx.children);
+    }
+
     /**
      * 创建表格 STATEMENT
      *
@@ -787,20 +801,25 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         for (ParseTree tree : ctx.create_definition()) {
             String columnName = visit(tree.getChild(0)).getValue();
             ASTNodeVisitResult visitColumnDefinitionNodeResult = visit(tree.getChild(1));
-            int index = visitColumnDefinitionNodeResult.getValue().indexOf(" ");
-            String columnCommend = (index != -1 ? "COMMENT "
-                    + visitColumnDefinitionNodeResult.getValue().substring(index + 1, visitColumnDefinitionNodeResult.getValue().length())
-                    : "");
-            String columnType = visitColumnDefinitionNodeResult.getValue().split(" ")[0];
-            int leftBracketsIndex = columnType.indexOf('(');
-            int rightBracketsIndex = columnType.indexOf(')');
+//            int index = visitColumnDefinitionNodeResult.getValue().indexOf(" ");
+//            String columnCommend = (index != -1 ? "COMMENT "
+//                    + visitColumnDefinitionNodeResult.getValue().substring(index + 1, visitColumnDefinitionNodeResult.getValue().length())
+//                    : "");
+            String columnCommend = "";
+            String allColumn = visitColumnDefinitionNodeResult.getValue();
+            while (allColumn.indexOf(" ") == 0) allColumn = allColumn.substring(1);   //去掉开头的空格
+            String columnType = visitColumnDefinitionNodeResult.getValue();
+            while (columnType.indexOf(" ") == 0) columnType = columnType.substring(1);   //去掉开头的空格
+//            columnType = columnType.split(" ")[0];
+            int leftBracketsIndex = allColumn.indexOf('(');
+            int rightBracketsIndex = allColumn.indexOf(')');
             // 括号内容
             String bracketContent = "";
             if (leftBracketsIndex != -1) {
-                bracketContent = columnType.substring(leftBracketsIndex, rightBracketsIndex + 1);
-                columnType = columnType.substring(0, leftBracketsIndex);
+                bracketContent = allColumn.substring(leftBracketsIndex, rightBracketsIndex + 1);
+                columnType = allColumn.substring(0, leftBracketsIndex);
             }
-
+            while (columnType.lastIndexOf(" ") == columnType.length() - 1) columnType = columnType.substring(0,columnType.length() - 1);   //去掉开头的空格
             CommandAdapter commandAdapter = CommandAdapter.getAdapterInstance(dbType);
             if (!commandAdapter.TYPE_MAP.containsKey(columnType.toUpperCase())) {
                 session.setErrorMessage("找不到类型 " + columnType);
@@ -1168,6 +1187,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
             session.setDatabase("获取数据库所在底层库失败，错误原因：" + e.getMessage());
             return null;
         }
+        if (dbId == -1) dbId = 1;
         Database.DBType dbType = innerDatabasesArrayList.get(dbId - 1).getDbType();
 
         // SELECT ITEMS
@@ -2555,13 +2575,14 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         }
         String database = session.getDatabase();
         /* 确定数据库所在底层库以及底层库类型 */
-        int dbId;
+        int dbId = -1;
         try {
             dbId = metaDatabase.getInnerDatabaseId(database);
         } catch (MetaDatabaseOperationsException e) {
             session.setDatabase("获取数据库所在底层库失败，错误原因：" + e.getMessage());
             return null;
         }
+        if (dbId == -1) dbId = 1;
         Database.DBType dbType = getInnerDatabaseByDBID(dbId).getDbType();
 
         String insert_headerStr = "";
@@ -2665,7 +2686,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         if (ctx.schema_name() != null) {
             //databasename
             ASTNodeVisitResult schema_nameResult = visit(ctx.schema_name());
-            String database = "";
+            String database = session.getDatabase();
             if (schema_nameResult.getValue() != null) {
                 valueStr += schema_nameResult.getValue();
                 database = schema_nameResult.getValue();
