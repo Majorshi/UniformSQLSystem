@@ -16,7 +16,7 @@ import java.io.*;
  * Reference: https://github.com/stdunbar/jisql
  */
 public class Shell {
-    private String user, password, inputQuery, fileName, database;
+    public String user, password, inputQuery, fileName, database;
     private final String commandTerminator = ";";
     private final static Logger logger = LoggerFactory.getLogger(Shell.class);
 
@@ -112,7 +112,7 @@ public class Shell {
      *
      * @param args 程序参数
      */
-    private void parseArgs(String[] args) {
+    public void parseArgs(String[] args) {
         /* 构建解析器 */
         OptionParser parser = new OptionParser();
         parser.posixlyCorrect(false);

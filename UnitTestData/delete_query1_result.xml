@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="GB2312"?>
+<ResultSet>
+	<row id="1">
+		<col name="id">20150002</col>
+		<col name="name">Tony</col>
+		<col name="age">21</col>
+		<col name="sex">1</col>
+		<col name="num">18810403710</col>
+	</row>
+	<row id="2">
+		<col name="id">20150003</col>
+		<col name="name">Adam</col>
+		<col name="age">23</col>
+		<col name="sex">0</col>
+		<col name="num">18810409888</col>
+	</row>
+	<row id="3">
+		<col name="id">20150010</col>
+		<col name="name">??</col>
+		<col name="age">22</col>
+		<col name="sex">1</col>
+		<col name="num">18810409432</col>
+	</row>
+	<row id="4">
+		<col name="id">20150101</col>
+		<col name="name">??</col>
+		<col name="age">21</col>
+		<col name="sex">1</col>
+		<col name="num">18810456721</col>
+	</row>
+	<row id="5">
+		<col name="id">20150302</col>
+		<col name="name">Tina</col>
+		<col name="age">20</col>
+		<col name="sex">0</col>
+		<col name="num">07667899000</col>
+	</row>
+	<row id="6">
+		<col name="id">20150367</col>
+		<col name="name">??</col>
+		<col name="age">22</col>
+		<col name="sex">1</col>
+		<col name="num">01077223311</col>
+	</row>
+	<row id="7">
+		<col name="id">20150450</col>
+		<col name="name">??</col>
+		<col name="age">21</col>
+		<col name="sex">1</col>
+		<col name="num">18810409837</col>
+	</row>
+	<row id="8">
+		<col name="id">20150786</col>
+		<col name="name">??</col>
+		<col name="age">21</col>
+		<col name="sex">0</col>
+		<col name="num">18810407836</col>
+	</row>
+</ResultSet><?xml version="1.0" encoding="GB2312"?>
+<ResultSet>
+	<row id="1">
+		<col name="id">20150002</col>
+		<col name="name">Tony</col>
+		<col name="age">21</col>
+		<col name="sex">1</col>
+		<col name="num">18810403710</col>
+	</row>
+	<row id="2">
+		<col name="id">20150003</col>
+		<col name="name">Adam</col>
+		<col name="age">23</col>
+		<col name="sex">0</col>
+		<col name="num">18810409888</col>
+	</row>
+	<row id="3">
+		<col name="id">20150010</col>
+		<col name="name">??</col>
+		<col name="age">22</col>
+		<col name="sex">1</col>
+		<col name="num">18810409432</col>
+	</row>
+	<row id="4">
+		<col name="id">20150101</col>
+		<col name="name">??</col>
+		<col name="age">21</col>
+		<col name="sex">1</col>
+		<col name="num">18810456721</col>
+	</row>
+	<row id="5">
+		<col name="id">20150302</col>
+		<col name="name">Tina</col>
+		<col name="age">20</col>
+		<col name="sex">0</col>
+		<col name="num">07667899000</col>
+	</row>
+	<row id="6">
+		<col name="id">20150367</col>
+		<col name="name">??</col>
+		<col name="age">22</col>
+		<col name="sex">1</col>
+		<col name="num">01077223311</col>
+	</row>
+	<row id="7">
+		<col name="id">20150450</col>
+		<col name="name">??</col>
+		<col name="age">21</col>
+		<col name="sex">1</col>
+		<col name="num">18810409837</col>
+	</row>
+	<row id="8">
+		<col name="id">20150786</col>
+		<col name="name">??</col>
+		<col name="age">21</col>
+		<col name="sex">0</col>
+		<col name="num">18810407836</col>
+	</row>
+</ResultSet>

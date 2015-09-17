@@ -17,48 +17,12 @@ import java.sql.Statement;
  */
 public class UnitTestUtils {
 
-    private final static String testFileUrl = "test.json";
-    private final static String dataDirectory = "./UnitTestData/";
+//
+//    public static void main (String[] argv) throws JSONException {
+//        UnitTestUtils test = new UnitTestUtils();
+//        test.startTest();
+//    }
 
-    public static void main (String[] argv) throws JSONException {
-        UnitTestUtils test = new UnitTestUtils();
-        test.startTest();
-    }
-
-    // 读入测试流程JSON
-    public void startTest () throws JSONException {
-        String json = ReadFile(testFileUrl);
-        org.json.JSONArray arr = new JSONArray(json);
-        for (int i = 0; i < arr.length(); i++) {
-            JSONObject obj = arr.getJSONObject(i);
-            //测试用例标题
-            String title = obj.getString("title") != null ? obj.getString("title"):"";
-            //初始化用sql文件名称
-            String initFile = obj.getString("initFile") != null ? obj.getString("initFile"):"";
-            //测试用SQL语句（非文件）
-            String excuteSQL = obj.getString("excuteSQL") != null ? obj.getString("excuteSQL"):"";
-            //需要使用showSQL来得到对比用的结果集（针对insert、delete等没有结果集的语句使用）
-            int useShowSQL = obj.getInt("useShowSQL");
-            //showSQL
-            String showSQL = obj.getString("showSQL") != null ? obj.getString("showSQL"):"";
-            //结果集输出的文件名
-            String exportFile = obj.getString("exportFile") != null ? obj.getString("exportFile"):"";
-            //期望结果集文件名
-            String expectFile = obj.getString("expectFile") != null ? obj.getString("expectFile"):"";
-
-            //TODO: 根据initFile初始化数据库
-
-            //TODO: 执行excuteSQL
-            ResultSet rs = null;
-            if (useShowSQL != 0) {
-                //TODO: 执行showSQL
-//                rs = ...;
-            }
-//            exportResultToXML(rs,expectFile);
-
-            //TODO: 对比expectFile和exportFile
-        }
-    }
     public String ReadFile(String path){
         File file = new File(path);
         BufferedReader reader = null;
@@ -147,7 +111,7 @@ public class UnitTestUtils {
             UnitTestUtils obj = new UnitTestUtils();
             String res = obj.generateXML(rs);
 
-            FileOutputStream fswriter = new FileOutputStream(dataDirectory + fileName, true);
+            FileOutputStream fswriter = new FileOutputStream(fileName, true);
             fswriter.write(res.getBytes());
 
             fswriter.close();
