@@ -53,8 +53,67 @@ public class SQLCommandManager {
         return this.resultSet;
     }
 
+    public boolean excuteSQLWithoutParser (ArrayList<InnerSQLCommand> commands, ArrayList<Integer> dbIds) {
+        /* 记录时间 */
+        java.util.Date startTime = new java.util.Date();
+    /* 通过连接池连接底层库 */
+        for (int i = 0; i < commands.size(); ++i) {
+            int dbId = dbIds.get(i);
+            InnerSQLCommand innerSQLCommand = commands.get(i);
+            Connection connection = connections.get(dbId);
+            Statement statement;
+            try {
+                statement = connection.createStatement();
+            } catch (SQLException e) {
+                ZQLConnectionException zqlConnectionException = new ZQLConnectionException("创建数据库 " + dbId + " 的 Statement 对象失败，失败原因：");
+                zqlConnectionException.initCause(e);
+                logger.e("创建数据库 " + dbId + " 的 Statement 对象失败，失败原因：", zqlConnectionException);
+                return false;
+            }
+
+            /* 交付数据库（底层库 / 元数据库）执行 SQL 命令 */
+            boolean isQuery;
+            try {
+                logger.d("在数据库 " + dbId + " 中执行指令 " + innerSQLCommand.getCommandStr());
+                String a = innerSQLCommand.getCommandStr();
+                isQuery = statement.execute(innerSQLCommand.getCommandStr());
+            } catch (SQLException e) {
+                ZQLCommandExecutionError zqlCommandExecutionError = new ZQLCommandExecutionError(e.getMessage());
+                logger.e("在数据库 " + dbId + " 执行 SQL 命令失败：" + innerSQLCommand.getCommandStr() + "，错误原因：", zqlCommandExecutionError);
+                return false;
+            }
+
+            /* 获取结果 */
+            if (isQuery) {
+                try {
+                    this.resultSet = statement.getResultSet();
+                } catch (SQLException e) {
+                    ZQLCommandExecutionError zqlCommandExecutionError = new ZQLCommandExecutionError();
+                    zqlCommandExecutionError.initCause(e);
+                    logger.e("从底层库 " + dbId + " 中获取 Result Set 失败：" + sqlCommand, zqlCommandExecutionError);
+                    return false;
+                }
+            } else {
+                try {
+                    this.updateCount += statement.getUpdateCount();
+                } catch (SQLException e) {
+                    ZQLCommandExecutionError zqlCommandExecutionError = new ZQLCommandExecutionError();
+                    zqlCommandExecutionError.initCause(e);
+                    logger.e("从底层库 " + dbId + " 中获取 Update Row 失败：" + sqlCommand, zqlCommandExecutionError);
+                    return false;
+                }
+            }
+        }
+
+        /* 记录时间 */
+        java.util.Date endTime = new java.util.Date();
+        this.runningTime = endTime.getTime() - startTime.getTime();
+        return true;
+    }
+
+
     /**
-     * 执行 SQL 命令
+     *  通过语法解析器执行 SQL 命令
      */
     public boolean execute() {
         // TODO: 抛出异常给外部处理

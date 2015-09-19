@@ -111,7 +111,7 @@ public class UnitTestUtils {
             UnitTestUtils obj = new UnitTestUtils();
             String res = obj.generateXML(rs);
 
-            FileOutputStream fswriter = new FileOutputStream(fileName, true);
+            FileOutputStream fswriter = new FileOutputStream(fileName, false);
             fswriter.write(res.getBytes());
 
             fswriter.close();
