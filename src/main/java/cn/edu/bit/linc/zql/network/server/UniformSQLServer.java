@@ -37,7 +37,7 @@ public class UniformSQLServer {
      */
     public void start() throws IOException {
         ServerSocket serverSocket = new ServerSocket(port);
-        logger.i("系统正在监听 " + port + " 端口");
+        logger.i("系统正在监听 " + port + " 端口...");
 
         while (true) {
             final Socket clientSocket = serverSocket.accept();

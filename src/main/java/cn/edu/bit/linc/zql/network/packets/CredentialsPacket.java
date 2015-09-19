@@ -3,7 +3,7 @@ package cn.edu.bit.linc.zql.network.packets;
 import cn.edu.bit.linc.zql.network.packets.type.IntegerType;
 import cn.edu.bit.linc.zql.network.packets.type.LengthCodeStringType;
 import cn.edu.bit.linc.zql.network.packets.type.StringType;
-import cn.edu.bit.linc.zql.network.utils.CHAP;
+import cn.edu.bit.linc.zql.util.CHAP;
 
 /**
  * 客户端认证报�?

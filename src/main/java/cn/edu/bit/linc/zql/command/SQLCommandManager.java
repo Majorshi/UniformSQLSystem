@@ -1,7 +1,6 @@
 package cn.edu.bit.linc.zql.command;
 
 import cn.edu.bit.linc.zql.connections.ZQLSession;
-import cn.edu.bit.linc.zql.connections.connector.ConnectionPools;
 import cn.edu.bit.linc.zql.exceptions.ZQLCommandExecutionError;
 import cn.edu.bit.linc.zql.exceptions.ZQLConnectionException;
 import cn.edu.bit.linc.zql.exceptions.ZQLSyntaxErrorException;
@@ -23,8 +22,6 @@ import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import cn.edu.bit.linc.zql.network.packets.*;
-import javax.xml.transform.Result;
 
 /**
  * SQL 命令类，用于执行 SQL 命令并保存执行结果

@@ -2,6 +2,8 @@ package cn.edu.bit.linc.zql;
 
 import cn.edu.bit.linc.zql.connections.connector.ConnectionPools;
 import cn.edu.bit.linc.zql.databases.InnerDatabases;
+import cn.edu.bit.linc.zql.exceptions.MetaDatabaseOperationsException;
+import cn.edu.bit.linc.zql.exceptions.ZQLServerError;
 import cn.edu.bit.linc.zql.network.packets.*;
 import cn.edu.bit.linc.zql.network.server.UniformSQLServer;
 import cn.edu.bit.linc.zql.network.server.UniformSQLServerSocketHandlerFactory;
@@ -15,6 +17,10 @@ import cn.edu.bit.linc.zql.util.StringUtil;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import static cn.edu.bit.linc.zql.util.CHAP.calcToken;
 
 /**
  * 统一 SQL 系统入口，用于初始化系统底层的所有模块
@@ -36,23 +42,23 @@ public class ZQLContext {
         if (!initializedSystem) {
             initializedSystem = true;
 
-            logger.i("正在初始化系统模块");
+            logger.i("正在初始化系统模块...");
             ZQLEnv.init();
 
-            logger.i("正在初始化元数据库");
+            logger.i("正在读取元数据库信息...");
             metaDatabase = MetaDatabase.getInstance();
 
-            logger.i("正在初始化底层库");
+            logger.i("正在读取底层库信息...");
             innerDatabases = InnerDatabases.getInstance();
 
-            logger.i("正在初始化到底层库的连接池");
+            logger.i("正在初始化到底层库的连接池...");
             connectionPools = ConnectionPools.getInstance();
 
-            logger.i("正在创建元数据库");
+            logger.i("正在创建元数据库...");
             metaDatabase.createMetaDatabase();
 
             if (ZQLEnv.get("server.enable").equals("true")) {
-                logger.i("正在启动服务接口");
+                logger.i("正在启动服务接口...");
                 UniformSQLServerSocketHandlerFactory uniformSQLSocketHandlerFactory = new UniformSQLServerSocketHandlerFactory();
                 server = new UniformSQLServer
                         .Builder()
@@ -63,51 +69,29 @@ public class ZQLContext {
             }
             logger.i("系统模块初始化完毕\n");
         }
+
     }
 
-    public static Packet executeSQL(String commandStr, ZQLSession session) {
-        BasePacket basePacket = null;
+    /**
+     * 执行一条 SQL 语句并输出结果，本方法仅用于测试用途！
+     *
+     * @param commandStr 需要执行的 SQL 语句
+     * @param session    当前会话
+     */
+    public static void executeSQL(String commandStr, ZQLSession session) {
         SQLCommandManager sqlCommandManager = new SQLCommandManager(commandStr, session);
         if (sqlCommandManager.execute()) {
             try {
                 System.out.println("执行 SQL 命令 `" + commandStr + "` 成功");
                 System.out.println(sqlCommandManager.getOutput());
-
-                if (sqlCommandManager.getReturnType()) {
-                    String ret = sqlCommandManager.getReturnString();
-                    basePacket = SuccessPacket.getSuccessPacket(new byte[]{1, 2, 3, 4}, new byte[]{3, 2, 1}, 200, 0, ret);
-                } else {
-                    basePacket = sqlCommandManager.getReturnPacket();
-                }
-
             } catch (SQLException e) {
                 logger.e("打印执行结果失败", e);
             }
         } else {
             System.out.println("执行 SQL 命令 `" + commandStr + "` 失败");
-            int errorCode = 0;
-            int serverStatus = 500;
-            String errorMessage = "执行 SQL 命令 `" + commandStr + "` 失败";
-            basePacket = ErrorPacket.getErrorPacket(errorCode, serverStatus, errorMessage);
-            System.out.println(basePacket);
         }
 
         System.out.println();
-
-        byte[] body = new byte[basePacket.getSize()];
-        basePacket.getData(body);
-
-        /* 构建包头 */
-        PacketHeader packetHeader = new PacketHeader(4);
-        packetHeader.setPacketLength(basePacket.getSize());
-        packetHeader.setPacketID((byte) 0);
-
-        /* 构建数据包 */
-        Packet packet = new Packet(packetHeader.getSize() + body.length);
-        packet.setPacketHeader(packetHeader);
-        packet.setPacketBody(body);
-
-        return packet;
     }
 
     public static void mySQLTest() {
@@ -187,6 +171,8 @@ public class ZQLContext {
         executeSQL("SERVER ALIAS db_mysql CREATE DATABASE IF NOT EXISTS db_2", session);  // 指定底层库运行
         executeSQL("SHOW DATABASES", session);          // 显示数据库
         executeSQL("SHOW TABLES", session);             // 显示数据表
+
+        // 关闭会话！！！！
         session.closeSession();
     }
 
@@ -211,7 +197,6 @@ public class ZQLContext {
                 " C5 FLOAT, C7 DOUBLE, C8 DECIMAL, C10 TIMESTAMP, c11 date, C12 Boolean, " +
                 "C13 BINARY) COMMENT 'Table 3 Comment'", session);        // 创建数据表三 / 不带数据库名
 
-
         // 删除数据库、数据表
         executeSQL("USE db_1", session);        // 使用数据库一
         executeSQL("DROP DATABASE IF EXISTS db_2", session);    // 删除数据库2
@@ -223,7 +208,6 @@ public class ZQLContext {
         executeSQL("ALTER TABLE tb_N CHANGE C3 C3_NEW", session);    // 修改列名
         executeSQL("ALTER TABLE tb_N CHANGE COLUMN C2 C2_NEW", session);    // 修改列名
 
-
         // 查看数据库、数据表、数据列
         executeSQL("SHOW DATABASES", session);  // 查看数据库
         executeSQL("SHOW SCHEMAS LIKE 'db\\_%'", session);     // 带条件查看数据库
@@ -234,8 +218,9 @@ public class ZQLContext {
         executeSQL("USE db_1", session);        // 使用数据库一
         executeSQL("SHOW CREATE TABLE db1.tb_1", session);
         executeSQL("SHOW CREATE TABLE tb_n", session);
-
         executeSQL("SERVER ALIAS db_hive CREATE DATABASE IF NOT EXISTS db_2", session);  // 指定底层库运行
+
+        // 关闭会话！！！！
         session.closeSession();
     }
 
@@ -244,8 +229,11 @@ public class ZQLContext {
      *
      * @param args 程序参数
      */
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, MetaDatabaseOperationsException {
         initializeSystem();
-        // mySQLTest();
+        String password = "root";
+        String scramble = "12345678901234567890";
+        String token = calcToken(password, scramble);
+        System.out.println(ZQLContext.metaDatabase.checkPassword("root", scramble, token));
     }
 }

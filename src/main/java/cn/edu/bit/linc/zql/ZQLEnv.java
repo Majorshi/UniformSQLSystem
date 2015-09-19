@@ -22,7 +22,7 @@ public class ZQLEnv {
     static {
         /* 读取配置文件 */
         try {
-            logger.i("正在读取配置文件 " + new File(CONFIG_FILE_PATH).getAbsolutePath());
+            logger.i("正在读取配置文件 " + new File(CONFIG_FILE_PATH).getAbsolutePath() + " ...");
             readConFile(CONFIG_FILE_PATH);
         } catch (ConfigurationException e) {
             logger.f("找不到配置文件 " + new File(CONFIG_FILE_PATH).getAbsolutePath(), e);

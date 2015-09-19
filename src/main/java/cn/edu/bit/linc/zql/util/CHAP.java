@@ -1,4 +1,4 @@
-package cn.edu.bit.linc.zql.network.utils;
+package cn.edu.bit.linc.zql.util;
 
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
@@ -83,7 +83,7 @@ public class CHAP {
      * @param password 需要加密的字符串
      * @return 加密后的字符串
      */
-    private static String SHA1(String password) {
+    public static String SHA1(String password) {
         String sha1 = "";
         try {
             MessageDigest crypt = MessageDigest.getInstance("SHA-1");

@@ -4,6 +4,7 @@ import cn.edu.bit.linc.zql.ZQLEnv;
 import cn.edu.bit.linc.zql.connections.connector.ConnectionPools;
 import cn.edu.bit.linc.zql.exceptions.MetaDatabaseOperationsException;
 import cn.edu.bit.linc.zql.exceptions.ZQLConnectionException;
+import cn.edu.bit.linc.zql.util.CHAP;
 import cn.edu.bit.linc.zql.util.Logger;
 import cn.edu.bit.linc.zql.util.LoggerFactory;
 
@@ -13,6 +14,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
+
+import static cn.edu.bit.linc.zql.util.CHAP.*;
 
 /**
  * 元数据库类，存储元数据相关的信息与操作
@@ -97,7 +100,7 @@ public class MetaDatabase extends Database {
             "PRIMARY KEY(User, Db, Tb), FOREIGN KEY(User) " +
             "REFERENCES %s.zql_users(User) ON UPDATE CASCADE ON DELETE CASCADE, FOREIGN KEY(Db, Tb) " +
             "REFERENCES %s.zql_tables(Db, Tb) ON UPDATE CASCADE ON DELETE CASCADE) ENGINE=InnoDB";
-    private final static String CREATE_ROOT_USER = "INSERT IGNORE INTO %s.zql_users VALUES('root', 'root')";
+    private final static String CREATE_ROOT_USER = "INSERT IGNORE INTO %s.zql_users VALUES('root', '" + CHAP.SHA1(CHAP.SHA1("root")) + "')";
 
     /**
      * 创建元数据库，只能在 ZQLContext.initializeSystem 方法中被调用
@@ -220,5 +223,45 @@ public class MetaDatabase extends Database {
         }
 
         return null;
+    }
+
+
+    private final static String SELECT_USER_PASSWORD_SQL = "SELECT * FROM %s.zql_users WHERE User = '%s' ";
+
+    /**
+     * 验证用户密码是否正确
+     *
+     * @param userName 需要检测的用户名
+     * @param scramble 由服务器端生成的 20 位随机数
+     * @param token    客户端返回的认证信息
+     * @return 如果密码正确，返回 true，否则返回 false
+     * @throws MetaDatabaseOperationsException 验证用户密码是否正确失败，可能是用户不存在，或者连接到元数据库失败
+     */
+    public boolean checkPassword(String userName, String scramble, String token) throws MetaDatabaseOperationsException {
+        /* 连接元数据库并执行命令 */
+        Connection connection = null;
+        try {
+            connection = ConnectionPools.getInstance().getConnection(0);
+            Statement statement = connection.createStatement();
+            String sqlCommand = String.format(SELECT_USER_PASSWORD_SQL, metaDatabase.getMetaDbName(), userName);
+            ResultSet resultSet = statement.executeQuery(sqlCommand);
+
+            if (resultSet.next()) {
+                String realPassword = resultSet.getString("Password");
+                return checkToken(realPassword, scramble, token);
+            } else throw new SQLException("用户 " + userName + " 不存在");
+        } catch (SQLException e) {
+            MetaDatabaseOperationsException metaDatabaseOperationsException = new MetaDatabaseOperationsException("从元数据库中获取用户 " + userName + " 的密码信息失败");
+            metaDatabaseOperationsException.initCause(e);
+            throw metaDatabaseOperationsException;
+        } finally {
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    logger.e("关闭到元数据库的连接失败", e);
+                }
+            }
+        }
     }
 }

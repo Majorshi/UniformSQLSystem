@@ -149,4 +149,10 @@ public class ZQLSession {
         }
         logger.i("Session " + sessionId + ": 关闭用户 " + userName + " 到底层库的连接成功");
     }
+
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        this.closeSession();
+    }
 }

@@ -24,7 +24,7 @@ public class JDBCDriverTest {
 
         Driver drv = new UniformSQLDriver();
 
-        Assert.assertTrue(drv.acceptsURL("jdbc:uniformsql:local:./working/db/test"));
+        Assert.assertTrue(drv.acceptsURL("jdbc:zql:local:./working/db/test"));
         TestCase.assertFalse(drv.acceptsURL("local:./working/db/test"));
 
         Connection conn = DriverManager.getConnection("jdbc:zql://127.0.0.1:9527", "wyq", "123456");

@@ -5,16 +5,16 @@ import cn.edu.bit.linc.zql.network.packets.type.IntegerType;
 import cn.edu.bit.linc.zql.network.packets.type.LengthCodeBinaryType;
 import cn.edu.bit.linc.zql.network.packets.type.LengthCodeStringType;
 import cn.edu.bit.linc.zql.network.packets.type.StringType;
-import cn.edu.bit.linc.zql.network.utils.CHAP;
+import cn.edu.bit.linc.zql.util.CHAP;
 import cn.edu.bit.linc.zql.util.Logger;
 import cn.edu.bit.linc.zql.util.LoggerFactory;
-import cn.edu.bit.linc.zql.util.StringUtil;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -23,7 +23,7 @@ import java.util.List;
  * 统一 SQL 系统 Client Socket Handler，用于接收和发送请求
  */
 public class UniformSQLClientSocketHandler implements ClientSocketHandler {
-    private static final Logger logger = LoggerFactory.getLogger(UniformSQLClientSocketHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(UniformSQLClientSocketHandler.class);
 
     private final Socket clientSocket;
     private InputStream in;
@@ -54,62 +54,65 @@ public class UniformSQLClientSocketHandler implements ClientSocketHandler {
      *
      * @throws IOException 读取 InputStream 或者 OutputStream 失败
      */
-
     public void handleSocket() throws IOException {
-        logger.i("Connected to server " + clientSocket.getInetAddress() + ":" + clientSocket.getPort());
+        LOGGER.i("已经连接到服务器 " + clientSocket.getInetAddress() + ":" + clientSocket.getPort());
 
         in = clientSocket.getInputStream();
         out = clientSocket.getOutputStream();
 
-        // TODO: 接收握手包
-        Packet packer = readPacket(in);
-        byte[] handShakePacketBytes = packer.getPacketBody();
+        Packet packet = readPacket(in);
+        byte[] handShakePacketBytes = packet.getPacketBody();
         HandShakePacket handShakePacket = new HandShakePacket(handShakePacketBytes.length);
         handShakePacket.setData(handShakePacketBytes);
-        logger.i("Received hand shake packet from server " + clientSocket.getInetAddress());
-        logger.i("handShakePacket : " + handShakePacket);
-        System.out.println("Protocol Version    : " + IntegerType.getIntegerValue(handShakePacket.getProtocolVersion()));
-        System.out.println("Server Version      : " + StringType.getString(handShakePacket.getServerVersion()));
-        System.out.println("Thread ID           : " + IntegerType.getIntegerValue(handShakePacket.getThreadID()));
-        System.out.println("Scramble Part One   : " + Arrays.toString(handShakePacket.getScramblePartOne()));
-        System.out.println("Server Capabilities : " + IntegerType.getIntegerValue(handShakePacket.getServerCapabilities()));
-        System.out.println("Character Set       : " + IntegerType.getIntegerValue(handShakePacket.getCharacterSet()));
-        System.out.println("Server Status       : " + IntegerType.getIntegerValue(handShakePacket.getServerStatus()));
-        System.out.println("Scramble Part Two   : " + Arrays.toString(handShakePacket.getScramblePartTwo()));
-        System.out.println();
+        LOGGER.d("从服务器端接收到握手数据包 " + clientSocket.getInetAddress());
+        LOGGER.d("握手数据包内容 : " + handShakePacket);
+        LOGGER.d("Protocol Version    : " + IntegerType.getIntegerValue(handShakePacket.getProtocolVersion()));
+        LOGGER.d("Server Version      : " + StringType.getString(handShakePacket.getServerVersion()));
+        LOGGER.d("Thread ID           : " + IntegerType.getIntegerValue(handShakePacket.getThreadID()));
+        LOGGER.d("Scramble Part One   : " + Arrays.toString(handShakePacket.getScramblePartOne()));
+        LOGGER.d("Server Capabilities : " + IntegerType.getIntegerValue(handShakePacket.getServerCapabilities()));
+        LOGGER.d("Character Set       : " + IntegerType.getIntegerValue(handShakePacket.getCharacterSet()));
+        LOGGER.d("Server Status       : " + IntegerType.getIntegerValue(handShakePacket.getServerStatus()));
+        LOGGER.d("Scramble Part Two   : " + Arrays.toString(handShakePacket.getScramblePartTwo()));
 
-        // TODO: 构造和发送验证包
-        Packet credentialsPacket = null;
+        byte[] scramblePartOne = handShakePacket.getScramblePartOne(), scramblePartTwo = handShakePacket.getScramblePartTwo();
+        byte[] realScramblePartOne = Arrays.copyOfRange(scramblePartOne, 0, scramblePartOne.length - 1),
+                realScramblePartTwo = Arrays.copyOfRange(scramblePartTwo, 0, scramblePartTwo.length - 1);
+        String randStr = new String(realScramblePartOne, StandardCharsets.UTF_8) +
+                new String(realScramblePartTwo, StandardCharsets.UTF_8);
+
+        LOGGER.d("随机字符串：" + randStr + " - " + randStr.length());
+
+        Packet credentialsPacket;
         try {
-            credentialsPacket = buildCredentialsPacket();
+            credentialsPacket = buildCredentialsPacket(randStr);
             byte[] data = new byte[credentialsPacket.getSize()];
             credentialsPacket.getData(data);
             out.write(data);
-            logger.i("Send credentials packet to server " + clientSocket.getInetAddress());
-            logger.i("credentialsPacket : " + credentialsPacket + "\r\n");
+            LOGGER.d("发送验证数据包给服务器 " + clientSocket.getInetAddress());
+            LOGGER.d("验证数据包 : " + credentialsPacket + "\r\n");
         } catch (Exception e) {
             // TODO: 正确处理异常
-            //logger.i("必要字段 var_len 尚未确定", ex);
             return;
         }
 
         // TODO: 接收验证结果包
-        packer = readPacket(in);
-        byte[] SuccessPacketBytes = packer.getPacketBody();
+        packet = readPacket(in);
+        byte[] SuccessPacketBytes = packet.getPacketBody();
         SuccessPacket successPacket = new SuccessPacket(SuccessPacketBytes.length);
         successPacket.setData(SuccessPacketBytes);
-        logger.i("Received success packet from server " + clientSocket.getInetAddress());
-        logger.i("successPacket : " + successPacket);
+        LOGGER.d("从服务器中接收验证结果报文 " + clientSocket.getInetAddress());
+        LOGGER.d("验证结果报文 : " + successPacket);
         System.out.println("Packet Identifier : " + IntegerType.getIntegerValue(successPacket.getPacketIdentifier()));
         System.out.print("Changed Rows      : ");
         byte[] bytes = LengthCodeBinaryType.getBytes(successPacket.getChangedRows());
-        for(byte b : bytes) {
+        for (byte b : bytes) {
             System.out.print(b + " ");
         }
         System.out.println();
         System.out.print("Index ID          : ");
         bytes = LengthCodeBinaryType.getBytes(successPacket.getIndexID());
-        for(byte b : bytes) {
+        for (byte b : bytes) {
             System.out.print(b + " ");
         }
         System.out.println();
@@ -232,8 +235,8 @@ public class UniformSQLClientSocketHandler implements ClientSocketHandler {
         getResult();
 
 //        // 接收结果
-//        packer = readPacket(in);
-//        byte[] ResultBytes = packer.getPacketBody();
+//        packet = readPacket(in);
+//        byte[] ResultBytes = packet.getPacketBody();
 //        SuccessPacket resultPacket = new SuccessPacket(ResultBytes.length);
 //        resultPacket.setData(ResultBytes);
 //        logger.i("Received result packet from server " + clientSocket.getInetAddress());
@@ -272,7 +275,6 @@ public class UniformSQLClientSocketHandler implements ClientSocketHandler {
 
     /**
      * 断开连接
-     *
      */
     public void disconnect() {
         sendCommand(0, null);
@@ -298,15 +300,15 @@ public class UniformSQLClientSocketHandler implements ClientSocketHandler {
         try {
             IntegerType commandCode = IntegerType.getIntegerType(commandType, CommandPacket.LENGTH_COMMAND_CODE);
             LengthCodeStringType _command = null;
-            if(commandType != CommandPacket.COM_QUIT)
+            if (commandType != CommandPacket.COM_QUIT)
                 _command = LengthCodeStringType.getLengthCodeString(command);
 
             int len = commandCode.getSize();
-            if(commandType != CommandPacket.COM_QUIT)
+            if (commandType != CommandPacket.COM_QUIT)
                 len += _command.getSize();
             CommandPacket commandPacketBody = new CommandPacket(len);
             commandPacketBody.setCommandCode(commandCode);
-            if(commandType != CommandPacket.COM_QUIT)
+            if (commandType != CommandPacket.COM_QUIT)
                 commandPacketBody.setCommand(_command);
             byte[] body = new byte[commandPacketBody.getSize()];
             commandPacketBody.getData(body);
@@ -324,9 +326,9 @@ public class UniformSQLClientSocketHandler implements ClientSocketHandler {
             byte[] data = new byte[commandPacket.getSize()];
             commandPacket.getData(data);
             out.write(data);
-            logger.i("Send command packet to server " + clientSocket.getInetAddress());
-            logger.i("commandPacket : " + commandPacket + "\r\n");
-            logger.i("command : " + LengthCodeStringType.getString(commandPacketBody.getCommand()));
+            LOGGER.i("Send command packet to server " + clientSocket.getInetAddress());
+            LOGGER.i("commandPacket : " + commandPacket + "\r\n");
+            LOGGER.i("command : " + LengthCodeStringType.getString(commandPacketBody.getCommand()));
         } catch (Exception e) {
             // TODO: 正确处理异常
             //logger.i("必要字段 var_len 尚未确定", ex);
@@ -337,21 +339,19 @@ public class UniformSQLClientSocketHandler implements ClientSocketHandler {
 
     /**
      * 等待获取远程服务器的返回结果
-     *
      */
-    public void getResult() throws IOException{
+    public void getResult() throws IOException {
         Packet packer = readPacket(in);
         byte[] ResultBytes = packer.getPacketBody();
 
-        for(int i = 0; i < ResultBytes.length; ++i)
-            System.out.print(ResultBytes[i] +" ");
+        for (int i = 0; i < ResultBytes.length; ++i)
+            System.out.print(ResultBytes[i] + " ");
 
-        if(ResultBytes[0] == 0){
-
+        if (ResultBytes[0] == 0) {
             SuccessPacket resultPacket = new SuccessPacket(ResultBytes.length);
             resultPacket.setData(ResultBytes);
-            logger.i("Received success packet from server " + clientSocket.getInetAddress());
-            logger.i("successPacket : " + resultPacket);
+            LOGGER.i("Received success packet from server " + clientSocket.getInetAddress());
+            LOGGER.i("successPacket : " + resultPacket);
             System.out.println("Packet Identifier : " + IntegerType.getIntegerValue(resultPacket.getPacketIdentifier()));
             System.out.print("Changed Rows      : ");
             byte[] bytes = LengthCodeBinaryType.getBytes(resultPacket.getChangedRows());
@@ -369,8 +369,7 @@ public class UniformSQLClientSocketHandler implements ClientSocketHandler {
             System.out.println("Warning Number    : " + IntegerType.getIntegerValue(resultPacket.getWarningNumber()));
             System.out.println("Server Message    : " + LengthCodeStringType.getString(resultPacket.getServerMessage()));
             System.out.println();
-        }
-        else if(ResultBytes[0] == -1){
+        } else if (ResultBytes[0] == -1) {
             ErrorPacket errorPacket = new ErrorPacket(ResultBytes.length);
             errorPacket.setData(ResultBytes);
             System.out.println(errorPacket);
@@ -379,8 +378,7 @@ public class UniformSQLClientSocketHandler implements ClientSocketHandler {
             System.out.println("Server Status     : " + IntegerType.getIntegerValue(errorPacket.getServerStatus()));
             System.out.println("Error Message     : " + LengthCodeStringType.getString(errorPacket.getErrorMessage()));
 
-        }
-        else if(ResultBytes[0] == 254){
+        } else if (ResultBytes[0] == 254) {
             EOFPacket eofPacket = new EOFPacket(ResultBytes.length);
             eofPacket.setData(ResultBytes);
 
@@ -389,12 +387,11 @@ public class UniformSQLClientSocketHandler implements ClientSocketHandler {
             System.out.println("Warning Number         : " + IntegerType.getIntegerValue(eofPacket.getWarningNumber()));
             System.out.println("Server Status Bit Mask : " + IntegerType.getIntegerValue(eofPacket.getServerStatusBitMask()));
 
-        }
-        else {
-            int fieldNumber = 0;
+        } else {
+            int fieldNumber;
             ResultSetPacket resultSetPacket = new ResultSetPacket(ResultBytes.length);
             resultSetPacket.getResultSetPacketFromByte(ResultBytes);
-            logger.i("Received resultSetPacket from server " + clientSocket.getInetAddress());
+            LOGGER.i("Received resultSetPacket from server " + clientSocket.getInetAddress());
             //logger.i("resultSetPacket : " + resultSetPacket);
 
             ResultHeadPacket resultHeadPacket = resultSetPacket.getResultHeadPacket();
@@ -417,7 +414,7 @@ public class UniformSQLClientSocketHandler implements ClientSocketHandler {
             System.out.println("Field Name");
             String[] fieldNames = new String[fieldNumber];
             int cnt = 0;
-            for(FieldPacket fieldPacketGet : fieldPacketArrayGet) {
+            for (FieldPacket fieldPacketGet : fieldPacketArrayGet) {
 //                System.out.println("fieldPacket : " + fieldPacketGet);
 //                System.out.println("Data Field          : " + LengthCodeStringType.getString(fieldPacketGet.getDataField()));
 //                System.out.println("Database Name       : " + LengthCodeStringType.getString(fieldPacketGet.getDatabaseName()));
@@ -448,12 +445,12 @@ public class UniformSQLClientSocketHandler implements ClientSocketHandler {
             RowDataPacket[] rowDataPacketArrayGet = resultSetPacket.getRowDataPacketArray(fieldNumber);
             System.out.println("Row Data");
             results = new ArrayList<RowData>();
-            for(RowDataPacket rowDataPacketGet : rowDataPacketArrayGet) {
+            for (RowDataPacket rowDataPacketGet : rowDataPacketArrayGet) {
                 //System.out.println("rowDataPacket : " + rowDataPacketGet);
                 LengthCodeStringType[] rowDataArrayRes = rowDataPacketGet.getRowData(fieldNumber);
                 RowData row = new RowData();
                 int pos = 0;
-                for(LengthCodeStringType rowData : rowDataArrayRes) {
+                for (LengthCodeStringType rowData : rowDataArrayRes) {
                     System.out.print(LengthCodeStringType.getString(rowData) + " ");
                     row.add(fieldNames[pos++], LengthCodeStringType.getString(rowData));
                 }
@@ -475,10 +472,11 @@ public class UniformSQLClientSocketHandler implements ClientSocketHandler {
 
     /**
      * 向远程服务器发送sql命令并返回结果
+     *
      * @param sql
      * @return
      */
-    public List<RowData> execute(String sql){
+    public List<RowData> execute(String sql) {
         results = null;
         sendCommand(1, sql);
         try {
@@ -486,7 +484,7 @@ public class UniformSQLClientSocketHandler implements ClientSocketHandler {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if(results == null)
+        if (results == null)
             results = new ArrayList<RowData>();
         return results;
     }
@@ -524,22 +522,23 @@ public class UniformSQLClientSocketHandler implements ClientSocketHandler {
             closeable.close();
         } catch (IOException e) {
             // TODO: do something
-            logger.e("Close stream failed", e);
+            LOGGER.e("Close stream failed", e);
         } finally { /* we tried! */ }
     }
 
     /**
      * 构造验证报文
      *
+     * @param randStr 服务器传递过来的随机字符串
      * @return 验证报文
      */
-    private Packet buildCredentialsPacket() {
+    private Packet buildCredentialsPacket(String randStr) {
         IntegerType capabilities = IntegerType.getIntegerType(5, CredentialsPacket.LENGTH_CLIENT_CAPABILITIES);
         IntegerType maxPacketLength = IntegerType.getIntegerType(10, CredentialsPacket.LENGTH_MAX_PACKET_LENGTH);
         IntegerType characterSet = IntegerType.getIntegerType(1, CredentialsPacket.LENGTH_CHARACTER_SET);
         StringType userName = StringType.getStringType(this.username); //"ihainan"
-        String password = this.password; //"12345"
-        String scramble = "12345678901234567890";
+        String password = this.password;
+        String scramble = randStr;
         String tokenStr = CHAP.calcToken(password, scramble);
         LengthCodeStringType token = LengthCodeStringType.getLengthCodeString(tokenStr);
         StringType dbName = StringType.getStringType("db_test");

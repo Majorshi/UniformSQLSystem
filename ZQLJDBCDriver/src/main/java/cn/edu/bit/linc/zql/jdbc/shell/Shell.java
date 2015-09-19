@@ -129,8 +129,7 @@ public class Shell {
 
         if (options.has("u")) {
             user = (String) options.valueOf("u");
-        }
-        else{
+        } else {
             user = "root";
         }
 

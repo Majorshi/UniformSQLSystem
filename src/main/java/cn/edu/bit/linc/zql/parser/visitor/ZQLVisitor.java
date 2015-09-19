@@ -52,7 +52,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param dbid 数据库id
      * @return InnerDatabases对象
      */
-    public InnerDatabase getInnerDatabaseByDBID (int dbid) {
+    public InnerDatabase getInnerDatabaseByDBID(int dbid) {
         for (int i = 0; i < innerDatabasesArrayList.size(); i++) {
             if (innerDatabasesArrayList.get(i).getDbId() == dbid) {
                 return innerDatabasesArrayList.get(i);
@@ -91,7 +91,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitRoot_statement(uniformSQLParser.Root_statementContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitRoot_statement(uniformSQLParser.Root_statementContext ctx) {
         ArrayList<InnerSQLCommand> commands = new ArrayList<InnerSQLCommand>();
         ArrayList<Integer> dbIds = new ArrayList<Integer>();
         ASTNodeVisitResult result = visitChildrenNodes(ctx.children);
@@ -183,7 +184,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         return new ASTNodeVisitResult(null, commands, dbIds);
     }
 
-    @Override public ASTNodeVisitResult visitData_definition_statements(uniformSQLParser.Data_definition_statementsContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitData_definition_statements(uniformSQLParser.Data_definition_statementsContext ctx) {
         return visitChildrenNodes(ctx.children);
     }
 
@@ -193,7 +195,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param childrenNodes 要遍历的节点的子节点数组
      * @return 访问结果
      */
-    public ASTNodeVisitResult visitChildrenNodes (List<ParseTree> childrenNodes) {
+    public ASTNodeVisitResult visitChildrenNodes(List<ParseTree> childrenNodes) {
         String valueStr = "";
         ArrayList<InnerSQLCommand> commands = new ArrayList<InnerSQLCommand>();
         ArrayList<Integer> dbIds = new ArrayList<Integer>();
@@ -760,7 +762,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitCreate_table_statement(uniformSQLParser.Create_table_statementContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitCreate_table_statement(uniformSQLParser.Create_table_statementContext ctx) {
         return visitChildrenNodes(ctx.children);
     }
 
@@ -819,7 +822,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
                 bracketContent = allColumn.substring(leftBracketsIndex, rightBracketsIndex + 1);
                 columnType = allColumn.substring(0, leftBracketsIndex);
             }
-            while (columnType.lastIndexOf(" ") == columnType.length() - 1) columnType = columnType.substring(0,columnType.length() - 1);   //去掉开头的空格
+            while (columnType.lastIndexOf(" ") == columnType.length() - 1)
+                columnType = columnType.substring(0, columnType.length() - 1);   //去掉开头的空格
             CommandAdapter commandAdapter = CommandAdapter.getAdapterInstance(dbType);
             if (!commandAdapter.TYPE_MAP.containsKey(columnType.toUpperCase())) {
                 session.setErrorMessage("找不到类型 " + columnType);
@@ -1026,8 +1030,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
             /* 修改列名 */
                 String oldColumnName, newColumnName;
 //                if (alter_table_specificationContext.get(0).COLUMN() != null) {
-                    oldColumnName = ctx.alter_table_specification(0).column_name(0).getText();
-                    newColumnName = ctx.alter_table_specification(0).column_name(1).getText();
+                oldColumnName = ctx.alter_table_specification(0).column_name(0).getText();
+                newColumnName = ctx.alter_table_specification(0).column_name(1).getText();
 //                } else {
 //                    oldColumnName = alter_table_specificationContext.get(0).children.get(1).getText();
 //                    newColumnName = alter_table_specificationContext.get(0).children.get(2).getText();
@@ -1131,7 +1135,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitSelect_statement(uniformSQLParser.Select_statementContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitSelect_statement(uniformSQLParser.Select_statementContext ctx) {
         commandStack.add("SELECT");
         ArrayList<InnerSQLCommand> commands = new ArrayList<InnerSQLCommand>();
         ArrayList<Integer> dbIds = new ArrayList<Integer>();
@@ -1157,7 +1162,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         }
         Database.DBType dbType = null;
         if (dbIds.size() != 0) {
-             dbType = innerDatabasesArrayList.get(dbIds.get(0) - 1).getDbType();
+            dbType = innerDatabasesArrayList.get(dbIds.get(0) - 1).getDbType();
         }
         InnerSQLCommand innerDBcommands = sqlCommandBuilder.defaultSQL(dbType, valueStr);
         commands.add(innerDBcommands);
@@ -1255,7 +1260,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitSelect_list(uniformSQLParser.Select_listContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitSelect_list(uniformSQLParser.Select_listContext ctx) {
         return visitChildrenNodes(ctx.children);
     }
 
@@ -1265,7 +1271,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitTable_references(uniformSQLParser.Table_referencesContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitTable_references(uniformSQLParser.Table_referencesContext ctx) {
         String valueStr = "";
         for (int i = 0; i < ctx.children.size(); i++) {
             if (ctx.children.get(i).getText().equals(",")) {
@@ -1286,7 +1293,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitGroupby_clause(uniformSQLParser.Groupby_clauseContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitGroupby_clause(uniformSQLParser.Groupby_clauseContext ctx) {
         return visitChildrenNodes(ctx.children);
     }
 
@@ -1296,7 +1304,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitGroupby_item(uniformSQLParser.Groupby_itemContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitGroupby_item(uniformSQLParser.Groupby_itemContext ctx) {
         String valueStr = "";
         if (ctx.column_spec() != null) {
             ASTNodeVisitResult whateverResult = visit(ctx.column_spec());
@@ -1322,7 +1331,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitHaving_clause(uniformSQLParser.Having_clauseContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitHaving_clause(uniformSQLParser.Having_clauseContext ctx) {
         return visitChildrenNodes(ctx.children);
     }
 
@@ -1332,7 +1342,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitOrderby_clause(uniformSQLParser.Orderby_clauseContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitOrderby_clause(uniformSQLParser.Orderby_clauseContext ctx) {
         return visitChildrenNodes(ctx.children);
     }
 
@@ -1342,7 +1353,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitOrderby_item(uniformSQLParser.Orderby_itemContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitOrderby_item(uniformSQLParser.Orderby_itemContext ctx) {
         return visitChildrenNodes(ctx.children);
     }
 
@@ -1352,7 +1364,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitLimit_clause(uniformSQLParser.Limit_clauseContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitLimit_clause(uniformSQLParser.Limit_clauseContext ctx) {
         return visitChildrenNodes(ctx.children);
     }
 
@@ -1362,7 +1375,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitOffset(uniformSQLParser.OffsetContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitOffset(uniformSQLParser.OffsetContext ctx) {
         String valueStr = "";
         for (int i = 0; i < ctx.children.size(); i++) {
             ASTNodeVisitResult whateverResult = visit(ctx.children.get(i));
@@ -1379,7 +1393,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitRow_count(uniformSQLParser.Row_countContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitRow_count(uniformSQLParser.Row_countContext ctx) {
         return new ASTNodeVisitResult(ctx.INTEGER_NUM().getText(), null, null);
     }
 
@@ -1546,7 +1561,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitTable_factor1(uniformSQLParser.Table_factor1Context ctx) {
+    @Override
+    public ASTNodeVisitResult visitTable_factor1(uniformSQLParser.Table_factor1Context ctx) {
         return visitChildrenNodes(ctx.children);
     }
 
@@ -1556,7 +1572,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitTable_factor2(uniformSQLParser.Table_factor2Context ctx) {
+    @Override
+    public ASTNodeVisitResult visitTable_factor2(uniformSQLParser.Table_factor2Context ctx) {
         return visitChildrenNodes(ctx.children);
     }
 
@@ -1566,7 +1583,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitTable_factor3(uniformSQLParser.Table_factor3Context ctx) {
+    @Override
+    public ASTNodeVisitResult visitTable_factor3(uniformSQLParser.Table_factor3Context ctx) {
         return visitChildrenNodes(ctx.children);
     }
 
@@ -1576,9 +1594,10 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitTable_atom(uniformSQLParser.Table_atomContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitTable_atom(uniformSQLParser.Table_atomContext ctx) {
 //        if (ctx.table_spec() == null) {
-            return visitChildrenNodes(ctx.children);
+        return visitChildrenNodes(ctx.children);
 //        }
 //        String valueStr = "";
 //        ASTNodeVisitResult whateverResult = visit(ctx.table_spec());
@@ -1594,7 +1613,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
 //        return new ASTNodeVisitResult(valueStr, null, null);
     }
 
-    @Override public ASTNodeVisitResult visitAlias(uniformSQLParser.AliasContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitAlias(uniformSQLParser.AliasContext ctx) {
         ASTNodeVisitResult whateverResult = visitChildrenNodes(ctx.children);
         return new ASTNodeVisitResult(" " + whateverResult.getValue(), whateverResult.getCommands(), whateverResult.getDbIds());
     }
@@ -1640,20 +1660,22 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
             whereString = "";
         }
         /* 底层库命令 */
-        InnerSQLCommand innerDbCommand = sqlCommandBuilder.delete(dbType,databaseName + "." + tableName, whereString);
+        InnerSQLCommand innerDbCommand = sqlCommandBuilder.delete(dbType, databaseName + "." + tableName, whereString);
         commands.add(innerDbCommand);
         dbIds.add(dbId);
         if (commandStack.size() > 1) commandStack.remove(commandStack.size() - 1);
         /* 返回结果 */
         return new ASTNodeVisitResult(null, commands, dbIds);
     }
+
     /**
      * WHERE CLAUSE
      *
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitWhere_clause(uniformSQLParser.Where_clauseContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitWhere_clause(uniformSQLParser.Where_clauseContext ctx) {
         commandStack.add("WHERE");
         String whereString = "";
         if (ctx.WHERE() != null) {
@@ -1671,7 +1693,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitExpression(uniformSQLParser.ExpressionContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitExpression(uniformSQLParser.ExpressionContext ctx) {
         String valueStr = "";
         for (int i = 0; i < ctx.exp_factor1().size(); i++) {
             ASTNodeVisitResult expressionResult = visit(ctx.exp_factor1().get(i));
@@ -1691,7 +1714,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitExp_factor1(uniformSQLParser.Exp_factor1Context ctx) {
+    @Override
+    public ASTNodeVisitResult visitExp_factor1(uniformSQLParser.Exp_factor1Context ctx) {
         String valueStr = "";
         for (int i = 0; i < ctx.exp_factor2().size(); i++) {
             ASTNodeVisitResult childrenResult = visit(ctx.exp_factor2().get(i));
@@ -1711,7 +1735,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitExp_factor2(uniformSQLParser.Exp_factor2Context ctx) {
+    @Override
+    public ASTNodeVisitResult visitExp_factor2(uniformSQLParser.Exp_factor2Context ctx) {
         String valueStr = "";
         for (int i = 0; i < ctx.exp_factor3().size(); i++) {
             ASTNodeVisitResult childrenResult = visit(ctx.exp_factor3().get(i));
@@ -1731,7 +1756,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitExp_factor3(uniformSQLParser.Exp_factor3Context ctx) {
+    @Override
+    public ASTNodeVisitResult visitExp_factor3(uniformSQLParser.Exp_factor3Context ctx) {
         String valueStr = "";
         if (ctx.NOT() != null) {
             valueStr += " " + ctx.NOT() + " ";
@@ -1749,7 +1775,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitExp_factor4(uniformSQLParser.Exp_factor4Context ctx) {
+    @Override
+    public ASTNodeVisitResult visitExp_factor4(uniformSQLParser.Exp_factor4Context ctx) {
         String valueStr = "";
         ASTNodeVisitResult childrenResult = visit(ctx.bool_primary());
         if (childrenResult.getValue() != null) {
@@ -1779,7 +1806,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitBoolean_literal(uniformSQLParser.Boolean_literalContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitBoolean_literal(uniformSQLParser.Boolean_literalContext ctx) {
         String valueStr = "";
         if (ctx.TRUE() != null) {
             valueStr += " " + ctx.TRUE() + " ";
@@ -1796,7 +1824,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitBool_primary(uniformSQLParser.Bool_primaryContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitBool_primary(uniformSQLParser.Bool_primaryContext ctx) {
         String valueStr = "";
         if (ctx.predicate().size() != 0) {
             ASTNodeVisitResult predicateResult = visit(ctx.predicate(0));
@@ -1851,7 +1880,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitPredicate(uniformSQLParser.PredicateContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitPredicate(uniformSQLParser.PredicateContext ctx) {
         String valueStr = "";
         ASTNodeVisitResult bit_exprResult1 = visit(ctx.bit_expr(0));
         if (bit_exprResult1.getValue() != null) {
@@ -1927,13 +1957,15 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         }
         return new ASTNodeVisitResult(valueStr, null, null);
     }
+
     /**
      * Bit_expr
      *
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitBit_expr(uniformSQLParser.Bit_exprContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitBit_expr(uniformSQLParser.Bit_exprContext ctx) {
         String valueStr = "";
         ASTNodeVisitResult factor1Result1 = visit(ctx.factor1(0));
         if (factor1Result1.getValue() != null) {
@@ -1952,13 +1984,15 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         }
         return new ASTNodeVisitResult(valueStr, null, null);
     }
+
     /**
      * factor1
      *
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitFactor1(uniformSQLParser.Factor1Context ctx) {
+    @Override
+    public ASTNodeVisitResult visitFactor1(uniformSQLParser.Factor1Context ctx) {
         String valueStr = "";
         ASTNodeVisitResult factor2Result1 = visit(ctx.factor2(0));
         if (factor2Result1.getValue() != null) {
@@ -1984,7 +2018,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitFactor2(uniformSQLParser.Factor2Context ctx) {
+    @Override
+    public ASTNodeVisitResult visitFactor2(uniformSQLParser.Factor2Context ctx) {
         String valueStr = "";
         ASTNodeVisitResult factor2Result1 = visit(ctx.factor3(0));
         if (factor2Result1.getValue() != null) {
@@ -2022,7 +2057,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitFactor3(uniformSQLParser.Factor3Context ctx) {
+    @Override
+    public ASTNodeVisitResult visitFactor3(uniformSQLParser.Factor3Context ctx) {
         String valueStr = "";
         for (int i = 0; i < ctx.children.size(); i++) {
             if (ctx.children.get(i).getText().equals("+") || ctx.children.get(i).getText().equals("-")) {
@@ -2044,7 +2080,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitFactor4(uniformSQLParser.Factor4Context ctx) {
+    @Override
+    public ASTNodeVisitResult visitFactor4(uniformSQLParser.Factor4Context ctx) {
         String valueStr = "";
         for (int i = 0; i < ctx.children.size(); i++) {
             if (ctx.children.get(i).getText().equals("*") || ctx.children.get(i).getText().equals("/") || ctx.children.get(i).getText().equals("%") || ctx.children.get(i).getText().equals("^")) {
@@ -2066,7 +2103,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitFactor5(uniformSQLParser.Factor5Context ctx) {
+    @Override
+    public ASTNodeVisitResult visitFactor5(uniformSQLParser.Factor5Context ctx) {
         String valueStr = "";
         ASTNodeVisitResult factor6Result = visit(ctx.factor6());
         if (factor6Result.getValue() != null) {
@@ -2096,7 +2134,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitFactor6(uniformSQLParser.Factor6Context ctx) {
+    @Override
+    public ASTNodeVisitResult visitFactor6(uniformSQLParser.Factor6Context ctx) {
         String valueStr = "";
         if (ctx.PLUS() != null) valueStr += " " + ctx.PLUS() + " ";
         if (ctx.MINUS() != null) valueStr += " " + ctx.MINUS() + " ";
@@ -2115,7 +2154,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitSimple_expr(uniformSQLParser.Simple_exprContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitSimple_expr(uniformSQLParser.Simple_exprContext ctx) {
         String valueStr = "";
         if (ctx.EXISTS() != null) {
             //EXISTS subquery
@@ -2173,7 +2213,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitLiteral_value(uniformSQLParser.Literal_valueContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitLiteral_value(uniformSQLParser.Literal_valueContext ctx) {
         String valueStr = "";
         if (ctx.NULL() != null) valueStr += " " + ctx.NULL() + " ";
         else if (ctx.string_literal() != null) {
@@ -2211,7 +2252,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitString_literal(uniformSQLParser.String_literalContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitString_literal(uniformSQLParser.String_literalContext ctx) {
         return new ASTNodeVisitResult(ctx.getText(), null, null);
     }
 
@@ -2221,7 +2263,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitHex_literal(uniformSQLParser.Hex_literalContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitHex_literal(uniformSQLParser.Hex_literalContext ctx) {
         return new ASTNodeVisitResult(ctx.getText(), null, null);
     }
 
@@ -2231,7 +2274,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitBit_literal(uniformSQLParser.Bit_literalContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitBit_literal(uniformSQLParser.Bit_literalContext ctx) {
         return new ASTNodeVisitResult(ctx.getText(), null, null);
     }
 
@@ -2241,7 +2285,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitAny_name(uniformSQLParser.Any_nameContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitAny_name(uniformSQLParser.Any_nameContext ctx) {
         return new ASTNodeVisitResult(ctx.getText(), null, null);
     }
 
@@ -2251,7 +2296,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitColumn_spec(uniformSQLParser.Column_specContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitColumn_spec(uniformSQLParser.Column_specContext ctx) {
         String valueStr = "";
         if (ctx.table_spec() != null) {
             ASTNodeVisitResult whateverResult = visit(ctx.table_spec());
@@ -2273,7 +2319,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitExpression_list(uniformSQLParser.Expression_listContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitExpression_list(uniformSQLParser.Expression_listContext ctx) {
         //LPAREN expression ( COMMA expression )* RPAREN ;
         String valueStr = "";
         if (ctx.LPAREN() != null) {
@@ -2300,7 +2347,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitRaw_expression_list(uniformSQLParser.Raw_expression_listContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitRaw_expression_list(uniformSQLParser.Raw_expression_listContext ctx) {
         return visitChildrenNodes(ctx.children);
     }
 
@@ -2310,7 +2358,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitInterval_expr(uniformSQLParser.Interval_exprContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitInterval_expr(uniformSQLParser.Interval_exprContext ctx) {
         String valueStr = "";
         if (ctx.INTERVAL() != null) {
             valueStr += " " + ctx.INTERVAL() + " ";
@@ -2336,7 +2385,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitCase_when_statement(uniformSQLParser.Case_when_statementContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitCase_when_statement(uniformSQLParser.Case_when_statementContext ctx) {
         String valueStr = "";
         if (ctx.case_when_statement1() != null) {
             ASTNodeVisitResult caseResult = visit(ctx.case_when_statement1());
@@ -2358,7 +2408,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitCase_when_statement1(uniformSQLParser.Case_when_statement1Context ctx) {
+    @Override
+    public ASTNodeVisitResult visitCase_when_statement1(uniformSQLParser.Case_when_statement1Context ctx) {
         return visitChildrenNodes(ctx.children);
     }
 
@@ -2368,7 +2419,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitCase_when_statement2(uniformSQLParser.Case_when_statement2Context ctx) {
+    @Override
+    public ASTNodeVisitResult visitCase_when_statement2(uniformSQLParser.Case_when_statement2Context ctx) {
         return visitChildrenNodes(ctx.children);
     }
 
@@ -2378,7 +2430,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitFunction_call(uniformSQLParser.Function_callContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitFunction_call(uniformSQLParser.Function_callContext ctx) {
         String valueStr = "";
         for (int i = 0; i < ctx.children.size(); i++) {
             if (ctx.children.get(i).getText().equals("(") || ctx.children.get(i).getText().equals(")") || ctx.children.get(i).getText().equals(",") || ctx.children.get(i).getText().equals("CAST") || ctx.children.get(i).getText().equals("*") || ctx.children.get(i).getText().equals("ALL") || ctx.children.get(i).getText().equals("DISTINCT")) {
@@ -2399,7 +2452,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitFunctionList(uniformSQLParser.FunctionListContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitFunctionList(uniformSQLParser.FunctionListContext ctx) {
         String valueStr = "";
         ASTNodeVisitResult whateverResult = visit(ctx.children.get(0));
         if (whateverResult.getValue() != null) {
@@ -2414,7 +2468,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitCast_data_type(uniformSQLParser.Cast_data_typeContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitCast_data_type(uniformSQLParser.Cast_data_typeContext ctx) {
 //        BINARY (INTEGER_NUM)?
 //        | CHAR (INTEGER_NUM)?
 //        | DATE
@@ -2432,7 +2487,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitGroup_functions(uniformSQLParser.Group_functionsContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitGroup_functions(uniformSQLParser.Group_functionsContext ctx) {
         String valueStr = "";
         valueStr += " " + ctx.children.get(0).getText() + " ";
         return new ASTNodeVisitResult(valueStr, null, null);
@@ -2444,7 +2500,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitRelational_op(uniformSQLParser.Relational_opContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitRelational_op(uniformSQLParser.Relational_opContext ctx) {
         String valueStr = "";
         if (ctx.EQ() != null) valueStr += " " + ctx.EQ() + " ";
         if (ctx.LTH() != null) valueStr += " " + ctx.LTH() + " ";
@@ -2461,7 +2518,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitUpdate_statements(uniformSQLParser.Update_statementsContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitUpdate_statements(uniformSQLParser.Update_statementsContext ctx) {
         commandStack.add("UPDATE");
         ArrayList<InnerSQLCommand> commands = new ArrayList<InnerSQLCommand>();
         ArrayList<Integer> dbIds = new ArrayList<Integer>();
@@ -2514,7 +2572,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         }
 
         /* 底层库命令 */
-        InnerSQLCommand innerDbCommand = sqlCommandBuilder.update(dbType,database + "." + tableName, setString, whereString);
+        InnerSQLCommand innerDbCommand = sqlCommandBuilder.update(dbType, database + "." + tableName, setString, whereString);
         commands.add(innerDbCommand);
         dbIds.add(dbId);
         if (commandStack.size() > 1) commandStack.remove(commandStack.size() - 1);
@@ -2527,7 +2585,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitSet_columns_cluase(uniformSQLParser.Set_columns_cluaseContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitSet_columns_cluase(uniformSQLParser.Set_columns_cluaseContext ctx) {
         return visitChildrenNodes(ctx.children);
     }
 
@@ -2537,7 +2596,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitSet_column_cluase(uniformSQLParser.Set_column_cluaseContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitSet_column_cluase(uniformSQLParser.Set_column_cluaseContext ctx) {
         return visitChildrenNodes(ctx.children);
     }
 
@@ -2547,7 +2607,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitInsert_statements(uniformSQLParser.Insert_statementsContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitInsert_statements(uniformSQLParser.Insert_statementsContext ctx) {
         ArrayList<InnerSQLCommand> commands = new ArrayList<InnerSQLCommand>();
         ArrayList<Integer> dbIds = new ArrayList<Integer>();
         if (ctx.insert_statement() != null) {
@@ -2564,7 +2625,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitInsert_statement(uniformSQLParser.Insert_statementContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitInsert_statement(uniformSQLParser.Insert_statementContext ctx) {
         commandStack.add("INSERT");
         ArrayList<InnerSQLCommand> commands = new ArrayList<InnerSQLCommand>();
         ArrayList<Integer> dbIds = new ArrayList<Integer>();
@@ -2629,7 +2691,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         }
 
         /* 底层库命令 */
-        InnerSQLCommand innerDbCommand = sqlCommandBuilder.insert(dbType,insert_headerStr, column_listStr, select_expressionStr + value_list_clauseStr, insert_subfixStr);
+        InnerSQLCommand innerDbCommand = sqlCommandBuilder.insert(dbType, insert_headerStr, column_listStr, select_expressionStr + value_list_clauseStr, insert_subfixStr);
         commands.add(innerDbCommand);
         dbIds.add(dbId);
         if (commandStack.size() > 1) commandStack.remove(commandStack.size() - 1);
@@ -2642,7 +2704,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitInsert_header(uniformSQLParser.Insert_headerContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitInsert_header(uniformSQLParser.Insert_headerContext ctx) {
         ArrayList<Integer> dbIds = new ArrayList<Integer>();
         String valueStr = "";
         if (ctx.LOW_PRIORITY() != null) {
@@ -2678,7 +2741,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitTable_spec(uniformSQLParser.Table_specContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitTable_spec(uniformSQLParser.Table_specContext ctx) {
         ArrayList<Integer> dbIds = new ArrayList<Integer>();
         String valueStr = "";
 //        tableSpecNodes.add(ctx);
@@ -2722,7 +2786,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitPartition_clause(uniformSQLParser.Partition_clauseContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitPartition_clause(uniformSQLParser.Partition_clauseContext ctx) {
         String valueStr = "";
         if (ctx.PARTITION() != null) {
             valueStr += " " + ctx.PARTITION() + " ";
@@ -2749,7 +2814,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitPartition_names(uniformSQLParser.Partition_namesContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitPartition_names(uniformSQLParser.Partition_namesContext ctx) {
         String valueStr = "";
         for (int i = 0; i < ctx.children.size(); i++) {
             if (ctx.children.get(i).getText().equals(",")) {
@@ -2770,7 +2836,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitPartition_name(uniformSQLParser.Partition_nameContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitPartition_name(uniformSQLParser.Partition_nameContext ctx) {
         return new ASTNodeVisitResult(ctx.any_name().getText(), null, null);
     }
 
@@ -2780,7 +2847,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitColumn_list(uniformSQLParser.Column_listContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitColumn_list(uniformSQLParser.Column_listContext ctx) {
         return visitChildrenNodes(ctx.children);
     }
 
@@ -2790,7 +2858,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitValue_list_clause(uniformSQLParser.Value_list_clauseContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitValue_list_clause(uniformSQLParser.Value_list_clauseContext ctx) {
         return visitChildrenNodes(ctx.children);
     }
 
@@ -2800,7 +2869,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitColumn_value_list(uniformSQLParser.Column_value_listContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitColumn_value_list(uniformSQLParser.Column_value_listContext ctx) {
         return visitChildrenNodes(ctx.children);
     }
 
@@ -2810,7 +2880,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitInsert_subfix(uniformSQLParser.Insert_subfixContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitInsert_subfix(uniformSQLParser.Insert_subfixContext ctx) {
         return visitChildrenNodes(ctx.children);
     }
 
@@ -2820,7 +2891,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitSubquery(uniformSQLParser.SubqueryContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitSubquery(uniformSQLParser.SubqueryContext ctx) {
         ASTNodeVisitResult whateverResult = visitChildrenNodes(ctx.children);
         String valueStr = "(" + whateverResult.getCommands().get(0).getCommandStr() + ")";
         return new ASTNodeVisitResult(valueStr, null, whateverResult.getDbIds());
@@ -2832,7 +2904,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      * @param ctx 节点上下文
      * @return 节点访问结果
      */
-    @Override public ASTNodeVisitResult visitJoin_condition(uniformSQLParser.Join_conditionContext ctx) {
+    @Override
+    public ASTNodeVisitResult visitJoin_condition(uniformSQLParser.Join_conditionContext ctx) {
         return visitChildrenNodes(ctx.children);
     }
 }

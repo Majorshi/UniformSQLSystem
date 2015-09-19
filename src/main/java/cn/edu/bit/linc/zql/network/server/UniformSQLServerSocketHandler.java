@@ -2,6 +2,7 @@ package cn.edu.bit.linc.zql.network.server;
 
 import cn.edu.bit.linc.zql.ZQLContext;
 import cn.edu.bit.linc.zql.ZQLEnv;
+import cn.edu.bit.linc.zql.command.SQLCommandManager;
 import cn.edu.bit.linc.zql.connections.ZQLSession;
 import cn.edu.bit.linc.zql.network.packets.*;
 import cn.edu.bit.linc.zql.network.packets.type.IntegerType;
@@ -17,6 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.sql.SQLException;
 
 /**
  * 统一 SQL 系统 Server Socket Handler，用于接收和发送请求
@@ -45,7 +47,7 @@ public class UniformSQLServerSocketHandler implements ServerSocketHandler {
      * @throws IOException                                    获取 InputStream 或者 OutputStream 失败
      * @throws PacketExceptions.NecessaryFieldNotSetException 必要字段没有正确设置
      */
-    public void handleSocket() throws IOException, PacketExceptions.NecessaryFieldNotSetException {
+    public void handleSocket() throws IOException, PacketExceptions.NecessaryFieldNotSetException, SQLException {
         logger.i(clientSocket.getInetAddress() + " has been connected to server with ID " + id);
 
         InputStream in = clientSocket.getInputStream();
@@ -76,13 +78,24 @@ public class UniformSQLServerSocketHandler implements ServerSocketHandler {
         logger.d("Database Name       : " + StringType.getString(credentialInformation.dbName));
 
         // TODO: 用户信息认证
-        Packet successPacket;
-        successPacket = buildSuccessPacket("OK");
-        data = new byte[successPacket.getSize()];
-        successPacket.getData(data);
-        out.write(data);
-        logger.i("(TID " + Thread.currentThread().getId() + ") 发送验证成功报文给客户端 " + clientSocket.getInetAddress());
-        logger.d("(TID " + Thread.currentThread().getId() + ") 成功报文内容: " + successPacket);
+        Packet resultPacket;
+        if (ZQLContext.metaDatabase.checkPassword(StringType.getString(credentialInformation.userName), randomStr,
+                LengthCodeStringType.getString(credentialInformation.token))) {
+            resultPacket = buildSuccessPacket("OK");
+            data = new byte[resultPacket.getSize()];
+            resultPacket.getData(data);
+            out.write(data);
+            logger.i("(TID " + Thread.currentThread().getId() + ") 发送验证成功报文给客户端 " + clientSocket.getInetAddress());
+            logger.d("(TID " + Thread.currentThread().getId() + ") 成功报文内容: " + resultPacket);
+        } else {
+            // 验证失败，直接结束
+            logger.i("(TID " + Thread.currentThread().getId() + ") 用户 " + StringType.getString(credentialInformation.userName) + " 验证密码失败");
+            resultPacket = buildErrorPacket(1, 500, "验证密码错误");
+            data = new byte[resultPacket.getSize()];
+            resultPacket.getData(data);
+            out.write(data);
+            return;
+        }
 
         /* 生成会话 */
         ZQLSession session = new ZQLSession("root", null, "12345");
@@ -106,7 +119,37 @@ public class UniformSQLServerSocketHandler implements ServerSocketHandler {
             logger.d("(TID " + Thread.currentThread().getId() + ") 命令内容: " + LengthCodeStringType.getString(commandPacket.getCommand()));
 
             // TODO: 执行命令，若失败则封装错误报文
-            Packet packet = ZQLContext.executeSQL(LengthCodeStringType.getString(commandPacket.getCommand()), session);
+            String commandStr = LengthCodeStringType.getString(commandPacket.getCommand());
+            SQLCommandManager sqlCommandManager = new SQLCommandManager(commandStr, session);
+
+            // TODO: 异常处理和错误定义
+            BasePacket basePacket;
+            if (sqlCommandManager.execute()) {
+                if (sqlCommandManager.getReturnType()) {
+                    String ret = sqlCommandManager.getReturnString();
+                    basePacket = SuccessPacket.getSuccessPacket(new byte[]{1, 2, 3, 4}, new byte[]{3, 2, 1}, 200, 0, ret);
+                } else {
+                    basePacket = sqlCommandManager.getReturnPacket();
+                }
+            } else {
+                int errorCode = 0;
+                int serverStatus = 500;
+                String errorMessage = "执行 SQL 命令 `" + commandStr + "` 失败";
+                basePacket = ErrorPacket.getErrorPacket(errorCode, serverStatus, errorMessage);
+            }
+
+            byte[] body = new byte[basePacket.getSize()];
+            basePacket.getData(body);
+
+            /* 构建包头 */
+            PacketHeader packetHeader = new PacketHeader(4);
+            packetHeader.setPacketLength(basePacket.getSize());
+            packetHeader.setPacketID((byte) 0);
+
+            /* 构建数据包 */
+            Packet packet = new Packet(packetHeader.getSize() + body.length);
+            packet.setPacketHeader(packetHeader);
+            packet.setPacketBody(body);
 
             // 返回结果包
             data = new byte[packet.getSize()];
@@ -151,6 +194,8 @@ public class UniformSQLServerSocketHandler implements ServerSocketHandler {
         closeable.close();
     }
 
+    private String randomStr = null;    // 20 位随机字符串
+
     /**
      * 构建握手数据包
      *
@@ -166,7 +211,7 @@ public class UniformSQLServerSocketHandler implements ServerSocketHandler {
         IntegerType characterSet = IntegerType.getIntegerType(0, HandShakePacket.LENGTH_CHARACTER_SET);
         IntegerType serverStatus = IntegerType.getIntegerType(0, HandShakePacket.LENGTH_SERVER_STATUS);
 
-        String randomStr = RandomStringUtils.randomAlphanumeric(HandShakePacket.LENGTH_SCRAMBLE_ONE + HandShakePacket.LENGTH_SCRAMBLE_TWO - 2);    // 随机字符串
+        randomStr = RandomStringUtils.randomAlphanumeric(HandShakePacket.LENGTH_SCRAMBLE_ONE + HandShakePacket.LENGTH_SCRAMBLE_TWO - 2);    // 随机字符串
         StringType randomStrPartOneST = StringType.getStringType(randomStr.substring(0, 8));
         byte[] scramblePartOne = new byte[HandShakePacket.LENGTH_SCRAMBLE_ONE];
         randomStrPartOneST.getData(scramblePartOne);
@@ -235,4 +280,27 @@ public class UniformSQLServerSocketHandler implements ServerSocketHandler {
         return packet;
     }
 
+
+    /**
+     * 构建响应成功数据包
+     *
+     * @return 构建得到的响应成功数据包
+     */
+    private Packet buildErrorPacket(int errorCode, int serverStatus, String errorMessage) {
+        ErrorPacket errorPacket = ErrorPacket.getErrorPacket(errorCode, serverStatus, errorMessage);
+        byte[] body = new byte[errorPacket.getSize()];
+        errorPacket.getData(body);
+
+        /* 构建包头 */
+        PacketHeader packetHeader = new PacketHeader(4);
+        packetHeader.setPacketLength(errorPacket.getSize());
+        packetHeader.setPacketID((byte) packetNumber++);
+
+        /* 构建数据包 */
+        Packet packet = new Packet(packetHeader.getSize() + body.length);
+        packet.setPacketHeader(packetHeader);
+        packet.setPacketBody(body);
+
+        return packet;
+    }
 }
