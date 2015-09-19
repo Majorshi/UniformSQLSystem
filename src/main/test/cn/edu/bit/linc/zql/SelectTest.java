@@ -264,6 +264,9 @@ public class SelectTest {
             }
             test.exportResultToXML(rs, dataDirectory + expectFile);
 
+            //重新根据initFile初始化数据库
+            doInputSQLCommand(dataDirectory + initFile);
+            //使用语法解析器测试语句
             sqlCommandManager = new SQLCommandManager("USE " + useDatabase, session);
             sqlCommandManager.execute();
             sqlCommandManager = new SQLCommandManager(executeSQL, session);
@@ -288,27 +291,6 @@ public class SelectTest {
 
             System.out.println("==================结束测试用例" + (i + 1) + "==================");
         }
-    }
-
-    public boolean initDatabase (ZQLSession session, String initFile) {
-
-        String dropSQL = "DROP DATABASE " + testDBName;
-        SQLCommandManager sqlCommandManager = new SQLCommandManager(dropSQL, session);
-        if (!sqlCommandManager.execute()) return false;
-
-        String createSQL = "CREATE DATABASE " + testDBName;
-        sqlCommandManager = new SQLCommandManager(createSQL, session);
-        if (!sqlCommandManager.execute()) return false;
-
-        String useSQL = "USE " + testDBName;
-        sqlCommandManager = new SQLCommandManager(useSQL, session);
-        if (!sqlCommandManager.execute()) return false;
-
-        UnitTestUtils unit = new UnitTestUtils();
-        String initSQL = unit.ReadFile(dataDirectory + initFile);
-        sqlCommandManager = new SQLCommandManager(initSQL, session);
-        if (!sqlCommandManager.execute()) return false;
-        return true;
     }
 
     public static void main (String[] args) throws IOException, JSONException {
