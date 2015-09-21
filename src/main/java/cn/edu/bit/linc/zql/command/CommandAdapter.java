@@ -49,7 +49,7 @@ public abstract class CommandAdapter {
     public String DROP_USER = "DELETE FROM %s.zql_users WHERE User = '%s'";  // DROP user ihainan，只考虑 MySQL
 
     public String GRANT = "INSERT IGNORE INTO %s.zql_tables_priv VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')";  // GRANT SELECT, DELETE ON table_test TO ihainan, snow [WITH GRANT OPTION]，只考虑 MySQL
-    public static String UPDATE_GRANT = "UPDATE %s.zql_tables_priv SET %s WHERE User = '%s' and Db = '%s' and Tb = '%s'";
+    public String UPDATE_GRANT = "UPDATE %s.zql_tables_priv SET %s WHERE User = '%s' and Db = '%s' and Tb = '%s'";
 
     public String REVOKE_GRANT = "REVOKE %s %s ON %s TO %s %s"; // REVOKE SELECT, DELETE ON table_test [GRANT OPTION] FROM ihainan, snow
 
@@ -89,7 +89,7 @@ public abstract class CommandAdapter {
 
     public String SET_TABLE_NAME_TO_SERVER_ALIAS = "INSERT IGNORE INTO %s.zql_tables VALUES('%s', '%s', '%s', '%s')";
 
-    public String SELECT = "SELECT %s %s FROM %s %s %s %s %s";
+    public String SELECT = "SELECT %s %s %s %s %s %s %s";
 
     public String DEFAULT = "%s";
 

@@ -50,6 +50,7 @@ public class MySQLCommandAdapter extends CommandAdapter {
 
         ALTER_COLUMN_NAME = "ALTER TABLE %s CHANGE COLUMN %s %s %s"; // ALTER TABLE table_name CHANGE COLUMN old_name new_name type
         SELECT_FIELD_TYPE = "SHOW FIELDS FROM %s where Field ='%s'";
+        SELECT_FIELD_INFO = "SHOW FIELDS FROM %s";
         TYPE_FILED_NAME = "type";
 
         SHOW_TABLES = "SELECT * FROM %s.zql_tables WHERE %s and %s";    // SHOW TABLES [IN db_test] [LIKE "db_*"]
@@ -71,6 +72,14 @@ public class MySQLCommandAdapter extends CommandAdapter {
 
         SET_TABLE_NAME_TO_SERVER_ALIAS = "INSERT IGNORE INTO %s.zql_tables VALUES('%s', '%s', '%s', '%s')";
 
-        SELECT = "SELECT %s %s FROM %s %s %s %s %s";
+        SELECT = "SELECT %s %s %s %s %s %s %s";
+
+        DEFAULT = "%s";
+
+        DELETE = "DELETE FROM %s %s";
+
+        UPDATE = "UPDATE %s %s %s";
+
+        INSERT = "INSERT %s %s %s";
     }
 }

@@ -16,6 +16,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
+import org.junit.Test;
 
 import java.io.*;
 import java.sql.ResultSet;
@@ -28,6 +29,7 @@ public class SelectTest {
     private final static MetaDatabase metaDatabase = MetaDatabase.getInstance();
     private final static InnerDatabases innerDatabase = InnerDatabases.getInstance();
     private final static ArrayList<InnerDatabase> innerDatabasesArrayList = innerDatabase.getInnerDatabaseArray();
+    private ZQLSession session;
     private String user, password, inputQuery, fileName, database;
     public final static SQLCommandBuilder sqlCommandBuilder;
     static {
@@ -92,7 +94,7 @@ public class SelectTest {
     }
 
     public void doInputSQLCommand(String fileUrl) {
-        ZQLSession session = new ZQLSession(user, database, password);
+
 
         /* 确定输入源 */
         BufferedReader reader = null;
@@ -168,7 +170,6 @@ public class SelectTest {
                 SQLCommandManager sqlCommandManager = new SQLCommandManager(queryStr, session);
                 sqlCommandManager.execute();
                 System.out.println(sqlCommandManager.getOutput());
-
                 if (inputQuery != null)
                     return;
             }
@@ -212,10 +213,12 @@ public class SelectTest {
             String useDatabase = obj.getString("useDatabase") != null ? obj.getString("useDatabase"):"";
             //测试用SQL语句（非文件）
             String executeSQL = obj.getString("executeSQL") != null ? obj.getString("executeSQL"):"";
+
             //需要使用showSQL来得到对比用的结果集（针对insert、delete等没有结果集的语句使用）
             int useShowSQL = obj.getInt("useShowSQL");
             //showSQL
             String showSQL = obj.getString("showSQL") != null ? obj.getString("showSQL"):"";
+
             //结果集输出的文件名
             String exportFile = obj.getString("exportFile") != null ? obj.getString("exportFile"):"";
             //期望结果集文件名
@@ -228,20 +231,21 @@ public class SelectTest {
             java.util.ArrayList<InnerSQLCommand> commands = new java.util.ArrayList<InnerSQLCommand>();
             ArrayList<Integer> dbIds = new ArrayList<Integer>();
             Database.DBType type = Database.DBType.MySQL;
-
-
-            InnerSQLCommand useDBcommand = sqlCommandBuilder.useDatabase(type, useDatabase);
-            InnerSQLCommand innerDBcommands = sqlCommandBuilder.defaultSQL(type, executeSQL);
-            commands.add(useDBcommand);
-            commands.add(innerDBcommands);
             int dbId;
             try {
-                dbId = metaDatabase.getInnerDatabaseId(useDatabase);
+                if (useDatabase.length() != 0) dbId = metaDatabase.getInnerDatabaseId(useDatabase);
+                else dbId = 1;
             } catch (MetaDatabaseOperationsException e) {
                 session.setDatabase("获取数据库所在底层库失败，错误原因：" + e.getMessage());
                 return;
             }
-            dbIds.add(dbId);
+            if (useDatabase.length() != 0) {
+                InnerSQLCommand useDBcommand = sqlCommandBuilder.useDatabase(type, useDatabase);
+                commands.add(useDBcommand);
+                dbIds.add(dbId);
+            }
+            InnerSQLCommand innerDBcommands = sqlCommandBuilder.defaultSQL(type, executeSQL);
+            commands.add(innerDBcommands);
             dbIds.add(dbId);
 
             SQLCommandManager sqlCommandManager = new SQLCommandManager(executeSQL, session);
@@ -267,10 +271,12 @@ public class SelectTest {
             //重新根据initFile初始化数据库
             doInputSQLCommand(dataDirectory + initFile);
             //使用语法解析器测试语句
-            sqlCommandManager = new SQLCommandManager("USE " + useDatabase, session);
-            sqlCommandManager.execute();
+            if (useDatabase.length() != 0) {
+                sqlCommandManager = new SQLCommandManager("USE " + useDatabase, session);
+                sqlCommandManager.execute();
+            }
             sqlCommandManager = new SQLCommandManager(executeSQL, session);
-
+            System.out.println("EXECUTESQL:" + executeSQL);
             if (!sqlCommandManager.execute()) {
                 rs = null;
             } else {
@@ -279,6 +285,7 @@ public class SelectTest {
             if (useShowSQL != 0) {
                 //执行showSQL
                 sqlCommandManager = new SQLCommandManager(showSQL, session);
+                System.out.println("showSQL:" + showSQL);
                 if (!sqlCommandManager.execute()) {
                     rs = null;
                 } else {
@@ -287,7 +294,11 @@ public class SelectTest {
             }
             test.exportResultToXML(rs, dataDirectory + exportFile);
             //对比expectFile和exportFile
-            Assert.assertTrue(test.compare(dataDirectory + expectFile, dataDirectory + expectFile));
+            try {
+                Assert.assertTrue(test.compare(dataDirectory + expectFile, dataDirectory + expectFile));
+            } catch (AssertionError e) {
+                System.out.println("==================测试用例" + (i + 1) + ":" + title + "对比失败！！！==================");
+            }
 
             System.out.println("==================结束测试用例" + (i + 1) + "==================");
         }
@@ -298,6 +309,8 @@ public class SelectTest {
         zqlContext.initializeSystem();
         SelectTest test = new SelectTest();
         test.parseArgs(args);
+        test.session = new ZQLSession(test.user, test.database, test.password);
         test.startTest();
+        test.session.closeSession();
     }
 }

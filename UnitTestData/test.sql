@@ -10,6 +10,14 @@ c_introduction varchar(500),
 week int,
 sequence int 
 );
+create table testSQLtest.course2(
+c_id int,
+credit float,
+course varchar(100),
+c_introduction varchar(500),
+week int,
+sequence int
+);
 create table testSQLtest.stu_course(
 c_id int,
 id int,
@@ -34,6 +42,9 @@ insert into course values(2203,4.0,'算法','大学软件专业必修',2,3);
 insert into course values(2204,3.5,'程序设计','学生提升能力的课程',2,1);
 insert into course values(2205,2.0,'java','面向对象的语言',1,2);
 insert into course values(2215,3.0,'C语言','理工科学生必修课程',3,3);
+insert into course2 values(2201,6.0,'高数','大学必修课程',1,3);
+insert into course2 values(2202,3.0,'数据结构','大学软件专业必修',1,4);
+insert into course2 values(2203,4.0,'算法','大学软件专业必修',2,3);
 insert into stu_class values('0811102',20150001);
 insert into stu_class values('0811102',20150002);
 insert into stu_class values('0811102',20150003);

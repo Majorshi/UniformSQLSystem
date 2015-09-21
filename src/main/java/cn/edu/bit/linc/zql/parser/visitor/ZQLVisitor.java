@@ -651,7 +651,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         int dbId = Integer.valueOf(ZQLEnv.get("innerdb.dafault.innerdb"));    // 默认底层库
 
         /* 获取子节点数据 */
-        ASTNodeVisitResult visitSchemaNameNodeResult = visit(ctx.schema_name());
+        ASTNodeVisitResult visitSchemaNameNodeResult = visit(ctx.database_name());
         String createDbName = visitSchemaNameNodeResult.getValue();     // 数据库名
         String checkExists = ctx.IF() != null ? "IF NOT EXISTS" : "";   // IF NOT EXISTS
 
@@ -683,7 +683,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
     public ASTNodeVisitResult visitDrop_database_statement(uniformSQLParser.Drop_database_statementContext ctx) {
         /* 获取子节点数据 */
         ASTNodeVisitResult visitSchemaNameNodeResult;
-        visitSchemaNameNodeResult = visit(ctx.schema_name());
+        visitSchemaNameNodeResult = visit(ctx.database_name());
         String dropDbName = visitSchemaNameNodeResult.getValue(); // 数据库名
         String checkExists = ctx.IF() != null ? "IF EXISTS" : "";   // IF NOT EXISTS
 
@@ -1202,6 +1202,10 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
             ASTNodeVisitResult visitResult = visit(ctx.select_list());
             String selectListeStr = visitResult.getValue();
             selectList += selectListeStr;
+        }
+
+        if (ctx.FROM() != null) {
+            selectList += " " + ctx.FROM().getText() + " ";
         }
 
         // FROM TABLES
@@ -2237,11 +2241,6 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
             if (whateverResult.getValue() != null) {
                 valueStr += whateverResult.getValue();
             }
-        } else if (ctx.bit_literal() != null) {
-            ASTNodeVisitResult whateverResult = visit(ctx.bit_literal());
-            if (whateverResult.getValue() != null) {
-                valueStr += whateverResult.getValue();
-            }
         }
         return new ASTNodeVisitResult(valueStr, null, null);
     }
@@ -2268,16 +2267,16 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         return new ASTNodeVisitResult(ctx.getText(), null, null);
     }
 
-    /**
-     * Bit_literal
-     *
-     * @param ctx 节点上下文
-     * @return 节点访问结果
-     */
-    @Override
-    public ASTNodeVisitResult visitBit_literal(uniformSQLParser.Bit_literalContext ctx) {
-        return new ASTNodeVisitResult(ctx.getText(), null, null);
-    }
+//    /**
+//     * Bit_literal
+//     *
+//     * @param ctx 节点上下文
+//     * @return 节点访问结果
+//     */
+//    @Override
+//    public ASTNodeVisitResult visitBit_literal(uniformSQLParser.Bit_literalContext ctx) {
+//        return new ASTNodeVisitResult(ctx.getText(), null, null);
+//    }
 
     /**
      * Any_name
@@ -2601,23 +2600,23 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         return visitChildrenNodes(ctx.children);
     }
 
-    /**
-     * Insert_statements
-     *
-     * @param ctx 节点上下文
-     * @return 节点访问结果
-     */
-    @Override
-    public ASTNodeVisitResult visitInsert_statements(uniformSQLParser.Insert_statementsContext ctx) {
-        ArrayList<InnerSQLCommand> commands = new ArrayList<InnerSQLCommand>();
-        ArrayList<Integer> dbIds = new ArrayList<Integer>();
-        if (ctx.insert_statement() != null) {
-            ASTNodeVisitResult insertResult = visit(ctx.insert_statement());
-            commands = insertResult.getCommands();
-            dbIds = insertResult.getDbIds();
-        }
-        return new ASTNodeVisitResult(null, commands, dbIds);
-    }
+//    /**
+//     * Insert_statements
+//     *
+//     * @param ctx 节点上下文
+//     * @return 节点访问结果
+//     */
+//    @Override
+//    public ASTNodeVisitResult visitInsert_statements(uniformSQLParser.Insert_statementsContext ctx) {
+//        ArrayList<InnerSQLCommand> commands = new ArrayList<InnerSQLCommand>();
+//        ArrayList<Integer> dbIds = new ArrayList<Integer>();
+//        if (ctx.insert_statement() != null) {
+//            ASTNodeVisitResult insertResult = visit(ctx.insert_statement());
+//            commands = insertResult.getCommands();
+//            dbIds = insertResult.getDbIds();
+//        }
+//        return new ASTNodeVisitResult(null, commands, dbIds);
+//    }
 
     /**
      * Insert_statement

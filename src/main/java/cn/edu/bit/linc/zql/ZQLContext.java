@@ -57,17 +57,17 @@ public class ZQLContext {
             logger.i("正在创建元数据库...");
             metaDatabase.createMetaDatabase();
 
-//            if (ZQLEnv.get("server.enable").equals("true")) {
-//                logger.i("正在启动服务接口...");
-//                UniformSQLServerSocketHandlerFactory uniformSQLSocketHandlerFactory = new UniformSQLServerSocketHandlerFactory();
-//                server = new UniformSQLServer
-//                        .Builder()
-//                        .onPort(Integer.valueOf(ZQLEnv.get("server.port")))
-//                        .withSocketHandlerFactory(uniformSQLSocketHandlerFactory)
-//                        .build();
-//                server.start();
-//            }
-//            logger.i("系统模块初始化完毕\n");
+            if (ZQLEnv.get("server.enable").equals("true")) {
+                logger.i("正在启动服务接口...");
+                UniformSQLServerSocketHandlerFactory uniformSQLSocketHandlerFactory = new UniformSQLServerSocketHandlerFactory();
+                server = new UniformSQLServer
+                        .Builder()
+                        .onPort(Integer.valueOf(ZQLEnv.get("server.port")))
+                        .withSocketHandlerFactory(uniformSQLSocketHandlerFactory)
+                        .build();
+                server.start();
+            }
+            logger.i("系统模块初始化完毕\n");
         }
 
     }
