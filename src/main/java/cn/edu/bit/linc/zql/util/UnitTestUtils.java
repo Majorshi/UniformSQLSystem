@@ -147,7 +147,4 @@ public class UnitTestUtils {
         }
         return diff.identical();
     }
-
-    // 导入 SQL 脚本
-
 }
