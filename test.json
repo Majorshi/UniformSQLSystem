@@ -1,6 +1,76 @@
 [
   {
     "enable": 1,
+    "title": "DATABASE-CREATE-001",
+    "initFile": "databaseTest.sql",
+    "useDatabase": "testSQLtest",
+    "executeSQL": "CREATE DATABASE test_db1;",
+    "shouldBeError": 0,
+    "useShowSQL": 1,
+    "showSQL": ""
+  },
+  {
+    "enable": 1,
+    "title": "DATABASE-CREATE-002",
+    "initFile": "databaseTest.sql",
+    "useDatabase": "testSQLtest",
+    "executeSQL": "CREATE DATABASE IF NOT EXISTS test_db1;",
+    "shouldBeError": 0,
+    "useShowSQL": 1,
+    "showSQL": ""
+  },
+  {
+    "enable": 1,
+    "title": "DATABASE-CREATE-001",
+    "initFile": "noDataTest.sql",
+    "useDatabase": "testSQLtest",
+    "executeSQL": "CREATE DATABASE testSQLtest;",
+    "shouldBeError": 1,
+    "useShowSQL": 0,
+    "showSQL": ""
+  },
+  {
+    "enable": 1,
+    "title": "DATABASE-CREATE-002",
+    "initFile": "noDataTest.sql",
+    "useDatabase": "testSQLtest",
+    "executeSQL": "CREATE DATABASE IF NOT EXISTS testSQLtest;",
+    "shouldBeError": 0,
+    "useShowSQL": 1,
+    "showSQL": ""
+  },
+  {
+    "enable": 1,
+    "title": "DATABASE-SHOW-001",
+    "initFile": "noDataTest.sql",
+    "useDatabase": "testSQLtest",
+    "executeSQL": "SHOW DATABASES;",
+    "shouldBeError": 0,
+    "useShowSQL": 1,
+    "showSQL": ""
+  },
+  {
+    "enable": 1,
+    "title": "DATABASE-USE-001",
+    "initFile": "noDataTest.sql",
+    "useDatabase": "testSQLtest",
+    "executeSQL": "USE db_test;",
+    "shouldBeError": 1,
+    "useShowSQL": 0,
+    "showSQL": ""
+  },
+  {
+    "enable": 1,
+    "title": "DATABASE-USE-002",
+    "initFile": "noDataTest.sql",
+    "useDatabase": "testSQLtest",
+    "executeSQL": "USE testSQLtest;",
+    "shouldBeError": 0,
+    "useShowSQL": 1,
+    "showSQL": ""
+  },
+  {
+    "enable": 0,
     "title": "DATABASE-DELETE-001",
     "initFile": "noDataTest.sql",
     "useDatabase": "testSQLtest",
@@ -10,7 +80,7 @@
     "showSQL": ""
   },
   {
-    "enable": 1,
+    "enable": 0,
     "title": "DATABASE-DELETE-002",
     "initFile": "noDataTest.sql",
     "useDatabase": "testSQLtest",
@@ -20,7 +90,7 @@
     "showSQL": ""
   },
   {
-    "enable": 1,
+    "enable": 0,
     "title": "DATABASE-DELETE-003",
     "initFile": "noDataTest.sql",
     "useDatabase": "testSQLtest",
@@ -30,7 +100,7 @@
     "showSQL": ""
   },
   {
-    "enable": 1,
+    "enable": 0,
     "title": "DATABASE-DELETE-004",
     "initFile": "noDataTest.sql",
     "useDatabase": "testSQLtest",
@@ -44,27 +114,17 @@
     "title": "TABLE-CREATE-001",
     "initFile": "noDataTest.sql",
     "useDatabase": "testSQLtest",
-    "executeSQL": "CREATE TABLE student (id int,name varchar(30),age int,sex boolean,num varchar(15));",
+    "executeSQL": "CREATE TABLE student5 (id int,name varchar(30),age int,sex boolean,num varchar(15));",
     "shouldBeError": 0,
     "useShowSQL": 1,
-    "showSQL": "SHOW COLUMNS FROM student;"
-  },
-  {
-    "enable": 1,
-    "title": "TABLE-CREATE-001",
-    "initFile": "noDataTest.sql",
-    "useDatabase": "testSQLtest",
-    "executeSQL": "CREATE TABLE student (id int,name varchar(30),age int,sex boolean,num varchar(15));",
-    "shouldBeError": 0,
-    "useShowSQL": 1,
-    "showSQL": "SHOW COLUMNS FROM student;"
+    "showSQL": "SHOW COLUMNS FROM student5;"
   },
   {
     "enable": 1,
     "title": "TABLE-CREATE-002",
     "initFile": "noDataTest.sql",
     "useDatabase": "testSQLtest",
-    "executeSQL": "CREATE TABLE student IF NOT EXISTS(id int,name varchar(30),age int,sex boolean,num varchar(15));",
+    "executeSQL": "CREATE TABLE IF NOT EXISTS student (id int,name varchar(30),age int,sex boolean,num varchar(15));",
     "shouldBeError": 0,
     "useShowSQL": 1,
     "showSQL": "SHOW COLUMNS FROM student;"
@@ -84,7 +144,7 @@
     "title": "TABLE-CREATE-004",
     "initFile": "noDataTest.sql",
     "useDatabase": "testSQLtest",
-    "executeSQL": "CREATE TABLE student IF NOT EXISTS(id int,name varchar(30),age int,sex boolean,num varchar(15));",
+    "executeSQL": "CREATE TABLE IF NOT EXISTS student (id int,name varchar(30),age int,sex boolean,num varchar(15));",
     "shouldBeError": 0,
     "useShowSQL": 1,
     "showSQL": "SHOW COLUMNS FROM student;"
