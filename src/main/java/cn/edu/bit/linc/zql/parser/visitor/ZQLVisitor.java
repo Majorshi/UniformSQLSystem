@@ -439,14 +439,28 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         ArrayList<Integer> dbIds = new ArrayList<Integer>();
 
         /* 获取子节点数据 */
-        String tbName = visit(ctx.table_spec()).getValue();
+        String tbName = visit(ctx.table_spec().table_name()).getValue();
 
         // 权限表
         ArrayList<String> privilegesArray = new ArrayList<String>();
         for (int i = 0; i < ctx.priv_type().size(); i++) {
             uniformSQLParser.Priv_typeContext context = ctx.priv_type().get(i);
             ASTNodeVisitResult visitPrivTypeNodeResult = visit(context);
-            privilegesArray.add(visitPrivTypeNodeResult.getValue());
+            if (context.ALL() != null) {
+                privilegesArray.add("ALL");
+            }
+            if (context.INSERT() != null) {
+                privilegesArray.add("INSERT");
+            }
+            if (context.SELECT() != null) {
+                privilegesArray.add("SELECT");
+            }
+            if (context.DELETE() != null) {
+                privilegesArray.add("DELETE");
+            }
+            if (context.UPDATE() != null) {
+                privilegesArray.add("UPDATE");
+            }
         }
 
         if (privilegesArray.contains("ALL")) {
