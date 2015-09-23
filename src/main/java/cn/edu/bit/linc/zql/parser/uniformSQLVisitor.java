@@ -516,6 +516,24 @@ public interface uniformSQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitData_definition_statements(uniformSQLParser.Data_definition_statementsContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link uniformSQLParser#create_statement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCreate_statement(uniformSQLParser.Create_statementContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link uniformSQLParser#drop_statement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitDrop_statement(uniformSQLParser.Drop_statementContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link uniformSQLParser#privilege_alter_statement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPrivilege_alter_statement(uniformSQLParser.Privilege_alter_statementContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link uniformSQLParser#select_statement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -624,12 +642,6 @@ public interface uniformSQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitInsert_header(uniformSQLParser.Insert_headerContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link uniformSQLParser#insert_subfix}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitInsert_subfix(uniformSQLParser.Insert_subfixContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link uniformSQLParser#value_list_clause}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -660,12 +672,6 @@ public interface uniformSQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitCreate_database_statement(uniformSQLParser.Create_database_statementContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link uniformSQLParser#drop_database_statement}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitDrop_database_statement(uniformSQLParser.Drop_database_statementContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link uniformSQLParser#create_table_statement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -683,12 +689,6 @@ public interface uniformSQLVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitCreate_table_statement2(uniformSQLParser.Create_table_statement2Context ctx);
-	/**
-	 * Visit a parse tree produced by {@link uniformSQLParser#create_table_statement3}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitCreate_table_statement3(uniformSQLParser.Create_table_statement3Context ctx);
 	/**
 	 * Visit a parse tree produced by {@link uniformSQLParser#create_definition}.
 	 * @param ctx the parse tree
@@ -719,18 +719,6 @@ public interface uniformSQLVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitIndex_column_name(uniformSQLParser.Index_column_nameContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link uniformSQLParser#reference_definition}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitReference_definition(uniformSQLParser.Reference_definitionContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link uniformSQLParser#reference_option}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitReference_option(uniformSQLParser.Reference_optionContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link uniformSQLParser#length}.
 	 * @param ctx the parse tree
@@ -792,6 +780,12 @@ public interface uniformSQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitRename_table_statement(uniformSQLParser.Rename_table_statementContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link uniformSQLParser#drop_database_statement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitDrop_database_statement(uniformSQLParser.Drop_database_statementContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link uniformSQLParser#drop_table_statement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -804,11 +798,11 @@ public interface uniformSQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitDrop_view_statement(uniformSQLParser.Drop_view_statementContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link uniformSQLParser#truncate_table_statement}.
+	 * Visit a parse tree produced by {@link uniformSQLParser#drop_user_statement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitTruncate_table_statement(uniformSQLParser.Truncate_table_statementContext ctx);
+	T visitDrop_user_statement(uniformSQLParser.Drop_user_statementContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link uniformSQLParser#create_view_statement}.
 	 * @param ctx the parse tree
@@ -833,12 +827,6 @@ public interface uniformSQLVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitCreate_user_statement(uniformSQLParser.Create_user_statementContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link uniformSQLParser#drop_user_statement}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitDrop_user_statement(uniformSQLParser.Drop_user_statementContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link uniformSQLParser#grant_privilege_statement}.
 	 * @param ctx the parse tree

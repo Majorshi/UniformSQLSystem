@@ -2712,12 +2712,6 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         }
 
         String insert_subfixStr = "";
-        if (ctx.insert_subfix() != null) {
-            ASTNodeVisitResult whateverResult = visit(ctx.insert_subfix());
-            if (whateverResult.getValue() != null) {
-                insert_subfixStr += whateverResult.getValue();
-            }
-        }
 
         /* 底层库命令 */
         InnerSQLCommand innerDbCommand = sqlCommandBuilder.insert(dbType, insert_headerStr, column_listStr, select_expressionStr + value_list_clauseStr, insert_subfixStr);
@@ -2737,15 +2731,15 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
     public ASTNodeVisitResult visitInsert_header(uniformSQLParser.Insert_headerContext ctx) {
         ArrayList<Integer> dbIds = new ArrayList<Integer>();
         String valueStr = "";
-        if (ctx.LOW_PRIORITY() != null) {
-            valueStr += " " + ctx.LOW_PRIORITY() + " ";
-        }
-        if (ctx.HIGH_PRIORITY() != null) {
-            valueStr += " " + ctx.HIGH_PRIORITY() + " ";
-        }
-        if (ctx.IGNORE() != null) {
-            valueStr += " " + ctx.IGNORE() + " ";
-        }
+//        if (ctx.LOW_PRIORITY() != null) {
+//            valueStr += " " + ctx.LOW_PRIORITY() + " ";
+//        }
+//        if (ctx.HIGH_PRIORITY() != null) {
+//            valueStr += " " + ctx.HIGH_PRIORITY() + " ";
+//        }
+//        if (ctx.IGNORE() != null) {
+//            valueStr += " " + ctx.IGNORE() + " ";
+//        }
         if (ctx.INTO() != null) {
             valueStr += " " + ctx.INTO() + " ";
         }
@@ -2903,16 +2897,16 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         return visitChildrenNodes(ctx.children);
     }
 
-    /**
-     * Insert_subfix
-     *
-     * @param ctx 节点上下文
-     * @return 节点访问结果
-     */
-    @Override
-    public ASTNodeVisitResult visitInsert_subfix(uniformSQLParser.Insert_subfixContext ctx) {
-        return visitChildrenNodes(ctx.children);
-    }
+//    /**
+//     * Insert_subfix
+//     *
+//     * @param ctx 节点上下文
+//     * @return 节点访问结果
+//     */
+//    @Override
+//    public ASTNodeVisitResult visitInsert_subfix(uniformSQLParser.Insert_subfixContext ctx) {
+//        return visitChildrenNodes(ctx.children);
+//    }
 
     /**
      * Subquery
