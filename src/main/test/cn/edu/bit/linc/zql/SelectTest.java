@@ -12,6 +12,7 @@ import cn.edu.bit.linc.zql.util.UnitTestUtils;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import junit.framework.TestCase;
+import org.datanucleus.store.rdbms.identifier.IdentifierFactory;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -203,6 +204,9 @@ public class SelectTest {
         org.json.JSONArray arr = new JSONArray(json);
         for (int i = 0; i < arr.length(); i++) {
             JSONObject obj = arr.getJSONObject(i);
+
+            int enable = obj.getInt("enable");
+            if (enable == 0) continue;
             //测试用例标题
             String title = obj.getString("title") != null ? obj.getString("title") : "";
 
@@ -215,19 +219,23 @@ public class SelectTest {
             String useDatabase = obj.getString("useDatabase") != null ? obj.getString("useDatabase") : "";
             //测试用SQL语句（非文件）
             String executeSQL = obj.getString("executeSQL") != null ? obj.getString("executeSQL") : "";
+            //预期结果为执行错误
+            int shouldBeError = obj.getInt("shouldBeError");
 
             //需要使用showSQL来得到对比用的结果集（针对insert、delete等没有结果集的语句使用）
             int useShowSQL = obj.getInt("useShowSQL");
             //showSQL
             String showSQL = obj.getString("showSQL") != null ? obj.getString("showSQL") : "";
 
+            boolean onlyCheckExecute = false;
+            //如果useShowSQL = 1 且showSQL为空，则只判断SQL是否运行成功
+            if (showSQL.length() == 0 && useShowSQL == 1) onlyCheckExecute = true;
+
             //结果集输出的文件名
-            String exportFile = obj.getString("exportFile") != null ? obj.getString("exportFile") : "";
+            String exportFile = title + "-export.xml";
             //期望结果集文件名
-            String expectFile = obj.getString("expectFile") != null ? obj.getString("expectFile") : "";
+            String expectFile = title + "-expect.xml";
             //根据initFile初始化数据库
-            doInputSQLCommand(dataDirectory + initFile);
-            //预执行excuteSQL，生成对比结果文件
             ResultSet rs;
 
             java.util.ArrayList<InnerSQLCommand> commands = new java.util.ArrayList<InnerSQLCommand>();
@@ -246,30 +254,36 @@ public class SelectTest {
                 commands.add(useDBcommand);
                 dbIds.add(dbId);
             }
-            InnerSQLCommand innerDBcommands = sqlCommandBuilder.defaultSQL(type, executeSQL);
-            commands.add(innerDBcommands);
-            dbIds.add(dbId);
 
-            SQLCommandManager sqlCommandManager = new SQLCommandManager(executeSQL, session);
-            if (!sqlCommandManager.excuteSQLWithoutParser(commands, dbIds)) {
-                rs = null;
-            } else {
-                rs = sqlCommandManager.getResultSet();
-            }
-            if (useShowSQL != 0) {
-                //执行showSQL
-                sqlCommandManager = new SQLCommandManager(showSQL, session);
-                commands = new java.util.ArrayList<InnerSQLCommand>();
-                innerDBcommands = sqlCommandBuilder.defaultSQL(type, showSQL);
+            SQLCommandManager sqlCommandManager;
+            if (shouldBeError == 0 && !onlyCheckExecute) {
+                doInputSQLCommand(dataDirectory + initFile);
+                //预执行excuteSQL，生成对比结果文件
+                InnerSQLCommand innerDBcommands = sqlCommandBuilder.defaultSQL(type, executeSQL);
                 commands.add(innerDBcommands);
+                dbIds.add(dbId);
+
+                sqlCommandManager = new SQLCommandManager(executeSQL, session);
                 if (!sqlCommandManager.excuteSQLWithoutParser(commands, dbIds)) {
                     rs = null;
                 } else {
                     rs = sqlCommandManager.getResultSet();
                 }
-            }
-            test.exportResultToXML(rs, dataDirectory + expectFile);
+                if (useShowSQL != 0) {
+                    //执行showSQL
+                    sqlCommandManager = new SQLCommandManager(showSQL, session);
+                    commands = new java.util.ArrayList<InnerSQLCommand>();
+                    innerDBcommands = sqlCommandBuilder.defaultSQL(type, showSQL);
+                    commands.add(innerDBcommands);
+                    if (!sqlCommandManager.excuteSQLWithoutParser(commands, dbIds)) {
+                        rs = null;
+                    } else {
+                        rs = sqlCommandManager.getResultSet();
+                    }
+                }
+                test.exportResultToXML(rs, dataDirectory + expectFile);
 
+            }
             //重新根据initFile初始化数据库
             doInputSQLCommand(dataDirectory + initFile);
             //使用语法解析器测试语句
@@ -279,29 +293,46 @@ public class SelectTest {
             }
             sqlCommandManager = new SQLCommandManager(executeSQL, session);
             System.out.println("EXECUTESQL:" + executeSQL);
-            if (!sqlCommandManager.execute()) {
-                rs = null;
-            } else {
-                rs = sqlCommandManager.getResultSet();
-            }
-            if (useShowSQL != 0) {
-                //执行showSQL
-                sqlCommandManager = new SQLCommandManager(showSQL, session);
-                System.out.println("showSQL:" + showSQL);
-                if (!sqlCommandManager.execute()) {
-                    rs = null;
+            boolean testResult = false;
+            boolean executeResult = sqlCommandManager.execute();
+            if (!executeResult) {
+                //SQL执行失败
+                if (shouldBeError == 1) {
+                    testResult = true;
                 } else {
-                    rs = sqlCommandManager.getResultSet();
+                    testResult = false;
+                }
+            } else {
+                //SQL执行成功
+                if (shouldBeError == 1) {
+                    testResult = false;
+                } else {
+                    if (onlyCheckExecute) {
+                        testResult = true;
+                    } else {
+                        rs = sqlCommandManager.getResultSet();
+                        if (useShowSQL != 0) {
+                            //执行showSQL
+                            sqlCommandManager = new SQLCommandManager(showSQL, session);
+                            System.out.println("showSQL:" + showSQL);
+                            if (!sqlCommandManager.execute()) {
+                                rs = null;
+                            } else {
+                                rs = sqlCommandManager.getResultSet();
+                            }
+                        }
+                        test.exportResultToXML(rs, dataDirectory + exportFile);
+                        //对比expectFile和exportFile
+                        testResult = test.compare(dataDirectory + expectFile, dataDirectory + expectFile);
+                    }
+
                 }
             }
-            test.exportResultToXML(rs, dataDirectory + exportFile);
-            //对比expectFile和exportFile
             try {
-                Assert.assertTrue(test.compare(dataDirectory + expectFile, dataDirectory + expectFile));
+                Assert.assertTrue(testResult);
             } catch (AssertionError e) {
                 System.out.println("==================测试用例" + (i + 1) + ":" + title + "对比失败！！！==================");
             }
-
             System.out.println("==================结束测试用例" + (i + 1) + "==================");
         }
     }

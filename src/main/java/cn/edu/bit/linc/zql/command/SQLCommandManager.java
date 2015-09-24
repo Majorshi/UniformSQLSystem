@@ -182,7 +182,7 @@ public class SQLCommandManager {
             try {
                 statement = connection.createStatement();
             } catch (SQLException e) {
-                int vendorCode = 12001;
+                int vendorCode = ZQLErrorNumbers.ERR_CP_CREATE_STATEMENT;
                 String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
                 ZQLConnectionException zqlConnectionException = new ZQLConnectionException(reason, e.getSQLState(), vendorCode);
                 zqlConnectionException.initCause(e);
@@ -195,7 +195,7 @@ public class SQLCommandManager {
                 LOGGER.d("在数据库 " + dbId + " 中执行指令 " + innerSQLCommand.getCommandStr());
                 isQuery = statement.execute(innerSQLCommand.getCommandStr());
             } catch (SQLException e) {
-                int vendorCode = 10002;
+                int vendorCode = ZQLErrorNumbers.ERR_INNER_EXEC;
                 String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{String.valueOf(dbId), innerSQLCommand.getCommandStr()});
                 ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, e.getSQLState(), vendorCode);
                 zqlInnerDatabaseExecutionException.initCause(e);
@@ -207,7 +207,7 @@ public class SQLCommandManager {
                 try {
                     this.resultSet = statement.getResultSet();
                 } catch (SQLException e) {
-                    int vendorCode = 12002;
+                    int vendorCode = ZQLErrorNumbers.ERR_CP_GET_RS;
                     String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
                     ZQLConnectionException zqlConnectionException = new ZQLConnectionException(reason, e.getSQLState(), vendorCode);
                     zqlConnectionException.initCause(e);
@@ -217,7 +217,7 @@ public class SQLCommandManager {
                 try {
                     this.updateCount += statement.getUpdateCount();
                 } catch (SQLException e) {
-                    int vendorCode = 12003;
+                    int vendorCode = ZQLErrorNumbers.ERR_CP_GET_UR;
                     String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
                     ZQLConnectionException zqlConnectionException = new ZQLConnectionException(reason, e.getSQLState(), vendorCode);
                     zqlConnectionException.initCause(e);

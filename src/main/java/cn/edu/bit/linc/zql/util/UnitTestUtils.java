@@ -146,8 +146,6 @@ public class UnitTestUtils {
         return diff.identical();
     }
 
-    // 导入 SQL 脚本
-
     /**
      * 执行一条 SQL 语句并输出结果，本方法仅用于测试用途！
      *
