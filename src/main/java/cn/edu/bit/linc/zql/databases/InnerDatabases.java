@@ -166,17 +166,18 @@ public class InnerDatabases {
         return "INT";
     }
 
-    public HashMap<String, String> getColumnTypeInTable(int dbNo, String databaseName, String tableName) throws ZQLCommandExecutionError {
+    public HashMap<String, String> getColumnTypeInTable(int dbNo, String databaseName, String tableName) throws ZQLInnerDatabaseExecutionException {
         /* 连接底层库并执行命令 */
         ConnectionPools connectionPools = ConnectionPools.getInstance();
         Connection connection = null;
         Statement statement = null;
+        InnerSQLCommand command = null;
         try {
             CommandAdapter adapterAdapter = CommandAdapter.getAdapterInstance(innerDatabaseArray.get(dbNo - 1).getDbType());
             connection = connectionPools.getConnection(dbNo);
             statement = connection.createStatement();
             // USE db_name
-            InnerSQLCommand command = sqlCommandBuilder.useDatabase(adapterAdapter.dbType, databaseName);
+            command = sqlCommandBuilder.useDatabase(adapterAdapter.dbType, databaseName);
             statement.execute(command.getCommandStr());
             // GET COLUMN_TYPE
             command = sqlCommandBuilder.getColumnInfo(adapterAdapter.dbType, tableName);
@@ -186,26 +187,31 @@ public class InnerDatabases {
                 types.put(resultSet.getString("field"), resultSet.getString(adapterAdapter.TYPE_FILED_NAME));
             }
             return types;
-        } catch (Exception e) {
-            ZQLCommandExecutionError zqlCommandExecutionError = new ZQLCommandExecutionError("获取数据列 " +
-                    databaseName + "." + tableName + "的类型失败");
-            zqlCommandExecutionError.initCause(e);
-            throw zqlCommandExecutionError;
+        } catch (SQLException e) {
+            int vendorCode = ZQLErrorNumbers.ERR_INNER_EXEC;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{innerDatabaseArray.get(dbNo - 1).toString(), command.getCommandStr()});
+            ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, e.getSQLState(), vendorCode);
+            zqlInnerDatabaseExecutionException.initCause(e);
+            throw zqlInnerDatabaseExecutionException;
         } finally {
             if (statement != null) try {
                 statement.close();
             } catch (SQLException e) {
-                ZQLCommandExecutionError zqlCommandExecutionError = new ZQLCommandExecutionError("关闭 Statement 失败");
-                zqlCommandExecutionError.initCause(e);
-                throw zqlCommandExecutionError;
+                int vendorCode = ZQLErrorNumbers.ERR_INNER_EXEC;
+                String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{innerDatabaseArray.get(dbNo - 1).toString(), command.getCommandStr()});
+                ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, e.getSQLState(), vendorCode);
+                zqlInnerDatabaseExecutionException.initCause(e);
+                throw zqlInnerDatabaseExecutionException;
             }
 
             if (connection != null) try {
                 connection.close();
             } catch (SQLException e) {
-                ZQLCommandExecutionError zqlCommandExecutionError = new ZQLCommandExecutionError("关闭到底层库 " + dbNo + " 的连接失败");
-                zqlCommandExecutionError.initCause(e);
-                throw zqlCommandExecutionError;
+                int vendorCode = ZQLErrorNumbers.ERR_INNER_CON_CLOSE;
+                String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{innerDatabaseArray.get(dbNo - 1).toString()});
+                ZQLMetaDatabaseConnectionException zqlMetaDatabaseConnectionException = new ZQLMetaDatabaseConnectionException(reason, e.getSQLState(), vendorCode);
+                zqlMetaDatabaseConnectionException.initCause(e);
+                LOGGER.e(reason, zqlMetaDatabaseConnectionException);
             }
         }
     }

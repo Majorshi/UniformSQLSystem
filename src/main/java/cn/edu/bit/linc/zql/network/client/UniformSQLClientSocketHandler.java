@@ -92,6 +92,7 @@ public class UniformSQLClientSocketHandler implements ClientSocketHandler {
             LOGGER.d("发送验证数据包给服务器 " + clientSocket.getInetAddress());
             LOGGER.d("验证数据包 : " + credentialsPacket + "\r\n");
         } catch (Exception e) {
+            e.printStackTrace();
             // TODO: 正确处理异常
             return;
         }
@@ -103,23 +104,14 @@ public class UniformSQLClientSocketHandler implements ClientSocketHandler {
         successPacket.setData(SuccessPacketBytes);
         LOGGER.d("从服务器中接收验证结果报文 " + clientSocket.getInetAddress());
         LOGGER.d("验证结果报文 : " + successPacket);
-        System.out.println("Packet Identifier : " + IntegerType.getIntegerValue(successPacket.getPacketIdentifier()));
-        System.out.print("Changed Rows      : ");
+        LOGGER.d("Packet Identifier : " + IntegerType.getIntegerValue(successPacket.getPacketIdentifier()));
+        LOGGER.d("Changed Rows      : ");
         byte[] bytes = LengthCodeBinaryType.getBytes(successPacket.getChangedRows());
-        for (byte b : bytes) {
-            System.out.print(b + " ");
-        }
-        System.out.println();
-        System.out.print("Index ID          : ");
+        LOGGER.d("Index ID          : ");
         bytes = LengthCodeBinaryType.getBytes(successPacket.getIndexID());
-        for (byte b : bytes) {
-            System.out.print(b + " ");
-        }
-        System.out.println();
-        System.out.println("Server Status     : " + IntegerType.getIntegerValue(successPacket.getServerStatus()));
-        System.out.println("Warning Number    : " + IntegerType.getIntegerValue(successPacket.getWarningNumber()));
-        System.out.println("Server Message    : " + LengthCodeStringType.getString(successPacket.getServerMessage()));
-        System.out.println();
+        LOGGER.d("Server Status     : " + IntegerType.getIntegerValue(successPacket.getServerStatus()));
+        LOGGER.d("Warning Number    : " + IntegerType.getIntegerValue(successPacket.getWarningNumber()));
+        LOGGER.d("Server Message    : " + LengthCodeStringType.getString(successPacket.getServerMessage()));
 
 
         /* 测试命令 */
@@ -345,47 +337,40 @@ public class UniformSQLClientSocketHandler implements ClientSocketHandler {
         byte[] ResultBytes = packer.getPacketBody();
 
         for (int i = 0; i < ResultBytes.length; ++i)
-            System.out.print(ResultBytes[i] + " ");
+            LOGGER.d(ResultBytes[i] + " ");
 
         if (ResultBytes[0] == 0) {
             SuccessPacket resultPacket = new SuccessPacket(ResultBytes.length);
             resultPacket.setData(ResultBytes);
             LOGGER.i("Received success packet from server " + clientSocket.getInetAddress());
             LOGGER.i("successPacket : " + resultPacket);
-            System.out.println("Packet Identifier : " + IntegerType.getIntegerValue(resultPacket.getPacketIdentifier()));
-            System.out.print("Changed Rows      : ");
+            LOGGER.d("Packet Identifier : " + IntegerType.getIntegerValue(resultPacket.getPacketIdentifier()));
+            LOGGER.d("Changed Rows      : ");
             byte[] bytes = LengthCodeBinaryType.getBytes(resultPacket.getChangedRows());
-            for (byte b : bytes) {
-                System.out.print(b + " ");
-            }
-            System.out.println();
-            System.out.print("Index ID          : ");
+            LOGGER.d("Index ID          : ");
             bytes = LengthCodeBinaryType.getBytes(resultPacket.getIndexID());
-            for (byte b : bytes) {
-                System.out.print(b + " ");
-            }
-            System.out.println();
-            System.out.println("Server Status     : " + IntegerType.getIntegerValue(resultPacket.getServerStatus()));
-            System.out.println("Warning Number    : " + IntegerType.getIntegerValue(resultPacket.getWarningNumber()));
-            System.out.println("Server Message    : " + LengthCodeStringType.getString(resultPacket.getServerMessage()));
-            System.out.println();
+
+            LOGGER.d("Server Status     : " + IntegerType.getIntegerValue(resultPacket.getServerStatus()));
+            LOGGER.d("Warning Number    : " + IntegerType.getIntegerValue(resultPacket.getWarningNumber()));
+            LOGGER.d("Server Message    : " + LengthCodeStringType.getString(resultPacket.getServerMessage()));
+
         } else if (ResultBytes[0] == -1) {
             ErrorPacket errorPacket = new ErrorPacket(ResultBytes.length);
             errorPacket.setData(ResultBytes);
-            System.out.println(errorPacket);
-            System.out.println("Packet Identifier : " + IntegerType.getIntegerValue(errorPacket.getPacketIdentifier()));
-            System.out.println("Error Code        : " + IntegerType.getIntegerValue(errorPacket.getErrorCode()));
-            System.out.println("Server Status     : " + IntegerType.getIntegerValue(errorPacket.getServerStatus()));
-            System.out.println("Error Message     : " + LengthCodeStringType.getString(errorPacket.getErrorMessage()));
+            LOGGER.d(errorPacket.toString());
+            LOGGER.d("Packet Identifier : " + IntegerType.getIntegerValue(errorPacket.getPacketIdentifier()));
+            LOGGER.d("Error Code        : " + IntegerType.getIntegerValue(errorPacket.getErrorCode()));
+            LOGGER.d("Server Status     : " + IntegerType.getIntegerValue(errorPacket.getServerStatus()));
+            LOGGER.d("Error Message     : " + LengthCodeStringType.getString(errorPacket.getErrorMessage()));
 
         } else if (ResultBytes[0] == 254) {
             EOFPacket eofPacket = new EOFPacket(ResultBytes.length);
             eofPacket.setData(ResultBytes);
 
-            System.out.println(eofPacket);
-            System.out.println("Packet Identifier      : " + IntegerType.getIntegerValue(eofPacket.getPacketIdentifier()));
-            System.out.println("Warning Number         : " + IntegerType.getIntegerValue(eofPacket.getWarningNumber()));
-            System.out.println("Server Status Bit Mask : " + IntegerType.getIntegerValue(eofPacket.getServerStatusBitMask()));
+            LOGGER.d(eofPacket.toString());
+            LOGGER.d("Packet Identifier      : " + IntegerType.getIntegerValue(eofPacket.getPacketIdentifier()));
+            LOGGER.d("Warning Number         : " + IntegerType.getIntegerValue(eofPacket.getWarningNumber()));
+            LOGGER.d("Server Status Bit Mask : " + IntegerType.getIntegerValue(eofPacket.getServerStatusBitMask()));
 
         } else {
             int fieldNumber;
@@ -411,7 +396,7 @@ public class UniformSQLClientSocketHandler implements ClientSocketHandler {
 
             FieldPacket[] fieldPacketArrayGet = resultSetPacket.getFieldPacketArray();
             fieldNumber = fieldPacketArrayGet.length;
-            System.out.println("Field Name");
+            LOGGER.d("Field Name");
             String[] fieldNames = new String[fieldNumber];
             int cnt = 0;
             for (FieldPacket fieldPacketGet : fieldPacketArrayGet) {
@@ -431,10 +416,10 @@ public class UniformSQLClientSocketHandler implements ClientSocketHandler {
 //                System.out.println("Reserved Field      : " + IntegerType.getIntegerValue(fieldPacketGet.getReservedField()));
 //                System.out.println("Default Value       : " + LengthCodeStringType.getString(fieldPacketGet.getDefaultValue()));
 
-                System.out.print(LengthCodeStringType.getString(fieldPacketGet.getFieldName()) + "   ");
+                LOGGER.d(LengthCodeStringType.getString(fieldPacketGet.getFieldName()) + "   ");
                 fieldNames[cnt++] = LengthCodeStringType.getString(fieldPacketGet.getFieldName());
             }
-            System.out.println();
+
 
             EOFPacket eofPacket1Get = resultSetPacket.getEOFPacket1();
             /*System.out.println("EOFPacket1 : " + eofPacket1Get);
@@ -443,7 +428,7 @@ public class UniformSQLClientSocketHandler implements ClientSocketHandler {
             System.out.println("Server Status Bit Mask : " + IntegerType.getIntegerValue(eofPacket1Get.getServerStatusBitMask()));*/
 
             RowDataPacket[] rowDataPacketArrayGet = resultSetPacket.getRowDataPacketArray(fieldNumber);
-            System.out.println("Row Data");
+            LOGGER.d("Row Data");
             results = new ArrayList<RowData>();
             for (RowDataPacket rowDataPacketGet : rowDataPacketArrayGet) {
                 //System.out.println("rowDataPacket : " + rowDataPacketGet);
@@ -451,22 +436,12 @@ public class UniformSQLClientSocketHandler implements ClientSocketHandler {
                 RowData row = new RowData();
                 int pos = 0;
                 for (LengthCodeStringType rowData : rowDataArrayRes) {
-                    System.out.print(LengthCodeStringType.getString(rowData) + " ");
+                    LOGGER.d(LengthCodeStringType.getString(rowData) + " ");
                     row.add(fieldNames[pos++], LengthCodeStringType.getString(rowData));
                 }
-                System.out.println();
                 results.add(row);
             }
-
-            EOFPacket eofPacket2Get = resultSetPacket.getEOFPacket2();
-            /*System.out.println("EOFPacket2 : " + eofPacket2Get);
-            System.out.println("Packet Identifier      : " + IntegerType.getIntegerValue(eofPacket2Get.getPacketIdentifier()));
-            System.out.println("Warning Number         : " + IntegerType.getIntegerValue(eofPacket2Get.getWarningNumber()));
-            System.out.println("Server Status Bit Mask : " + IntegerType.getIntegerValue(eofPacket2Get.getServerStatusBitMask()));*/
-            System.out.println();
-            System.out.println();
         }
-
     }
 
 

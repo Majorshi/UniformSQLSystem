@@ -150,13 +150,6 @@ public class Shell {
         if (options.has("d")) {
             database = (String) options.valueOf("d");
         }
-
-        System.out.println("User = " + user);
-        System.out.println("Password = " + password);
-        System.out.println("DatabaseName = " + database);
-        System.out.println("File Name = " + fileName);
-        System.out.println("Query = " + inputQuery);
-
     }
 
     /**

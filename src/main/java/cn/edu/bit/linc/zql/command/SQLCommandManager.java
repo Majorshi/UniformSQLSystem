@@ -55,7 +55,8 @@ public class SQLCommandManager {
     public boolean excuteSQLWithoutParser(ArrayList<InnerSQLCommand> commands, ArrayList<Integer> dbIds) {
         /* 记录时间 */
         java.util.Date startTime = new java.util.Date();
-    /* 通过连接池连接底层库 */
+
+        /* 通过连接池连接底层库 */
         for (int i = 0; i < commands.size(); ++i) {
             int dbId = dbIds.get(i);
             InnerSQLCommand innerSQLCommand = commands.get(i);
@@ -74,11 +75,10 @@ public class SQLCommandManager {
             boolean isQuery;
             try {
                 LOGGER.d("在数据库 " + dbId + " 中执行指令 " + innerSQLCommand.getCommandStr());
-                String a = innerSQLCommand.getCommandStr();
                 isQuery = statement.execute(innerSQLCommand.getCommandStr());
             } catch (SQLException e) {
-                ZQLCommandExecutionError zqlCommandExecutionError = new ZQLCommandExecutionError(e.getMessage());
-                LOGGER.e("在数据库 " + dbId + " 执行 SQL 命令失败：" + innerSQLCommand.getCommandStr() + "，错误原因：", zqlCommandExecutionError);
+                ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(e.getMessage());
+                LOGGER.e("在数据库 " + dbId + " 执行 SQL 命令失败：" + innerSQLCommand.getCommandStr() + "，错误原因：", zqlInnerDatabaseExecutionException);
                 return false;
             }
 
@@ -87,18 +87,18 @@ public class SQLCommandManager {
                 try {
                     this.resultSet = statement.getResultSet();
                 } catch (SQLException e) {
-                    ZQLCommandExecutionError zqlCommandExecutionError = new ZQLCommandExecutionError();
-                    zqlCommandExecutionError.initCause(e);
-                    LOGGER.e("从底层库 " + dbId + " 中获取 Result Set 失败：" + sqlCommand, zqlCommandExecutionError);
+                    ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException();
+                    zqlInnerDatabaseExecutionException.initCause(e);
+                    LOGGER.e("从底层库 " + dbId + " 中获取 Result Set 失败：" + sqlCommand, zqlInnerDatabaseExecutionException);
                     return false;
                 }
             } else {
                 try {
                     this.updateCount += statement.getUpdateCount();
                 } catch (SQLException e) {
-                    ZQLCommandExecutionError zqlCommandExecutionError = new ZQLCommandExecutionError();
-                    zqlCommandExecutionError.initCause(e);
-                    LOGGER.e("从底层库 " + dbId + " 中获取 Update Row 失败：" + sqlCommand, zqlCommandExecutionError);
+                    ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException();
+                    zqlInnerDatabaseExecutionException.initCause(e);
+                    LOGGER.e("从底层库 " + dbId + " 中获取 Update Row 失败：" + sqlCommand, zqlInnerDatabaseExecutionException);
                     return false;
                 }
             }
@@ -248,7 +248,7 @@ public class SQLCommandManager {
     }
 
     public ResultSetPacket getReturnPacket() throws SQLException {
-
+        getOutput();
         return resultSetPacket;
     }
 

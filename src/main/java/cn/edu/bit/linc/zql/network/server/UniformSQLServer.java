@@ -1,6 +1,6 @@
 package cn.edu.bit.linc.zql.network.server;
 
-import cn.edu.bit.linc.zql.exceptions.ZQLServerError;
+import cn.edu.bit.linc.zql.exceptions.ZQLServerException;
 import cn.edu.bit.linc.zql.util.Logger;
 import cn.edu.bit.linc.zql.util.LoggerFactory;
 
@@ -49,7 +49,7 @@ public class UniformSQLServer {
                         logger.i("(TID " + Thread.currentThread().getId() + ") 客户端 " + clientSocket.getInetAddress() + " 已经连接到服务器");
                         handler.handleSocket();
                     } catch (Exception ex) {
-                        ZQLServerError zqlServerError = new ZQLServerError();
+                        ZQLServerException zqlServerError = new ZQLServerException();
                         zqlServerError.initCause(ex);
                         logger.e("(TID " + Thread.currentThread().getId() + ") " + "连接发生异常", zqlServerError);
                     }

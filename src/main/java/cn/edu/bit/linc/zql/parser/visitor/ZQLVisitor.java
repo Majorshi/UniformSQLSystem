@@ -2997,4 +2997,9 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
     public ASTNodeVisitResult visitJoin_condition(uniformSQLParser.Join_conditionContext ctx) {
         return visitChildrenNodes(ctx.children);
     }
+
+    @Override
+    public ASTNodeVisitResult visitData_manipulation_statements(uniformSQLParser.Data_manipulation_statementsContext ctx) {
+        return visitChildrenNodes(ctx.children);
+    }
 }

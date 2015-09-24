@@ -1,25 +1,9 @@
 package cn.edu.bit.linc.zql.jdbc.shell;
 
 import cn.edu.bit.linc.zql.network.packets.*;
-import cn.edu.bit.linc.zql.command.InnerSQLCommand;
-import cn.edu.bit.linc.zql.connections.ZQLSession;
-import cn.edu.bit.linc.zql.connections.connector.ConnectionPools;
-import cn.edu.bit.linc.zql.databases.Database;
-import cn.edu.bit.linc.zql.databases.InnerDatabases;
-import cn.edu.bit.linc.zql.databases.MetaDatabase;
-import cn.edu.bit.linc.zql.exceptions.ZQLCommandExecutionError;
-import cn.edu.bit.linc.zql.exceptions.ZQLConnectionException;
-import cn.edu.bit.linc.zql.exceptions.ZQLSyntaxErrorException;
-import cn.edu.bit.linc.zql.parser.uniformSQLLexer;
-import cn.edu.bit.linc.zql.parser.uniformSQLParser;
-import cn.edu.bit.linc.zql.parser.visitor.ASTNodeVisitResult;
-import cn.edu.bit.linc.zql.parser.visitor.ZQLVisitor;
 import cn.edu.bit.linc.zql.util.AsciiArtTable;
 import cn.edu.bit.linc.zql.util.Logger;
 import cn.edu.bit.linc.zql.util.LoggerFactory;
-import org.antlr.v4.runtime.ANTLRInputStream;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -53,7 +37,7 @@ public class SQLCommandManager {
     static {
         try {
             Class.forName("cn.edu.bit.linc.zql.jdbc.UniformSQLDriver");
-            connection = DriverManager.getConnection("jdbc:zql://127.0.0.1:9527", "wyq", "123456");
+            connection = DriverManager.getConnection("jdbc:zql://127.0.0.1:9527", "root", "root");
         } catch (Exception e){
             e.printStackTrace();
         }

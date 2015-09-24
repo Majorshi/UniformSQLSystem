@@ -2,13 +2,11 @@ package cn.edu.bit.linc.zql;
 
 import cn.edu.bit.linc.zql.connections.ConnectionPools;
 import cn.edu.bit.linc.zql.databases.InnerDatabases;
-import cn.edu.bit.linc.zql.exceptions.MetaDatabaseOperationsException;
+import cn.edu.bit.linc.zql.databases.MetaDatabase;
 import cn.edu.bit.linc.zql.network.server.UniformSQLServer;
 import cn.edu.bit.linc.zql.network.server.UniformSQLServerSocketHandlerFactory;
-import cn.edu.bit.linc.zql.databases.MetaDatabase;
 import cn.edu.bit.linc.zql.util.Logger;
 import cn.edu.bit.linc.zql.util.LoggerFactory;
-import cn.edu.bit.linc.zql.util.UnitTestUtils;
 
 import java.io.IOException;
 
@@ -66,9 +64,9 @@ public class ZQLContext {
      *
      * @param args 程序参数
      */
-    public static void main(String[] args) throws IOException, MetaDatabaseOperationsException {
+    public static void main(String[] args) throws IOException {
         initializeSystem();
-        UnitTestUtils.mySQLTest();
+        // UnitTestUtils.mySQLTest();
         // ZQLSession session = new ZQLSession("root", "", "root");
         // UnitTestUtils.executeSQL("SELECT * FROMX user", session);
     }

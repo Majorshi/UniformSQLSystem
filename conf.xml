@@ -33,7 +33,7 @@
     <entry key="innerdb.db1.password">123456</entry>
 
     <!-- 底层库 2 类型，可填：MySQL / Hive -->
-    <entry key="innerdb.db2">disable</entry>
+    <entry key="innerdb.db2">enable</entry>
 
     <!-- 底层库 2 别名 -->
     <entry key="innerdb.db2.alias">db_hive</entry>
@@ -41,7 +41,7 @@
     <entry key="innerdb.db2.type">Hive</entry>
 
     <!-- 底层库 2 地址 -->
-    <entry key="innerdb.db2.host">10.4.21.220:10000</entry>
+    <entry key="innerdb.db2.host">lab2.ihainan.me:10000</entry>
 
     <!-- 底层库 2 用户名 -->
     <entry key="innerdb.db2.username">hadoop</entry>
