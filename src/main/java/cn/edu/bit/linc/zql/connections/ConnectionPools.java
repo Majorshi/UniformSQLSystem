@@ -1,10 +1,14 @@
-package cn.edu.bit.linc.zql.connections.connector;
+package cn.edu.bit.linc.zql.connections;
 
 import cn.edu.bit.linc.zql.ZQLContext;
 import cn.edu.bit.linc.zql.databases.Database;
 import cn.edu.bit.linc.zql.databases.InnerDatabase;
 import cn.edu.bit.linc.zql.databases.InnerDatabases;
 import cn.edu.bit.linc.zql.databases.MetaDatabase;
+import cn.edu.bit.linc.zql.exceptions.ZQLConnectionException;
+import cn.edu.bit.linc.zql.exceptions.ZQLErrorNumbers;
+import cn.edu.bit.linc.zql.exceptions.ZQLExceptionUtils;
+import cn.edu.bit.linc.zql.exceptions.ZQLSystemException;
 import cn.edu.bit.linc.zql.util.Logger;
 import cn.edu.bit.linc.zql.util.LoggerFactory;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
@@ -20,24 +24,40 @@ import java.util.ArrayList;
 public class ConnectionPools {
     private static ConnectionPools connectionPools;
     private ComboPooledDataSource[] cpdsArray;
-    private final Logger logger = LoggerFactory.getLogger(ConnectionPools.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(ConnectionPools.class);
 
     /**
      * 构造函数，初始化连接池
      */
     private ConnectionPools() {
-        // 获取底层库和元数据库
+        // 检查系统是否已经初始化
         if (ZQLContext.innerDatabases == null) {
-            logger.e("尚未初始化底层库");
+            int vendorCode = ZQLErrorNumbers.ERR_SYSTEM_INIT;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+            ZQLSystemException zqlSystemException = new ZQLSystemException(reason, "HY000", vendorCode);
+            LOGGER.f(reason, zqlSystemException);
             System.exit(0);
         }
-        InnerDatabases innerDatabases = ZQLContext.innerDatabases;
-        ArrayList<InnerDatabase> innerDatabaseArray = innerDatabases.getInnerDatabaseArray();
-        if (ZQLContext.metaDatabase == null) {
-            logger.e("尚未初始化元数据库");
-            System.exit(0);
-        }
+
+        // 检查并获取底层库和元数据库
         MetaDatabase metaDatabase = ZQLContext.metaDatabase;
+        if (metaDatabase == null) {
+            int vendorCode = ZQLErrorNumbers.ERR_SYSTEM_META_INIT;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+            ZQLSystemException zqlSystemException = new ZQLSystemException(reason, "HY000", vendorCode);
+            LOGGER.f(reason, zqlSystemException);
+            System.exit(0);
+        }
+
+        InnerDatabases innerDatabases = ZQLContext.innerDatabases;
+        if (innerDatabases == null) {
+            int vendorCode = ZQLErrorNumbers.ERR_SYSTEM_INNER_INIT;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+            ZQLSystemException zqlSystemException = new ZQLSystemException(reason, "HY000", vendorCode);
+            LOGGER.f(reason, zqlSystemException);
+            System.exit(0);
+        }
+        ArrayList<InnerDatabase> innerDatabaseArray = innerDatabases.getInnerDatabaseArray();
 
         // 初始化连接池
         int size = innerDatabaseArray.size() + 1;
@@ -52,7 +72,6 @@ public class ConnectionPools {
         }
     }
 
-
     /**
      * 根据 Database 对象获取 ComboPooledDataSource 实例
      *
@@ -65,7 +84,10 @@ public class ConnectionPools {
         try {
             cpds.setDriverClass(driverStr);
         } catch (PropertyVetoException e) {
-            logger.f("找不到 JDBC 驱动" + driverStr, e);
+            int vendorCode = 12000;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{driverStr});
+            ZQLConnectionException zqlConnectionException = new ZQLConnectionException(reason, "HY000", vendorCode);
+            LOGGER.f(reason, zqlConnectionException);
             System.exit(0);
         }
         String url = Database.getURL(db.getDbType(), db.getDbHost(), null);

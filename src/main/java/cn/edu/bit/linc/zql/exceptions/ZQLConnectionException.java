@@ -1,9 +1,11 @@
 package cn.edu.bit.linc.zql.exceptions;
 
+import java.sql.SQLException;
+
 /**
  * 连接到底层库或者元数据库时发生异常
  */
-public class ZQLConnectionException extends ZQLException {
+public class ZQLConnectionException extends SQLException {
     /**
      * 构造函数
      *

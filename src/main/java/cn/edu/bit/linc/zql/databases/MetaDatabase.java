@@ -1,9 +1,12 @@
 package cn.edu.bit.linc.zql.databases;
 
+import cn.edu.bit.linc.zql.ZQLContext;
 import cn.edu.bit.linc.zql.ZQLEnv;
-import cn.edu.bit.linc.zql.connections.connector.ConnectionPools;
-import cn.edu.bit.linc.zql.exceptions.MetaDatabaseOperationsException;
-import cn.edu.bit.linc.zql.exceptions.ZQLConnectionException;
+import cn.edu.bit.linc.zql.connections.ConnectionPools;
+import cn.edu.bit.linc.zql.exceptions.ZQLErrorNumbers;
+import cn.edu.bit.linc.zql.exceptions.ZQLExceptionUtils;
+import cn.edu.bit.linc.zql.exceptions.ZQLMetaDatabaseConnectionException;
+import cn.edu.bit.linc.zql.exceptions.ZQLMetaDatabaseExecutionException;
 import cn.edu.bit.linc.zql.util.CHAP;
 import cn.edu.bit.linc.zql.util.Logger;
 import cn.edu.bit.linc.zql.util.LoggerFactory;
@@ -15,7 +18,7 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
-import static cn.edu.bit.linc.zql.util.CHAP.*;
+import static cn.edu.bit.linc.zql.util.CHAP.checkToken;
 
 /**
  * 元数据库类，存储元数据相关的信息与操作
@@ -23,7 +26,7 @@ import static cn.edu.bit.linc.zql.util.CHAP.*;
 public class MetaDatabase extends Database {
     private String metaDbName;                  // 元数据库中，存储元数据的数据库的名字
 
-    private final static Logger logger = LoggerFactory.getLogger(MetaDatabase.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(MetaDatabase.class);
     public final static int META_DB_ID = 0;     // 元数据库的编号固定为 0
     public final static String META_DB_ALIAS = "db_meta";       // 元数据库的别名固定为 db_meta
     public final static DBType META_DB_TYPE = DBType.MySQL;     // 元数据的数据库类型固定为 MySQL
@@ -51,7 +54,6 @@ public class MetaDatabase extends Database {
         this.metaDbName = metaDbName;
     }
 
-
     /**
      * 获取 MetaDatabase 实例
      *
@@ -65,21 +67,21 @@ public class MetaDatabase extends Database {
     }
 
     /**
-     * 从系统配置中读取元数据库信息
+     * 从系统配置中读取元数据库信息，仅允许在 ZQLContext.initializeSystem 方法中调用
      */
     private static synchronized void readMetaDatabaseFromConfigurationFile() {
-        logger.i("正在从配置文件中读取元数据库信息");
-        String host = ZQLEnv.get("metadb.host");
-        String user = ZQLEnv.get("metadb.username");
-        String password = ZQLEnv.get("metadb.password");
-        String dbName = ZQLEnv.get("metadb.dbname");
-        if (host == null || user == null || password == null || dbName == null) {
-            logger.f("元数据库配置项不完整");
-            System.exit(0);
-        }
+        LOGGER.i("正在从配置文件中读取元数据库信息");
+        ZQLEnv.checkConfigurationItems(ZQLEnv.META_DB_HOST, ZQLEnv.META_DB_USERNAME,
+                ZQLEnv.META_DB_PASSWORD, ZQLEnv.META_DB_DBNAME);
+
+        String host = ZQLEnv.get(ZQLEnv.META_DB_HOST);
+        String user = ZQLEnv.get(ZQLEnv.META_DB_USERNAME);
+        String password = ZQLEnv.get(ZQLEnv.META_DB_PASSWORD);
+        String dbName = ZQLEnv.get(ZQLEnv.META_DB_DBNAME);
         metaDatabase = new MetaDatabase(host, user, password, dbName);
-        logger.i("从配置文件中读取得到元数据库 " + metaDatabase + " 的信息");
+        LOGGER.i("从配置文件中读取得到元数据库 " + metaDatabase + " 的信息");
     }
+
 
     private final static String CREATE_META_DB_SQL = "CREATE DATABASE IF NOT EXISTS %s";
     private final static String CREATE_ZQL_USERS_TB_SQL = "CREATE TABLE IF NOT EXISTS %s.zql_users (User char(64) PRIMARY KEY, Password char(41)) ENGINE=InnoDB";
@@ -103,11 +105,10 @@ public class MetaDatabase extends Database {
     private final static String CREATE_ROOT_USER = "INSERT IGNORE INTO %s.zql_users VALUES('root', '" + CHAP.SHA1(CHAP.SHA1("root")) + "')";
 
     /**
-     * 创建元数据库，只能在 ZQLContext.initializeSystem 方法中被调用
+     * 创建元数据库，<b>只能在 ZQLContext.initializeSystem 方法中被调用</b>
      */
     public static void createMetaDatabase() {
-        logger.i("正在创建和初始化元数据库");
-
+        LOGGER.i("正在创建和初始化元数据库");
         /* 连接元数据库 */
         Connection connection = null;
         try {
@@ -125,16 +126,24 @@ public class MetaDatabase extends Database {
             statement.execute(String.format(CREATE_ZQL_TABLES_TB_SQL, metaDatabase.getMetaDbName(), metaDatabase.getMetaDbName(), metaDatabase.getMetaDbName()));
             statement.execute(String.format(CREATE_ZQL_TABLES_PRIV, metaDatabase.getMetaDbName(), metaDatabase.getMetaDbName(), metaDatabase.getMetaDbName()));
             statement.execute(String.format(CREATE_ROOT_USER, metaDatabase.getMetaDbName()));
-            logger.i("创建和初始化元数据库成功");
+            LOGGER.i("创建和初始化元数据库成功");
         } catch (SQLException e) {
-            logger.f("创建元数据库失败，错误原因：", e);
+            int vendorCode = ZQLErrorNumbers.ERR_META_EXEC;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{ZQLContext.metaDatabase.toString(), "[数据库创建语句]"});
+            ZQLMetaDatabaseExecutionException zqlMetaDatabaseExecutionException = new ZQLMetaDatabaseExecutionException(reason, e.getSQLState(), vendorCode);
+            zqlMetaDatabaseExecutionException.initCause(e);
+            LOGGER.f(reason, zqlMetaDatabaseExecutionException);
             System.exit(0);
         } finally {
             if (connection != null) {
                 try {
                     connection.close();
                 } catch (SQLException e) {
-                    logger.e("关闭到元数据库的连接失败", e);
+                    int vendorCode = ZQLErrorNumbers.ERR_META_CON_CLOSE;
+                    String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{ZQLContext.metaDatabase.toString()});
+                    ZQLMetaDatabaseConnectionException zqlMetaDatabaseConnectionException = new ZQLMetaDatabaseConnectionException(reason, e.getSQLState(), vendorCode);
+                    zqlMetaDatabaseConnectionException.initCause(e);
+                    LOGGER.e(reason, zqlMetaDatabaseConnectionException);
                 }
             }
         }
@@ -147,30 +156,36 @@ public class MetaDatabase extends Database {
      *
      * @param dbName 数据库名
      * @return 底层库 ID，如果元数据库中没有记录，则返回 -1
-     * @throws cn.edu.bit.linc.zql.exceptions.MetaDatabaseOperationsException 从元数据库中查询某数据库所述的底层库失败
      */
-    public int getInnerDatabaseId(String dbName) throws MetaDatabaseOperationsException {
+    public int getInnerDatabaseId(String dbName) throws ZQLMetaDatabaseConnectionException, ZQLMetaDatabaseExecutionException {
         /* 连接元数据库并执行命令 */
         Connection connection = null;
+        String sqlCommand = "";
         try {
             connection = ConnectionPools.getInstance().getConnection(0);
             Statement statement = connection.createStatement();
-            String sqlCommand = String.format(SELECT_DB_FORM_ZQL_DBS_SQL, metaDatabase.getMetaDbName(), dbName);
-            logger.d("从元数据库中查询某数据库所在的底层库：" + sqlCommand);
+            sqlCommand = String.format(SELECT_DB_FORM_ZQL_DBS_SQL, metaDatabase.getMetaDbName(), dbName);
+            LOGGER.d("从元数据库中查询某数据库所在的底层库：" + sqlCommand);
             ResultSet resultSet = statement.executeQuery(sqlCommand);
             if (resultSet.next()) {
                 return Integer.valueOf(resultSet.getString("Inner_db_id"));
             }
         } catch (SQLException e) {
-            MetaDatabaseOperationsException metaDatabaseOperationsException = new MetaDatabaseOperationsException("从元数据库中查询数据库" + dbName + " 所在的底层库失败");
-            metaDatabaseOperationsException.initCause(e);
-            throw metaDatabaseOperationsException;
+            int vendorCode = ZQLErrorNumbers.ERR_META_EXEC;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{ZQLContext.metaDatabase.toString(), sqlCommand});
+            ZQLMetaDatabaseExecutionException zqlMetaDatabaseExecutionException = new ZQLMetaDatabaseExecutionException(reason, e.getSQLState(), vendorCode);
+            zqlMetaDatabaseExecutionException.initCause(e);
+            throw zqlMetaDatabaseExecutionException;
         } finally {
             if (connection != null) {
                 try {
                     connection.close();
                 } catch (SQLException e) {
-                    logger.e("关闭到元数据库的连接失败", e);
+                    int vendorCode = ZQLErrorNumbers.ERR_META_CON_CLOSE;
+                    String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{ZQLContext.metaDatabase.toString()});
+                    ZQLMetaDatabaseConnectionException zqlMetaDatabaseConnectionException = new ZQLMetaDatabaseConnectionException(reason, e.getSQLState(), vendorCode);
+                    zqlMetaDatabaseConnectionException.initCause(e);
+                    LOGGER.e(reason, zqlMetaDatabaseConnectionException);
                 }
             }
         }
@@ -187,15 +202,15 @@ public class MetaDatabase extends Database {
      * @param tableName    数据表名
      * @param user         用户
      * @return 权限列表
-     * @throws MetaDatabaseOperationsException 从元数据库中获取用户 user 对于数据表 databaseName.tableName 的权限失败
      */
-    public Map<String, String> getPrivilegesOfASpecifiedUserAndTable(String databaseName, String tableName, String user) throws MetaDatabaseOperationsException {
+    public Map<String, String> getPrivilegesOfASpecifiedUserAndTable(String databaseName, String tableName, String user) throws ZQLMetaDatabaseConnectionException, ZQLMetaDatabaseExecutionException {
         /* 连接元数据库并执行命令 */
         Connection connection = null;
+        String sqlCommand = "";
         try {
             connection = ConnectionPools.getInstance().getConnection(0);
             Statement statement = connection.createStatement();
-            String sqlCommand = String.format(SELECT_PRIVILEGES_SQL, metaDatabase.getMetaDbName(), databaseName,
+            sqlCommand = String.format(SELECT_PRIVILEGES_SQL, metaDatabase.getMetaDbName(), databaseName,
                     tableName, user);
             ResultSet resultSet = statement.executeQuery(sqlCommand);
             if (resultSet.next()) {
@@ -209,15 +224,21 @@ public class MetaDatabase extends Database {
                 return privileges;
             }
         } catch (SQLException e) {
-            MetaDatabaseOperationsException metaDatabaseOperationsException = new MetaDatabaseOperationsException("从元数据库中获取用户 " + user + " 对于数据表" + databaseName + "." + tableName + " 的权限失败");
-            metaDatabaseOperationsException.initCause(e);
-            throw metaDatabaseOperationsException;
+            int vendorCode = ZQLErrorNumbers.ERR_META_EXEC;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{ZQLContext.metaDatabase.toString(), sqlCommand});
+            ZQLMetaDatabaseExecutionException zqlMetaDatabaseExecutionException = new ZQLMetaDatabaseExecutionException(reason, e.getSQLState(), vendorCode);
+            zqlMetaDatabaseExecutionException.initCause(e);
+            throw zqlMetaDatabaseExecutionException;
         } finally {
             if (connection != null) {
                 try {
                     connection.close();
                 } catch (SQLException e) {
-                    logger.e("关闭到元数据库的连接失败", e);
+                    int vendorCode = ZQLErrorNumbers.ERR_META_CON_CLOSE;
+                    String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{ZQLContext.metaDatabase.toString()});
+                    ZQLMetaDatabaseConnectionException zqlMetaDatabaseConnectionException = new ZQLMetaDatabaseConnectionException(reason, e.getSQLState(), vendorCode);
+                    zqlMetaDatabaseConnectionException.initCause(e);
+                    throw zqlMetaDatabaseConnectionException;
                 }
             }
         }
@@ -235,15 +256,15 @@ public class MetaDatabase extends Database {
      * @param scramble 由服务器端生成的 20 位随机数
      * @param token    客户端返回的认证信息
      * @return 如果密码正确，返回 true，否则返回 false
-     * @throws MetaDatabaseOperationsException 验证用户密码是否正确失败，可能是用户不存在，或者连接到元数据库失败
      */
-    public boolean checkPassword(String userName, String scramble, String token) throws MetaDatabaseOperationsException {
+    public boolean checkPassword(String userName, String scramble, String token) throws ZQLMetaDatabaseConnectionException, ZQLMetaDatabaseExecutionException {
         /* 连接元数据库并执行命令 */
         Connection connection = null;
+        String sqlCommand = "";
         try {
             connection = ConnectionPools.getInstance().getConnection(0);
             Statement statement = connection.createStatement();
-            String sqlCommand = String.format(SELECT_USER_PASSWORD_SQL, metaDatabase.getMetaDbName(), userName);
+            sqlCommand = String.format(SELECT_USER_PASSWORD_SQL, metaDatabase.getMetaDbName(), userName);
             ResultSet resultSet = statement.executeQuery(sqlCommand);
 
             if (resultSet.next()) {
@@ -251,15 +272,21 @@ public class MetaDatabase extends Database {
                 return checkToken(realPassword, scramble, token);
             } else throw new SQLException("用户 " + userName + " 不存在");
         } catch (SQLException e) {
-            MetaDatabaseOperationsException metaDatabaseOperationsException = new MetaDatabaseOperationsException("从元数据库中获取用户 " + userName + " 的密码信息失败");
-            metaDatabaseOperationsException.initCause(e);
-            throw metaDatabaseOperationsException;
+            int vendorCode = ZQLErrorNumbers.ERR_META_EXEC;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{ZQLContext.metaDatabase.toString(), sqlCommand});
+            ZQLMetaDatabaseExecutionException zqlMetaDatabaseExecutionException = new ZQLMetaDatabaseExecutionException(reason, e.getSQLState(), vendorCode);
+            zqlMetaDatabaseExecutionException.initCause(e);
+            throw zqlMetaDatabaseExecutionException;
         } finally {
             if (connection != null) {
                 try {
                     connection.close();
                 } catch (SQLException e) {
-                    logger.e("关闭到元数据库的连接失败", e);
+                    int vendorCode = ZQLErrorNumbers.ERR_META_CON_CLOSE;
+                    String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{ZQLContext.metaDatabase.toString()});
+                    ZQLMetaDatabaseConnectionException zqlMetaDatabaseConnectionException = new ZQLMetaDatabaseConnectionException(reason, e.getSQLState(), vendorCode);
+                    zqlMetaDatabaseConnectionException.initCause(e);
+                    throw zqlMetaDatabaseConnectionException;
                 }
             }
         }

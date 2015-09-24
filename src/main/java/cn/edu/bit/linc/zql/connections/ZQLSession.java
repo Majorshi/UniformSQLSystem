@@ -1,7 +1,6 @@
 package cn.edu.bit.linc.zql.connections;
 
 import cn.edu.bit.linc.zql.ZQLContext;
-import cn.edu.bit.linc.zql.connections.connector.ConnectionPools;
 import cn.edu.bit.linc.zql.databases.Database;
 import cn.edu.bit.linc.zql.exceptions.ZQLConnectionException;
 import cn.edu.bit.linc.zql.util.Logger;
@@ -17,8 +16,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 会话类，用于存储用户会话，每个实例对应一个连接
  */
 public class ZQLSession {
-    private String errorMessage;
-    private Logger logger = LoggerFactory.getLogger(getClass());
+    private Exception exception;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ZQLSession.class);
     private ArrayList<Connection> connections = new ArrayList<Connection>();      // 到数据库的连接
     private int sessionId = 0;      // 会话编号
     private static final AtomicInteger COUNTER = new AtomicInteger(0);
@@ -30,6 +29,24 @@ public class ZQLSession {
      */
     public ArrayList<Connection> getConnections() {
         return connections;
+    }
+
+    /**
+     * 设置反向生成 SQL 命令时候生成的异常
+     *
+     * @param exception 反向生成 SQL 命令时候生成的异常
+     */
+    public void setException(Exception exception) {
+        this.exception = exception;
+    }
+
+    /**
+     * 获取反向生成 SQL 命令时候生成的异常
+     *
+     * @return 反向生成 SQL 命令时候生成的异常
+     */
+    public Exception getException() {
+        return exception;
     }
 
     /**
@@ -45,7 +62,7 @@ public class ZQLSession {
         this.database = database;
         this.token = token;
         connectedTime = new Date();
-        logger.i("Session " + sessionId + ": 用户 " + userName + " 于 " + connectedTime.toString() + " 创建新会话" + ((database == null) ? "" : "，连接到数据库 " + database));
+        LOGGER.i("Session " + sessionId + ": 用户 " + userName + " 于 " + connectedTime.toString() + " 创建新会话" + ((database == null) ? "" : "，连接到数据库 " + database));
 
         // 获取到底层库的连接
         ConnectionPools connectionPools = ConnectionPools.getInstance();
@@ -54,13 +71,13 @@ public class ZQLSession {
         databases.addAll(ZQLContext.innerDatabases.getInnerDatabaseArray());
         for (int i = 0; i < databases.size(); ++i) {
             try {
-                logger.i("Session " + sessionId + ": 正在建立到数据库 " + databases.get(i) + " 的连接");
+                LOGGER.i("Session " + sessionId + ": 正在建立到数据库 " + databases.get(i) + " 的连接");
                 connections.add(connectionPools.getConnection(i));
-                logger.i("Session " + sessionId + ": 成功连接到数据库 " + databases.get(i));
+                LOGGER.i("Session " + sessionId + ": 成功连接到数据库 " + databases.get(i));
             } catch (SQLException e) {
                 ZQLConnectionException zqlConnectionException = new ZQLConnectionException("Session " + sessionId + ": 建立到数据库 " + databases.get(i) + " 的连接失败");
                 zqlConnectionException.initCause(zqlConnectionException);
-                logger.f("Session " + sessionId + ": 建立到数据库 " + databases.get(i) + " 的连接失败", zqlConnectionException);
+                LOGGER.f("Session " + sessionId + ": 建立到数据库 " + databases.get(i) + " 的连接失败", zqlConnectionException);
                 // 记得一定要关闭已经建立的连接
                 closeSession();
             }
@@ -71,24 +88,6 @@ public class ZQLSession {
     private String database;
     private String token;   // Scramble Info
     private Date connectedTime;
-
-    /**
-     * 获取错误信息
-     *
-     * @return 错误信息
-     */
-    public String getErrorMessage() {
-        return errorMessage;
-    }
-
-    /**
-     * 设置错误信息
-     *
-     * @param errorMessage 错误信息
-     */
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
-    }
 
     /**
      * 获取连接用户名
@@ -139,15 +138,15 @@ public class ZQLSession {
      * Session 结束后执行的相关操作
      */
     public void closeSession() {
-        logger.i("Session " + sessionId + ": 正在关闭用户 " + userName + " 到底层库的连接");
+        LOGGER.i("Session " + sessionId + ": 正在关闭用户 " + userName + " 到底层库的连接");
         for (Connection conn : connections) {
             try {
                 conn.close();
             } catch (SQLException e) {
-                logger.e("Session " + sessionId + ": 关闭用户 " + userName + " 到底层库的连接失败", e);
+                LOGGER.e("Session " + sessionId + ": 关闭用户 " + userName + " 到底层库的连接失败", e);
             }
         }
-        logger.i("Session " + sessionId + ": 关闭用户 " + userName + " 到底层库的连接成功");
+        LOGGER.i("Session " + sessionId + ": 关闭用户 " + userName + " 到底层库的连接成功");
     }
 
     @Override

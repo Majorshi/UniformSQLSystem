@@ -1,9 +1,7 @@
 package cn.edu.bit.linc.zql.command;
 
 import cn.edu.bit.linc.zql.connections.ZQLSession;
-import cn.edu.bit.linc.zql.exceptions.ZQLCommandExecutionError;
-import cn.edu.bit.linc.zql.exceptions.ZQLConnectionException;
-import cn.edu.bit.linc.zql.exceptions.ZQLSyntaxErrorException;
+import cn.edu.bit.linc.zql.exceptions.*;
 import cn.edu.bit.linc.zql.network.packets.*;
 import cn.edu.bit.linc.zql.parser.uniformSQLLexer;
 import cn.edu.bit.linc.zql.parser.uniformSQLParser;
@@ -17,6 +15,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
@@ -27,7 +26,7 @@ import java.util.List;
  * SQL 命令类，用于执行 SQL 命令并保存执行结果
  */
 public class SQLCommandManager {
-    private static final Logger logger = LoggerFactory.getLogger(SQLCommandManager.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SQLCommandManager.class);
     private final String sqlCommand;    // SQL 指令
     private final ZQLSession session;   // 用户会话
     private ResultSet resultSet = null; // 执行结果，仅在执行结果返回 ResultSet 时候该值不为 null
@@ -49,11 +48,11 @@ public class SQLCommandManager {
         connections = session.getConnections();
     }
 
-    public ResultSet getResultSet () {
+    public ResultSet getResultSet() {
         return this.resultSet;
     }
 
-    public boolean excuteSQLWithoutParser (ArrayList<InnerSQLCommand> commands, ArrayList<Integer> dbIds) {
+    public boolean excuteSQLWithoutParser(ArrayList<InnerSQLCommand> commands, ArrayList<Integer> dbIds) {
         /* 记录时间 */
         java.util.Date startTime = new java.util.Date();
     /* 通过连接池连接底层库 */
@@ -67,19 +66,19 @@ public class SQLCommandManager {
             } catch (SQLException e) {
                 ZQLConnectionException zqlConnectionException = new ZQLConnectionException("创建数据库 " + dbId + " 的 Statement 对象失败，失败原因：");
                 zqlConnectionException.initCause(e);
-                logger.e("创建数据库 " + dbId + " 的 Statement 对象失败，失败原因：", zqlConnectionException);
+                LOGGER.e("创建数据库 " + dbId + " 的 Statement 对象失败，失败原因：", zqlConnectionException);
                 return false;
             }
 
             /* 交付数据库（底层库 / 元数据库）执行 SQL 命令 */
             boolean isQuery;
             try {
-                logger.d("在数据库 " + dbId + " 中执行指令 " + innerSQLCommand.getCommandStr());
+                LOGGER.d("在数据库 " + dbId + " 中执行指令 " + innerSQLCommand.getCommandStr());
                 String a = innerSQLCommand.getCommandStr();
                 isQuery = statement.execute(innerSQLCommand.getCommandStr());
             } catch (SQLException e) {
                 ZQLCommandExecutionError zqlCommandExecutionError = new ZQLCommandExecutionError(e.getMessage());
-                logger.e("在数据库 " + dbId + " 执行 SQL 命令失败：" + innerSQLCommand.getCommandStr() + "，错误原因：", zqlCommandExecutionError);
+                LOGGER.e("在数据库 " + dbId + " 执行 SQL 命令失败：" + innerSQLCommand.getCommandStr() + "，错误原因：", zqlCommandExecutionError);
                 return false;
             }
 
@@ -90,7 +89,7 @@ public class SQLCommandManager {
                 } catch (SQLException e) {
                     ZQLCommandExecutionError zqlCommandExecutionError = new ZQLCommandExecutionError();
                     zqlCommandExecutionError.initCause(e);
-                    logger.e("从底层库 " + dbId + " 中获取 Result Set 失败：" + sqlCommand, zqlCommandExecutionError);
+                    LOGGER.e("从底层库 " + dbId + " 中获取 Result Set 失败：" + sqlCommand, zqlCommandExecutionError);
                     return false;
                 }
             } else {
@@ -99,7 +98,7 @@ public class SQLCommandManager {
                 } catch (SQLException e) {
                     ZQLCommandExecutionError zqlCommandExecutionError = new ZQLCommandExecutionError();
                     zqlCommandExecutionError.initCause(e);
-                    logger.e("从底层库 " + dbId + " 中获取 Update Row 失败：" + sqlCommand, zqlCommandExecutionError);
+                    LOGGER.e("从底层库 " + dbId + " 中获取 Update Row 失败：" + sqlCommand, zqlCommandExecutionError);
                     return false;
                 }
             }
@@ -111,12 +110,15 @@ public class SQLCommandManager {
         return true;
     }
 
-
     /**
-     *  通过语法解析器执行 SQL 命令
+     * 执行 ZQL 命令
+     *
+     * @return 执行成功返回 <code>true</code>，否则抛出异常
+     * @throws ZQLSyntaxErrorException            解析 ZQL 命令 / 反向生成 SQL 命令失败，具体由 Exception 中的 ErrorCode 决定
+     * @throws ZQLInnerDatabaseExecutionException 底层库执行反向生成的 SQL 命令失败
+     * @throws ZQLConnectionException             创建 Connection / Statement 或者从 Statement 中获取结果失败，具体由 Exception 中的 ErrorCode 决定
      */
-    public boolean execute() {
-        // TODO: 抛出异常给外部处理
+    public boolean execute() throws ZQLSyntaxErrorException, ZQLInnerDatabaseExecutionException, ZQLConnectionException {
         /* 记录时间 */
         java.util.Date startTime = new java.util.Date();
 
@@ -128,28 +130,44 @@ public class SQLCommandManager {
         uniformSQLParser parser;
         ParseTree tree;
         ASTNodeVisitResult visitResult;
-        try {
-            /* 词法解析器与语法解析器 */
-            ais = new ANTLRInputStream(is);
-            lexer = new uniformSQLLexer(ais);
-            tokens = new CommonTokenStream(lexer);
-            parser = new uniformSQLParser(tokens);
 
-            /* 遍历语法树 */
-            tree = parser.root_statement();
-            ZQLVisitor visitor = new ZQLVisitor(session);
-            visitResult = visitor.visit(tree);
-        } catch (Exception e) {
-            ZQLSyntaxErrorException zqlSyntaxErrorException = new ZQLSyntaxErrorException();
-            zqlSyntaxErrorException.initCause(e);
-            logger.e("发生语法错误：" + sqlCommand, zqlSyntaxErrorException);
-            return false;
+        /* 词法解析与语法解析 */
+        try {
+            ais = new ANTLRInputStream(is);
+        } catch (IOException e) {
+            int vendorCode = ZQLErrorNumbers.ERR_SYNTAX_READ;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+            ZQLSyntaxErrorException zqlSyntaxErrorException = new ZQLSyntaxErrorException(reason, "42000", vendorCode);
+            throw zqlSyntaxErrorException;
         }
 
+        lexer = new uniformSQLLexer(ais);
+        tokens = new CommonTokenStream(lexer);
+        parser = new uniformSQLParser(tokens);
+        parser.setErrorHandler(new ExceptionErrorStrategy());
+        try {
+            tree = parser.root_statement();
+        } catch (Exception e) {
+            int vendorCode = ZQLErrorNumbers.ERR_SYNTAX_PARSE;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{sqlCommand});
+            ZQLSyntaxErrorException zqlSyntaxErrorException = new ZQLSyntaxErrorException(reason, "42000", vendorCode);
+            zqlSyntaxErrorException.initCause(e);
+            throw zqlSyntaxErrorException;
+        }
+
+        /* 遍历语法树 */
+        ZQLVisitor visitor = new ZQLVisitor(session);
+        visitResult = visitor.visit(tree);
+        session.setException(null);
+
         if (visitResult == null) {
-            ZQLCommandExecutionError zqlCommandExecutionError = new ZQLCommandExecutionError();
-            logger.e("反向生成 SQL 命令失败，错误原因：" + session.getErrorMessage(), zqlCommandExecutionError);
-            return false;
+            if (session.getException() != null) {
+                int vendorCode = ZQLErrorNumbers.ERR_SYNTAX_GENE;
+                String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+                ZQLSyntaxErrorException zqlSyntaxErrorException = new ZQLSyntaxErrorException(reason, "HY000", vendorCode);
+                zqlSyntaxErrorException.initCause(session.getException());
+                throw zqlSyntaxErrorException;
+            }
         }
 
         ArrayList<InnerSQLCommand> commands = visitResult.getCommands();
@@ -164,22 +182,24 @@ public class SQLCommandManager {
             try {
                 statement = connection.createStatement();
             } catch (SQLException e) {
-                ZQLConnectionException zqlConnectionException = new ZQLConnectionException("创建数据库 " + dbId + " 的 Statement 对象失败，失败原因：");
+                int vendorCode = 12001;
+                String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+                ZQLConnectionException zqlConnectionException = new ZQLConnectionException(reason, e.getSQLState(), vendorCode);
                 zqlConnectionException.initCause(e);
-                logger.e("创建数据库 " + dbId + " 的 Statement 对象失败，失败原因：", zqlConnectionException);
-                return false;
+                throw zqlConnectionException;
             }
 
             /* 交付数据库（底层库 / 元数据库）执行 SQL 命令 */
             boolean isQuery;
             try {
-                logger.d("在数据库 " + dbId + " 中执行指令 " + innerSQLCommand.getCommandStr());
-                String a = innerSQLCommand.getCommandStr();
+                LOGGER.d("在数据库 " + dbId + " 中执行指令 " + innerSQLCommand.getCommandStr());
                 isQuery = statement.execute(innerSQLCommand.getCommandStr());
             } catch (SQLException e) {
-                ZQLCommandExecutionError zqlCommandExecutionError = new ZQLCommandExecutionError(e.getMessage());
-                logger.e("在数据库 " + dbId + " 执行 SQL 命令失败：" + innerSQLCommand.getCommandStr() + "，错误原因：", zqlCommandExecutionError);
-                return false;
+                int vendorCode = 10002;
+                String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{String.valueOf(dbId), innerSQLCommand.getCommandStr()});
+                ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, e.getSQLState(), vendorCode);
+                zqlInnerDatabaseExecutionException.initCause(e);
+                throw zqlInnerDatabaseExecutionException;
             }
 
             /* 获取结果 */
@@ -187,19 +207,21 @@ public class SQLCommandManager {
                 try {
                     this.resultSet = statement.getResultSet();
                 } catch (SQLException e) {
-                    ZQLCommandExecutionError zqlCommandExecutionError = new ZQLCommandExecutionError();
-                    zqlCommandExecutionError.initCause(e);
-                    logger.e("从底层库 " + dbId + " 中获取 Result Set 失败：" + sqlCommand, zqlCommandExecutionError);
-                    return false;
+                    int vendorCode = 12002;
+                    String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+                    ZQLConnectionException zqlConnectionException = new ZQLConnectionException(reason, e.getSQLState(), vendorCode);
+                    zqlConnectionException.initCause(e);
+                    throw zqlConnectionException;
                 }
             } else {
                 try {
                     this.updateCount += statement.getUpdateCount();
                 } catch (SQLException e) {
-                    ZQLCommandExecutionError zqlCommandExecutionError = new ZQLCommandExecutionError();
-                    zqlCommandExecutionError.initCause(e);
-                    logger.e("从底层库 " + dbId + " 中获取 Update Row 失败：" + sqlCommand, zqlCommandExecutionError);
-                    return false;
+                    int vendorCode = 12003;
+                    String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+                    ZQLConnectionException zqlConnectionException = new ZQLConnectionException(reason, e.getSQLState(), vendorCode);
+                    zqlConnectionException.initCause(e);
+                    throw zqlConnectionException;
                 }
             }
         }
@@ -262,7 +284,6 @@ public class SQLCommandManager {
             EOFPacket eofPacket1 = EOFPacket.getEOFPacket(2, 0xFFFF);
 
             /* 获取表中数据并存放在二维数据中 */
-            int i = 0;
             int numberOfRows = 0;
             List<String[]> rowDataList = new ArrayList<String[]>();
             while (resultSet.next()) {
@@ -275,7 +296,6 @@ public class SQLCommandManager {
                 }
                 rowDataList.add(rowData);
                 asciiArtTable.add(rowData);
-                i++;
             }
 
             RowDataPacket[] rowDataPacketArray = new RowDataPacket[rowDataList.size()];

@@ -392,5 +392,16 @@
     <orderEntry type="library" name="Maven: net.sf.jopt-simple:jopt-simple:4.9" level="project" />
     <orderEntry type="library" name="Maven: junit:junit:4.4" level="project" />
     <orderEntry type="library" name="Maven: xmlunit:xmlunit:1.6" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/target/uniformSQL.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$MODULE_DIR$/target/uniformSQL.jar!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
   </component>
 </module>

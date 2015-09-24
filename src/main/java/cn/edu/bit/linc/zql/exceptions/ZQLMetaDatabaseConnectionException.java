@@ -1,9 +1,11 @@
 package cn.edu.bit.linc.zql.exceptions;
 
+import java.sql.SQLException;
+
 /**
- * 底层库执行 SQL 命令失败，
+ * 元数据库连接错误
  */
-public class ZQLCommandExecutionError extends ZQLException {
+public class ZQLMetaDatabaseConnectionException extends ZQLConnectionException {
     /**
      * 构造函数
      *
@@ -11,7 +13,7 @@ public class ZQLCommandExecutionError extends ZQLException {
      * @param SQLState   一个 XOPEN 或者 SQL:2003 代码用于标示异常
      * @param vendorCode 数据库提供商指定代码用于标示异常
      */
-    public ZQLCommandExecutionError(String reason, String SQLState, int vendorCode) {
+    public ZQLMetaDatabaseConnectionException(String reason, String SQLState, int vendorCode) {
         super(reason, SQLState, vendorCode);
     }
 
@@ -21,7 +23,7 @@ public class ZQLCommandExecutionError extends ZQLException {
      * @param reason   异常描述
      * @param SQLState 一个 XOPEN 或者 SQL:2003 代码用于标示异常
      */
-    public ZQLCommandExecutionError(String reason, String SQLState) {
+    public ZQLMetaDatabaseConnectionException(String reason, String SQLState) {
         super(reason, SQLState);
     }
 
@@ -30,13 +32,13 @@ public class ZQLCommandExecutionError extends ZQLException {
      *
      * @param reason 异常描述
      */
-    public ZQLCommandExecutionError(String reason) {
+    public ZQLMetaDatabaseConnectionException(String reason) {
         super(reason);
     }
 
     /**
      * 构造函数
      */
-    public ZQLCommandExecutionError() {
+    public ZQLMetaDatabaseConnectionException() {
     }
 }

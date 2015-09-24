@@ -1,11 +1,9 @@
 package cn.edu.bit.linc.zql.exceptions;
 
-import java.sql.SQLException;
-
 /**
- * 语法解析错误
+ * 元数据库执行命令失败
  */
-public class ZQLSyntaxErrorException extends SQLException{
+public class ZQLMetaDatabaseExecutionException extends ZQLExecutionException {
     /**
      * 构造函数
      *
@@ -13,7 +11,7 @@ public class ZQLSyntaxErrorException extends SQLException{
      * @param SQLState   一个 XOPEN 或者 SQL:2003 代码用于标示异常
      * @param vendorCode 数据库提供商指定代码用于标示异常
      */
-    public ZQLSyntaxErrorException(String reason, String SQLState, int vendorCode) {
+    public ZQLMetaDatabaseExecutionException(String reason, String SQLState, int vendorCode) {
         super(reason, SQLState, vendorCode);
     }
 
@@ -23,7 +21,7 @@ public class ZQLSyntaxErrorException extends SQLException{
      * @param reason   异常描述
      * @param SQLState 一个 XOPEN 或者 SQL:2003 代码用于标示异常
      */
-    public ZQLSyntaxErrorException(String reason, String SQLState) {
+    public ZQLMetaDatabaseExecutionException(String reason, String SQLState) {
         super(reason, SQLState);
     }
 
@@ -32,13 +30,13 @@ public class ZQLSyntaxErrorException extends SQLException{
      *
      * @param reason 异常描述
      */
-    public ZQLSyntaxErrorException(String reason) {
+    public ZQLMetaDatabaseExecutionException(String reason) {
         super(reason);
     }
 
     /**
      * 构造函数
      */
-    public ZQLSyntaxErrorException() {
+    public ZQLMetaDatabaseExecutionException() {
     }
 }

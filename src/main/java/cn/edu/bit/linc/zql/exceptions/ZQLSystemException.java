@@ -1,9 +1,11 @@
 package cn.edu.bit.linc.zql.exceptions;
 
+import java.sql.SQLException;
+
 /**
- * 不支持的底层库类型
+ * 系统相关异常
  */
-public class UnsupportedDatabaseException extends ZQLException {
+public class ZQLSystemException extends SQLException{
     /**
      * 构造函数
      *
@@ -11,7 +13,7 @@ public class UnsupportedDatabaseException extends ZQLException {
      * @param SQLState   一个 XOPEN 或者 SQL:2003 代码用于标示异常
      * @param vendorCode 数据库提供商指定代码用于标示异常
      */
-    public UnsupportedDatabaseException(String reason, String SQLState, int vendorCode) {
+    public ZQLSystemException(String reason, String SQLState, int vendorCode) {
         super(reason, SQLState, vendorCode);
     }
 
@@ -21,7 +23,7 @@ public class UnsupportedDatabaseException extends ZQLException {
      * @param reason   异常描述
      * @param SQLState 一个 XOPEN 或者 SQL:2003 代码用于标示异常
      */
-    public UnsupportedDatabaseException(String reason, String SQLState) {
+    public ZQLSystemException(String reason, String SQLState) {
         super(reason, SQLState);
     }
 
@@ -30,13 +32,13 @@ public class UnsupportedDatabaseException extends ZQLException {
      *
      * @param reason 异常描述
      */
-    public UnsupportedDatabaseException(String reason) {
+    public ZQLSystemException(String reason) {
         super(reason);
     }
 
     /**
      * 构造函数
      */
-    public UnsupportedDatabaseException() {
+    public ZQLSystemException() {
     }
 }

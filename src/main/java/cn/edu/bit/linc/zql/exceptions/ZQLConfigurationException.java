@@ -1,11 +1,11 @@
 package cn.edu.bit.linc.zql.exceptions;
 
-import cn.edu.bit.linc.zql.exceptions.ZQLException;
+import java.sql.SQLException;
 
 /**
- * 元数据库相关操作执行失败
+ * 配置文件相关异常
  */
-public class MetaDatabaseOperationsException extends ZQLException {
+public class ZQLConfigurationException extends SQLException {
     /**
      * 构造函数
      *
@@ -13,7 +13,7 @@ public class MetaDatabaseOperationsException extends ZQLException {
      * @param SQLState   一个 XOPEN 或者 SQL:2003 代码用于标示异常
      * @param vendorCode 数据库提供商指定代码用于标示异常
      */
-    public MetaDatabaseOperationsException(String reason, String SQLState, int vendorCode) {
+    public ZQLConfigurationException(String reason, String SQLState, int vendorCode) {
         super(reason, SQLState, vendorCode);
     }
 
@@ -23,7 +23,7 @@ public class MetaDatabaseOperationsException extends ZQLException {
      * @param reason   异常描述
      * @param SQLState 一个 XOPEN 或者 SQL:2003 代码用于标示异常
      */
-    public MetaDatabaseOperationsException(String reason, String SQLState) {
+    public ZQLConfigurationException(String reason, String SQLState) {
         super(reason, SQLState);
     }
 
@@ -32,13 +32,13 @@ public class MetaDatabaseOperationsException extends ZQLException {
      *
      * @param reason 异常描述
      */
-    public MetaDatabaseOperationsException(String reason) {
+    public ZQLConfigurationException(String reason) {
         super(reason);
     }
 
     /**
      * 构造函数
      */
-    public MetaDatabaseOperationsException() {
+    public ZQLConfigurationException() {
     }
 }

@@ -7,7 +7,7 @@ import cn.edu.bit.linc.zql.util.LoggerFactory;
  * 数据库类，用于存储一个数据库的信息
  */
 public class Database {
-    private final static Logger logger = LoggerFactory.getLogger(Database.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(Database.class);
     public static final String MYSQL_DRIVER = "com.mysql.jdbc.Driver";  // MYSQL JDBC 驱动
     public static final String HIVE_DRIVER = "org.apache.hive.jdbc.HiveDriver";   // HIVE JDBC 驱动
 

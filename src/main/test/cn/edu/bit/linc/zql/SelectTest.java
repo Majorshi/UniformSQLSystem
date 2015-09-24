@@ -6,7 +6,7 @@ import cn.edu.bit.linc.zql.databases.Database;
 import cn.edu.bit.linc.zql.databases.InnerDatabase;
 import cn.edu.bit.linc.zql.databases.InnerDatabases;
 import cn.edu.bit.linc.zql.databases.MetaDatabase;
-import cn.edu.bit.linc.zql.exceptions.MetaDatabaseOperationsException;
+import cn.edu.bit.linc.zql.exceptions.*;
 import cn.edu.bit.linc.zql.util.StringUtil;
 import cn.edu.bit.linc.zql.util.UnitTestUtils;
 import joptsimple.OptionParser;
@@ -32,15 +32,18 @@ public class SelectTest {
     private ZQLSession session;
     private String user, password, inputQuery, fileName, database;
     public final static SQLCommandBuilder sqlCommandBuilder;
+
     static {
         sqlCommandBuilder = new SQLCommandBuilder();
         sqlCommandBuilder.addAdapter(new MySQLCommandAdapter());
         sqlCommandBuilder.addAdapter(new HiveCommandAdapter());
     }
+
     private final static String testFileUrl = "test.json";
     private final static String dataDirectory = "./UnitTestData/";
     private final static String testDBName = "SQLTest";
     private final String commandTerminator = ";";
+
     private void parseArgs(String[] args) {
         /* 构建解析器 */
         OptionParser parser = new OptionParser();
@@ -62,8 +65,7 @@ public class SelectTest {
 
         if (options.has("u")) {
             user = (String) options.valueOf("u");
-        }
-        else{
+        } else {
             user = "root";
         }
 
@@ -194,7 +196,7 @@ public class SelectTest {
     }
 
     // 读入测试流程JSON
-    public void startTest () throws JSONException {
+    public void startTest() throws JSONException, ZQLSyntaxErrorException, ZQLInnerDatabaseExecutionException, ZQLConnectionException {
         ZQLSession session = new ZQLSession(user, database, password);
         UnitTestUtils test = new UnitTestUtils();
         String json = test.ReadFile(testFileUrl);
@@ -202,27 +204,27 @@ public class SelectTest {
         for (int i = 0; i < arr.length(); i++) {
             JSONObject obj = arr.getJSONObject(i);
             //测试用例标题
-            String title = obj.getString("title") != null ? obj.getString("title"):"";
+            String title = obj.getString("title") != null ? obj.getString("title") : "";
 
             System.out.println("==================开始测试用例" + (i + 1) + "==================");
             System.out.println("测试用例:" + title);
 
             //初始化用sql文件名称
-            String initFile = obj.getString("initFile") != null ? obj.getString("initFile"):"";
+            String initFile = obj.getString("initFile") != null ? obj.getString("initFile") : "";
             //测试用SQL语句所指定的数据库
-            String useDatabase = obj.getString("useDatabase") != null ? obj.getString("useDatabase"):"";
+            String useDatabase = obj.getString("useDatabase") != null ? obj.getString("useDatabase") : "";
             //测试用SQL语句（非文件）
-            String executeSQL = obj.getString("executeSQL") != null ? obj.getString("executeSQL"):"";
+            String executeSQL = obj.getString("executeSQL") != null ? obj.getString("executeSQL") : "";
 
             //需要使用showSQL来得到对比用的结果集（针对insert、delete等没有结果集的语句使用）
             int useShowSQL = obj.getInt("useShowSQL");
             //showSQL
-            String showSQL = obj.getString("showSQL") != null ? obj.getString("showSQL"):"";
+            String showSQL = obj.getString("showSQL") != null ? obj.getString("showSQL") : "";
 
             //结果集输出的文件名
-            String exportFile = obj.getString("exportFile") != null ? obj.getString("exportFile"):"";
+            String exportFile = obj.getString("exportFile") != null ? obj.getString("exportFile") : "";
             //期望结果集文件名
-            String expectFile = obj.getString("expectFile") != null ? obj.getString("expectFile"):"";
+            String expectFile = obj.getString("expectFile") != null ? obj.getString("expectFile") : "";
             //根据initFile初始化数据库
             doInputSQLCommand(dataDirectory + initFile);
             //预执行excuteSQL，生成对比结果文件
@@ -235,7 +237,7 @@ public class SelectTest {
             try {
                 if (useDatabase.length() != 0) dbId = metaDatabase.getInnerDatabaseId(useDatabase);
                 else dbId = 1;
-            } catch (MetaDatabaseOperationsException e) {
+            } catch (ZQLMetaDatabaseExecutionException e) {
                 session.setDatabase("获取数据库所在底层库失败，错误原因：" + e.getMessage());
                 return;
             }
@@ -249,7 +251,7 @@ public class SelectTest {
             dbIds.add(dbId);
 
             SQLCommandManager sqlCommandManager = new SQLCommandManager(executeSQL, session);
-            if (!sqlCommandManager.excuteSQLWithoutParser(commands,dbIds)) {
+            if (!sqlCommandManager.excuteSQLWithoutParser(commands, dbIds)) {
                 rs = null;
             } else {
                 rs = sqlCommandManager.getResultSet();
@@ -260,7 +262,7 @@ public class SelectTest {
                 commands = new java.util.ArrayList<InnerSQLCommand>();
                 innerDBcommands = sqlCommandBuilder.defaultSQL(type, showSQL);
                 commands.add(innerDBcommands);
-                if (!sqlCommandManager.excuteSQLWithoutParser(commands,dbIds)) {
+                if (!sqlCommandManager.excuteSQLWithoutParser(commands, dbIds)) {
                     rs = null;
                 } else {
                     rs = sqlCommandManager.getResultSet();
@@ -304,7 +306,7 @@ public class SelectTest {
         }
     }
 
-    public static void main (String[] args) throws IOException, JSONException {
+    public static void main(String[] args) throws IOException, JSONException, ZQLSyntaxErrorException, ZQLInnerDatabaseExecutionException, ZQLConnectionException {
         ZQLContext zqlContext = new ZQLContext();
         zqlContext.initializeSystem();
         SelectTest test = new SelectTest();

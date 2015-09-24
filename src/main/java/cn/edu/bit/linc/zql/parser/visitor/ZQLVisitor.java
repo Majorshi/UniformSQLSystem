@@ -1,6 +1,5 @@
 package cn.edu.bit.linc.zql.parser.visitor;
 
-import antlr.collections.AST;
 import cn.edu.bit.linc.zql.ZQLEnv;
 import cn.edu.bit.linc.zql.command.*;
 import cn.edu.bit.linc.zql.connections.ZQLSession;
@@ -8,8 +7,7 @@ import cn.edu.bit.linc.zql.databases.Database;
 import cn.edu.bit.linc.zql.databases.InnerDatabase;
 import cn.edu.bit.linc.zql.databases.InnerDatabases;
 import cn.edu.bit.linc.zql.databases.MetaDatabase;
-import cn.edu.bit.linc.zql.exceptions.MetaDatabaseOperationsException;
-import cn.edu.bit.linc.zql.exceptions.ZQLCommandExecutionError;
+import cn.edu.bit.linc.zql.exceptions.*;
 import cn.edu.bit.linc.zql.parser.uniformSQLBaseVisitor;
 import cn.edu.bit.linc.zql.parser.uniformSQLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -17,6 +15,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import org.mortbay.log.Log;
 
+import java.sql.SQLException;
 import java.util.*;
 
 /**
@@ -275,7 +274,10 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         ArrayList<InnerSQLCommand> commands = new ArrayList<InnerSQLCommand>();
         ArrayList<Integer> dbIds = new ArrayList<Integer>();
         if (session.getDatabase() == null) {
-            session.setErrorMessage("未指定数据库，使用命令 `use db_name` 指定数据库");
+            int vendorCode = ZQLErrorNumbers.ERR_INNER_NO_USE;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+            ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, "HY000", vendorCode);
+            session.setException(zqlInnerDatabaseExecutionException);
             return null;
         }
 
@@ -313,21 +315,27 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         try {
             privilegesMap = metaDatabase.getPrivilegesOfASpecifiedUserAndTable(session.getDatabase(),
                     tbName, session.getUserName());
-        } catch (MetaDatabaseOperationsException e) {
-            session.setErrorMessage("从元数据库获取用户 " + session.getUserName() + " 失败，失败原因 " + e.getMessage());
+        } catch (SQLException e) {
+            session.setException(e);
             return null;
         }
 
         if (!session.getUserName().equals("root") && privilegesMap == null) {
-            session.setErrorMessage("元数据库中找不到用户 " + session.getUserName() + " 对于数据库表 " + session.getDatabase()
-                    + "." + tbName + " 的权限");
+            int vendorCode = ZQLErrorNumbers.ERR_PRIV_NOT_FOUND;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{session.getUserName(), session.getDatabase()
+                    + "." + tbName, ""});
+            ZQLPrivilegeException zqlPrivilegeException = new ZQLPrivilegeException(reason, "HY000", vendorCode);
+            session.setException(zqlPrivilegeException);
             return null;
         }
 
         // 检查用户是否有足够权限
         if (!session.getUserName().equals("root") && privilegesMap.get("GRANT_OPTION").equals("N")) {
-            session.setErrorMessage("用户 " + session.getUserName() + " 在数据表 " + session.getDatabase()
-                    + "." + tbName + " 中没有 GRANT 权限");
+            int vendorCode = ZQLErrorNumbers.ERR_PRIV_NOT_FOUND;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{session.getUserName(), session.getDatabase()
+                    + "." + tbName, "GRANT"});
+            ZQLPrivilegeException zqlPrivilegeException = new ZQLPrivilegeException(reason, "HY000", vendorCode);
+            session.setException(zqlPrivilegeException);
             return null;
         }
 
@@ -336,8 +344,11 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
                         !(privilegesArray.contains("INSERT") && !privilegesMap.get("INSERT").equals("Y")) &&
                         !(privilegesArray.contains("UPDATE") && !privilegesMap.get("UPDATE").equals("Y")) &&
                         !(privilegesArray.contains("DELETE") && !privilegesMap.get("DELETE").equals("Y"))))) {
-            session.setErrorMessage("用户 " + session.getUserName() + " 在数据表 " + session.getDatabase() + "." +
-                    tbName + " 中没有足够的权限");
+            int vendorCode = ZQLErrorNumbers.ERR_PRIV_NOT_FOUND;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{session.getUserName(), session.getDatabase()
+                    + "." + tbName, ""});
+            ZQLPrivilegeException zqlPrivilegeException = new ZQLPrivilegeException(reason, "HY000", vendorCode);
+            session.setException(zqlPrivilegeException);
             return null;
         }
 
@@ -458,21 +469,27 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         try {
             privilegesMap = metaDatabase.getPrivilegesOfASpecifiedUserAndTable(session.getDatabase(),
                     tbName, session.getUserName());
-        } catch (MetaDatabaseOperationsException e) {
-            session.setErrorMessage("从元数据库获取用户 " + session.getUserName() + " 失败，失败原因 " + e.getMessage());
+        } catch (Exception e) {
+            session.setException(e);
             return null;
         }
 
         if (!session.getUserName().equals("root") && privilegesMap == null) {
-            session.setErrorMessage("元数据库中找不到用户 " + session.getUserName() + " 对于数据库表 " + session.getDatabase()
-                    + "." + tbName + " 的权限");
+            int vendorCode = ZQLErrorNumbers.ERR_PRIV_NOT_FOUND;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{session.getUserName(), session.getDatabase()
+                    + "." + tbName, ""});
+            ZQLPrivilegeException zqlPrivilegeException = new ZQLPrivilegeException(reason, "HY000", vendorCode);
+            session.setException(zqlPrivilegeException);
             return null;
         }
 
         // 检查用户是否有足够权限
         if (!session.getUserName().equals("root") && privilegesMap.get("GRANT_OPTION").equals("N")) {
-            session.setErrorMessage("用户 " + session.getUserName() + " 在数据表 " + session.getDatabase()
-                    + "." + tbName + " 中没有 GRANT 权限");
+            int vendorCode = ZQLErrorNumbers.ERR_PRIV_NOT_FOUND;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{session.getUserName(), session.getDatabase()
+                    + "." + tbName, "GRANT"});
+            ZQLPrivilegeException zqlPrivilegeException = new ZQLPrivilegeException(reason, "HY000", vendorCode);
+            session.setException(zqlPrivilegeException);
             return null;
         }
 
@@ -481,8 +498,11 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
                         !(privilegesArray.contains("INSERT") && !privilegesMap.get("INSERT").equals("Y")) &&
                         !(privilegesArray.contains("UPDATE") && !privilegesMap.get("UPDATE").equals("Y")) &&
                         !(privilegesArray.contains("DELETE") && !privilegesMap.get("DELETE").equals("Y"))))) {
-            session.setErrorMessage("用户 " + session.getUserName() + " 在数据表 " + session.getDatabase() + "." +
-                    tbName + " 中没有足够的权限");
+            int vendorCode = ZQLErrorNumbers.ERR_PRIV_NOT_FOUND;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{session.getUserName(), session.getDatabase()
+                    + "." + tbName, ""});
+            ZQLPrivilegeException zqlPrivilegeException = new ZQLPrivilegeException(reason, "HY000", vendorCode);
+            session.setException(zqlPrivilegeException);
             return null;
         }
 
@@ -558,8 +578,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
             int dbId;
             try {
                 dbId = metaDatabase.getInnerDatabaseId(session.getDatabase());
-            } catch (MetaDatabaseOperationsException e) {
-                session.setErrorMessage(e.getMessage());
+            } catch (SQLException e) {
+                session.setException(e);
                 return null;
             }
 
@@ -575,7 +595,10 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
             String databaseName = specificationContext.table_spec().schema_name() != null
                     ? visit(specificationContext.table_spec().schema_name()).getValue() : session.getDatabase();
             if (databaseName == null) {
-                session.setErrorMessage("未指定数据库");
+                int vendorCode = ZQLErrorNumbers.ERR_INNER_USE_DB;
+                String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+                ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, "HY000", vendorCode);
+                session.setException(zqlInnerDatabaseExecutionException);
                 return null;
             }
 
@@ -584,8 +607,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
             int dbId;
             try {
                 dbId = metaDatabase.getInnerDatabaseId(databaseName);
-            } catch (MetaDatabaseOperationsException e) {
-                session.setErrorMessage(e.getMessage());
+            } catch (SQLException e) {
+                session.setException(e);
                 return null;
             }
 
@@ -598,7 +621,10 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
                 args[0] = databaseName;
                 args[1] = tableName;
             } else {
-                session.setErrorMessage("不支持的数据库类型 " + dbType);
+                int vendorCode = ZQLErrorNumbers.ERR_NOT_SUPPORTED_DB;
+                String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{dbType.toString()});
+                ZQLNotSupportedDatabaseException zqlNotSupportedDatabaseException = new ZQLNotSupportedDatabaseException(reason, "HY000", vendorCode);
+                session.setException(zqlNotSupportedDatabaseException);
                 return null;
             }
             InnerSQLCommand innerDbCommand = sqlCommandBuilder.showColumns(dbType, args);
@@ -645,7 +671,10 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
 
         /* 底层库 */
         if (ZQLEnv.get("innerdb.dafault.innerdb") == null) {
-            session.setErrorMessage("没有指定底层库");
+            int vendorCode = ZQLErrorNumbers.ERR_INNER_NO_USE;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+            ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, "HY000", vendorCode);
+            session.setException(zqlInnerDatabaseExecutionException);
             return null;
         }
         int dbId = Integer.valueOf(ZQLEnv.get("innerdb.dafault.innerdb"));    // 默认底层库
@@ -696,8 +725,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         int dbId;
         try {
             dbId = metaDatabase.getInnerDatabaseId(dropDbName);
-        } catch (MetaDatabaseOperationsException e) {
-            session.setErrorMessage(e.getMessage());
+        } catch (Exception e) {
+            session.setException(e);
             return null;
         }
 
@@ -740,12 +769,16 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         int dbId;
         try {
             dbId = metaDatabase.getInnerDatabaseId(dbName);
-        } catch (MetaDatabaseOperationsException e) {
-            session.setErrorMessage("连接元数据库获取数据库信息失败，失败原因：" + e.getMessage());
+        } catch (Exception e) {
+            session.setException(e);
             return null;
         }
+
         if (dbId == -1) {
-            session.setErrorMessage("不存在数据库 " + dbName);
+            int vendorCode = ZQLErrorNumbers.ERR_INNER_USE_DB;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+            ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, "HY000", vendorCode);
+            session.setException(zqlInnerDatabaseExecutionException);
             return null;
         }
 
@@ -786,7 +819,10 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         String databaseName = (ctx.table_spec().schema_name() != null ? visit(ctx.table_spec().schema_name()).getValue() :
                 (session.getDatabase() != null ? session.getDatabase() : null));
         if (databaseName == null) {
-            session.setErrorMessage("未指定数据库");
+            int vendorCode = ZQLErrorNumbers.ERR_INNER_NO_USE;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+            ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, "HY000", vendorCode);
+            session.setException(zqlInnerDatabaseExecutionException);
             return null;
         }
 
@@ -794,8 +830,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         int dbId;
         try {
             dbId = metaDatabase.getInnerDatabaseId(databaseName);
-        } catch (MetaDatabaseOperationsException e) {
-            session.setDatabase("获取数据库所在底层库失败，错误原因：" + e.getMessage());
+        } catch (SQLException e) {
+            session.setException(e);
             return null;
         }
         Database.DBType dbType = innerDatabasesArrayList.get(dbId - 1).getDbType();
@@ -826,8 +862,10 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
                 columnType = columnType.substring(0, columnType.length() - 1);   //去掉开头的空格
             CommandAdapter commandAdapter = CommandAdapter.getAdapterInstance(dbType);
             if (!commandAdapter.TYPE_MAP.containsKey(columnType.toUpperCase())) {
-                session.setErrorMessage("找不到类型 " + columnType);
-                return null;
+                int vendorCode = ZQLErrorNumbers.ERR_INNER_COLUMN_TYPE_NOT_FOUND;
+                String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{columnType});
+                ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, "HY000", vendorCode);
+                session.setException(zqlInnerDatabaseExecutionException);
             }
             columns += columnName + " " + commandAdapter.TYPE_MAP.get(columnType.toUpperCase()) + bracketContent + " " + columnCommend + ", ";
         }
@@ -941,7 +979,10 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         ArrayList<InnerSQLCommand> commands = new ArrayList<InnerSQLCommand>();
         ArrayList<Integer> dbIds = new ArrayList<Integer>();
         if (session.getDatabase() == null) {
-            session.setErrorMessage("未指定数据库，使用命令 `use db_name` 指定数据库");
+            int vendorCode = ZQLErrorNumbers.ERR_INNER_NO_USE;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+            ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, "HY000", vendorCode);
+            session.setException(zqlInnerDatabaseExecutionException);
             return null;
         }
 
@@ -958,8 +999,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         int dbId;
         try {
             dbId = metaDatabase.getInnerDatabaseId(databaseName);
-        } catch (MetaDatabaseOperationsException e) {
-            session.setDatabase("获取数据库所在底层库失败，错误原因：" + e.getMessage());
+        } catch (SQLException e) {
+            session.setException(e);
             return null;
         }
 
@@ -998,15 +1039,18 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
             databaseName = visit(ctx.table_spec().schema_name()).getValue();
         }
         if (databaseName == null) {
-            session.setErrorMessage("未指定数据库");
+            int vendorCode = ZQLErrorNumbers.ERR_INNER_NO_USE;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+            ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, "HY000", vendorCode);
+            session.setException(zqlInnerDatabaseExecutionException);
             return null;
         }
         /* 确定数据库所在底层库以及底层库类型 */
         int dbId;
         try {
             dbId = metaDatabase.getInnerDatabaseId(databaseName);
-        } catch (MetaDatabaseOperationsException e) {
-            session.setDatabase("获取数据库所在底层库失败，错误原因：" + e.getMessage());
+        } catch (SQLException e) {
+            session.setException(e);
             return null;
         }
         Database.DBType dbType = innerDatabasesArrayList.get(dbId - 1).getDbType();
@@ -1041,8 +1085,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
                 String columnType;
                 try {
                     columnType = innerDatabase.getColumnType(dbId, databaseName, tableName, oldColumnName);
-                } catch (ZQLCommandExecutionError e) {
-                    session.setErrorMessage(e.getMessage());
+                } catch (SQLException e) {
+                    session.setException(e);
                     return null;
                 }
             /* 底层库命令 */
@@ -1188,8 +1232,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         int dbId;
         try {
             dbId = metaDatabase.getInnerDatabaseId(session.getDatabase());
-        } catch (MetaDatabaseOperationsException e) {
-            session.setDatabase("获取数据库所在底层库失败，错误原因：" + e.getMessage());
+        } catch (SQLException e) {
+            session.setException(e);
             return null;
         }
         if (dbId == -1) dbId = 1;
@@ -1455,18 +1499,24 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         }
 
         if (dbId == innerDatabasesArrayList.size()) {
-            session.setErrorMessage("底层库不存在");
+            int vendorCode = ZQLErrorNumbers.ERR_INNER_INNER_DB_NOT_FOUND;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{serverAlias});
+            ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, "HY000", vendorCode);
+            session.setException(zqlInnerDatabaseExecutionException);
             return null;
         }
 
         /* 检查数据库是否存在并且数据库是否在底层库中 */
         try {
             if (metaDatabase.getInnerDatabaseId(databaseName) != dbId + 1) {
-                session.setErrorMessage("数据库 " + databaseName + " 不存在或不在底层库当中");
+                int vendorCode = ZQLErrorNumbers.ERR_INNER_DB_NOT_FOUND;
+                String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{databaseName});
+                ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, "HY000", vendorCode);
+                session.setException(zqlInnerDatabaseExecutionException);
                 return null;
             }
-        } catch (MetaDatabaseOperationsException e) {
-            session.setErrorMessage("连接元数据库获取数据库 " + databaseName + " 所在底层库失败，失败原因：");
+        } catch (Exception e) {
+            session.setException(e);
             return null;
         }
 
@@ -1515,7 +1565,10 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         }
 
         if (dbId == innerDatabasesArrayList.size()) {
-            session.setErrorMessage("底层库不存在");
+            int vendorCode = ZQLErrorNumbers.ERR_INNER_INNER_DB_NOT_FOUND;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{serverAlias});
+            ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, "HY000", vendorCode);
+            session.setException(zqlInnerDatabaseExecutionException);
             return null;
         }
 
@@ -1637,25 +1690,30 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
 
         /* 底层库 */
         if (ZQLEnv.get("innerdb.dafault.innerdb") == null) {
-            session.setErrorMessage("没有指定底层库");
+            int vendorCode = ZQLErrorNumbers.ERR_INNER_NO_USE;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+            ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, "HY000", vendorCode);
+            session.setException(zqlInnerDatabaseExecutionException);
             return null;
         }
         String databaseName = session.getDatabase();
         if (ctx.table_spec().schema_name() != null) {
             databaseName = visit(ctx.table_spec().schema_name()).getValue();
         }
+
         /* 获取子节点数据 */
         ASTNodeVisitResult visitSchemaNameNodeResult = visit(ctx.table_spec().table_name());
         String tableName = visitSchemaNameNodeResult.getValue();
-        // 数据库名
+
         /* 确定数据库所在底层库以及底层库类型 */
         int dbId;
         try {
             dbId = metaDatabase.getInnerDatabaseId(databaseName);
-        } catch (MetaDatabaseOperationsException e) {
-            session.setDatabase("获取数据库所在底层库失败，错误原因：" + e.getMessage());
+        } catch (SQLException e) {
+            session.setException(e);
             return null;
         }
+
         Database.DBType dbType = getInnerDatabaseByDBID(dbId).getDbType();
 
         ASTNodeVisitResult visitWhereClauseResult = visit(ctx.where_clause());
@@ -1663,11 +1721,13 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         if (whereString == null) {
             whereString = "";
         }
+
         /* 底层库命令 */
         InnerSQLCommand innerDbCommand = sqlCommandBuilder.delete(dbType, databaseName + "." + tableName, whereString);
         commands.add(innerDbCommand);
         dbIds.add(dbId);
         if (commandStack.size() > 1) commandStack.remove(commandStack.size() - 1);
+
         /* 返回结果 */
         return new ASTNodeVisitResult(null, commands, dbIds);
     }
@@ -2522,9 +2582,12 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         commandStack.add("UPDATE");
         ArrayList<InnerSQLCommand> commands = new ArrayList<InnerSQLCommand>();
         ArrayList<Integer> dbIds = new ArrayList<Integer>();
-                /* 底层库 */
+        /* 底层库 */
         if (ZQLEnv.get("innerdb.dafault.innerdb") == null) {
-            session.setErrorMessage("没有指定底层库");
+            int vendorCode = ZQLErrorNumbers.ERR_INNER_NO_USE;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+            ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, "HY000", vendorCode);
+            session.setException(zqlInnerDatabaseExecutionException);
             return null;
         }
         String database = session.getDatabase();
@@ -2540,8 +2603,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         int dbId;
         try {
             dbId = metaDatabase.getInnerDatabaseId(database);
-        } catch (MetaDatabaseOperationsException e) {
-            session.setDatabase("获取数据库所在底层库失败，错误原因：" + e.getMessage());
+        } catch (SQLException e) {
+            session.setException(e);
             return null;
         }
         Database.DBType dbType = getInnerDatabaseByDBID(dbId).getDbType();
@@ -2631,7 +2694,10 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         ArrayList<Integer> dbIds = new ArrayList<Integer>();
         /* 底层库 */
         if (ZQLEnv.get("innerdb.dafault.innerdb") == null) {
-            session.setErrorMessage("没有指定底层库");
+            int vendorCode = ZQLErrorNumbers.ERR_INNER_NO_USE;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+            ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, "HY000", vendorCode);
+            session.setException(zqlInnerDatabaseExecutionException);
             return null;
         }
         String database = session.getDatabase();
@@ -2639,8 +2705,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         int dbId = -1;
         try {
             dbId = metaDatabase.getInnerDatabaseId(database);
-        } catch (MetaDatabaseOperationsException e) {
-            session.setDatabase("获取数据库所在底层库失败，错误原因：" + e.getMessage());
+        } catch (Exception e) {
+            session.setException(e);
             return null;
         }
         if (dbId == -1) dbId = 1;
@@ -2757,8 +2823,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
             int dbId;
             try {
                 dbId = metaDatabase.getInnerDatabaseId(database);
-            } catch (MetaDatabaseOperationsException e) {
-                session.setDatabase("获取数据库所在底层库失败，错误原因：" + e.getMessage());
+            } catch (SQLException e) {
+                session.setException(e);
                 return null;
             }
             dbIds.add(dbId);

@@ -18,7 +18,7 @@ import java.io.*;
 public class Shell {
     public String user, password, inputQuery, fileName, database;
     private final String commandTerminator = ";";
-    private final static Logger logger = LoggerFactory.getLogger(Shell.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(Shell.class);
 
     public void doInputSQLCommand() {
         ZQLSession session = new ZQLSession(user, database, password);
@@ -30,7 +30,7 @@ public class Shell {
             try {
                 reader = new BufferedReader(new FileReader(fileName));
             } catch (FileNotFoundException e) {
-                logger.f("找不到指定 SQL 文件 " + fileName, e);
+                LOGGER.f("找不到指定 SQL 文件 " + fileName, e);
                 System.exit(-1);
             }
         } else {
@@ -102,7 +102,7 @@ public class Shell {
                     return;
             }
         } catch (Exception e) {
-            logger.f("读取 SQL 命令失败", e);
+            LOGGER.f("读取 SQL 命令失败", e);
             System.exit(0);
         }
     }

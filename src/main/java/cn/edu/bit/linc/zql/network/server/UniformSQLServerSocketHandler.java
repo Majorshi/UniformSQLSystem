@@ -204,8 +204,8 @@ public class UniformSQLServerSocketHandler implements ServerSocketHandler {
      */
     private Packet buildHandShakePacket() throws PacketExceptions.NecessaryFieldNotSetException {
         /* 构建握手包 */
-        IntegerType protocolVersion = IntegerType.getIntegerType(Integer.valueOf(ZQLEnv.get("protocol.version")), HandShakePacket.LENGTH_PROTOCOL_VERSION);
-        StringType serverVersion = StringType.getStringType(ZQLEnv.get("server.version"));
+        IntegerType protocolVersion = IntegerType.getIntegerType(Integer.valueOf(ZQLEnv.get(ZQLEnv.SERVER_PROTOCOL_VERSION)), HandShakePacket.LENGTH_PROTOCOL_VERSION);
+        StringType serverVersion = StringType.getStringType(ZQLEnv.get(ZQLEnv.SERVER_VERSION));
         IntegerType threadID = IntegerType.getIntegerType((int) Thread.currentThread().getId(), HandShakePacket.LENGTH_THREAD_ID);
         IntegerType serverCapabilities = IntegerType.getIntegerType(0, HandShakePacket.LENGTH_SERVER_CAPABILITIES);
         IntegerType characterSet = IntegerType.getIntegerType(0, HandShakePacket.LENGTH_CHARACTER_SET);
@@ -282,9 +282,9 @@ public class UniformSQLServerSocketHandler implements ServerSocketHandler {
 
 
     /**
-     * 构建响应成功数据包
+     * 构建响应失败数据包
      *
-     * @return 构建得到的响应成功数据包
+     * @return 构建得到的响应失败数据包
      */
     private Packet buildErrorPacket(int errorCode, int serverStatus, String errorMessage) {
         ErrorPacket errorPacket = ErrorPacket.getErrorPacket(errorCode, serverStatus, errorMessage);
