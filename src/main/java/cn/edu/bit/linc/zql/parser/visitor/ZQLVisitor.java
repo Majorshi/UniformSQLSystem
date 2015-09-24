@@ -40,7 +40,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
     public ArrayList<uniformSQLParser.Table_specContext> tableSpecNodes = new ArrayList<uniformSQLParser.Table_specContext>();
     public HashMap<uniformSQLParser.Table_specContext, String> commandType = new HashMap<uniformSQLParser.Table_specContext, String>();
     public ArrayList<String> commandStack = new ArrayList<String>();
-
+    public boolean usedServerAlias = false;
+    public int defaultDbId = -1;
     public ZQLVisitor(ZQLSession session) {
         this.session = session;
     }
@@ -576,22 +577,46 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
             // TODO: Like 为可选项
             /* 查看数据库 */
             /* 元数据库命令 */
-            String likeStr = specificationContext.LIKE() == null ? ""
-                    : "WHERE Db LIKE '" + specificationContext.getChild(2).getText().substring(1, specificationContext.getChild(2).getText().length() - 1) + "'";
-            InnerSQLCommand metaDbCommand = sqlCommandBuilder.showDatabases(Database.DBType.MySQL, metaDatabase.getMetaDbName(), likeStr);
-            commands.add(metaDbCommand);
-            dbIds.add(0);
+            if (!usedServerAlias) {
+                String likeStr = specificationContext.LIKE() == null ? ""
+                        : "WHERE Db LIKE '" + specificationContext.getChild(2).getText().substring(1, specificationContext.getChild(2).getText().length() - 1) + "'";
+                InnerSQLCommand metaDbCommand = sqlCommandBuilder.showDatabases(Database.DBType.MySQL, metaDatabase.getMetaDbName(), likeStr);
+                commands.add(metaDbCommand);
+                dbIds.add(0);
+            } else {
+                ASTNodeVisitResult whateverResult = visitChildrenNodes(ctx.children);
+                String allStr = whateverResult.getValue();
+                InnerSQLCommand showCommand = sqlCommandBuilder.defaultSQL(Database.DBType.MySQL, allStr);
+                commands.add(showCommand);
+                dbIds.add(defaultDbId);
+            }
+
         } else if (specificationContext.TABLES() != null) {
             /* 查看数据表 */
             /* 获取子节点数据 */
-            String inDatabase = (specificationContext.IN() != null) ? "Db = '" + (visit(specificationContext.database_name()).getValue()) + "'" : "true";
-            String like = (specificationContext.children.size() >= 4) ?
-                    "tb LIKE " + specificationContext.children.get(3).getText() : "true";
+            if (!usedServerAlias) {
+                String inDatabase = (specificationContext.IN() != null) ? "Db = '" + (visit(specificationContext.database_name()).getValue()) + "'" : "true";
+                String like = (specificationContext.children.size() >= 4) ?
+                        "tb LIKE " + specificationContext.children.get(3).getText() : "true";
 
             /* 元数据库命令 */
-            InnerSQLCommand metaDbCommand = sqlCommandBuilder.showTables(Database.DBType.MySQL, metaDatabase.getMetaDbName(), inDatabase, like);
-            commands.add(metaDbCommand);
-            dbIds.add(0);
+                InnerSQLCommand metaDbCommand = sqlCommandBuilder.showTables(Database.DBType.MySQL, metaDatabase.getMetaDbName(), inDatabase, like);
+                commands.add(metaDbCommand);
+                dbIds.add(0);
+            } else {
+                ASTNodeVisitResult whateverResult = visitChildrenNodes(ctx.children);
+                String allStr = whateverResult.getValue();
+                InnerSQLCommand showCommand = sqlCommandBuilder.defaultSQL(Database.DBType.MySQL, allStr);
+                commands.add(showCommand);
+                dbIds.add(defaultDbId);
+                if (session.getDatabase() == null) {
+                    int vendorCode = ZQLErrorNumbers.ERR_INNER_NO_USE;
+                    String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+                    ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, "HY000", vendorCode);
+                    session.setException(zqlInnerDatabaseExecutionException);
+                    return null;
+                }
+            }
         } else if (specificationContext.SERVER() != null) {
             /* 查看数据库别名 */
             InnerSQLCommand metaDbCommand = sqlCommandBuilder.showServerAliases(Database.DBType.MySQL, metaDatabase.getMetaDbName());
@@ -706,7 +731,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
             return null;
         }
         int dbId = Integer.valueOf(ZQLEnv.get("innerdb.dafault.innerdb"));    // 默认底层库
-
+        if (usedServerAlias) dbId = defaultDbId;
         /* 获取子节点数据 */
         ASTNodeVisitResult visitSchemaNameNodeResult = visit(ctx.database_name());
         String createDbName = visitSchemaNameNodeResult.getValue();     // 数据库名
@@ -795,21 +820,26 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
 
         /* 检查数据库是否存在 */
         int dbId;
-        try {
-            dbId = metaDatabase.getInnerDatabaseId(dbName);
-        } catch (Exception e) {
-            session.setException(e);
-            return null;
+        if (usedServerAlias) {
+            dbId = defaultDbId;
+            InnerSQLCommand useCommand = sqlCommandBuilder.useDatabase(Database.DBType.MySQL,dbName);
+            commands.add(useCommand);
+            dbIds.add(dbId);
+        } else {
+            try {
+                dbId = metaDatabase.getInnerDatabaseId(dbName);
+            } catch (Exception e) {
+                session.setException(e);
+                return null;
+            }
+            if (dbId == -1) {
+                int vendorCode = ZQLErrorNumbers.ERR_INNER_USE_DB;
+                String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+                ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, "HY000", vendorCode);
+                session.setException(zqlInnerDatabaseExecutionException);
+                return null;
+            }
         }
-
-        if (dbId == -1) {
-            int vendorCode = ZQLErrorNumbers.ERR_INNER_USE_DB;
-            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
-            ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, "HY000", vendorCode);
-            session.setException(zqlInnerDatabaseExecutionException);
-            return null;
-        }
-
         /* 更新 Session */
         session.setDatabase(dbName);
 
@@ -1580,13 +1610,14 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
     public ASTNodeVisitResult visitServer_event_statement(uniformSQLParser.Server_event_statementContext ctx) {
         ArrayList<InnerSQLCommand> commands = new ArrayList<InnerSQLCommand>();
         ArrayList<Integer> dbIds = new ArrayList<Integer>();
-
+        usedServerAlias = true;
         /* 获取子节点数据 */
         String serverAlias = visit(ctx.server_alias_name()).getValue();
 
         /* 检查底层库是否存在 */
         int dbId;
         for (dbId = 0; dbId < innerDatabasesArrayList.size(); ++dbId) {
+            String alias = innerDatabasesArrayList.get(dbId).getDbAlias();
             if (innerDatabasesArrayList.get(dbId).getDbAlias().equals(serverAlias)) {
                 break;
             }
@@ -1599,7 +1630,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
             session.setException(zqlInnerDatabaseExecutionException);
             return null;
         }
-
+        defaultDbId = dbId + 1; //此处的dbid是在不带有元数据库数组内的下标，因此+1
         /* 访问语句，提取执行结果 */
         ASTNodeVisitResult visitResult = visit(ctx.root_statement());
         if (visitResult == null) {
@@ -1607,7 +1638,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         } else {
             commands.addAll(visitResult.getCommands());
             for (int id : visitResult.getDbIds()) {
-                dbIds.add(id == 0 ? 0 : dbId + 1);  // 保留元数据库相关操作
+                dbIds.add(id == 0 ? 0 : defaultDbId);  // 保留元数据库相关操作
             }
         }
 
@@ -2857,7 +2888,9 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
             }
         } else {
             dbIds = null;
-            valueStr += session.getDatabase() + ".";
+            if (session.getDatabase() != null) {
+                valueStr += session.getDatabase() + ".";
+            }
         }
         if (ctx.table_name() != null) {
             ASTNodeVisitResult table_nameResult = visit(ctx.table_name());
