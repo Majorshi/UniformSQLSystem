@@ -1219,6 +1219,12 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         return new ASTNodeVisitResult(value, null, null);
     }
 
+    @Override
+    public ASTNodeVisitResult visitBinary_length(uniformSQLParser.Binary_lengthContext ctx) {
+        return visitChildrenNodes(ctx.children);
+    }
+
+
     /**
      * 数据库名
      *

@@ -105,7 +105,7 @@ public class ZQLEnv {
     public static void checkConfigurationItems(String... itemNames) {
         for (String itemName : itemNames) {
             int vendorCode = ZQLErrorNumbers.ERR_CONF_MISS;
-            if (ZQLEnv.get(itemName) == null || ZQLEnv.get(itemName) == "") {
+            if (ZQLEnv.get(itemName) == null) {
                 String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{itemName});
                 ZQLConfigurationException zqlConfigurationException = new ZQLConfigurationException(reason, "HY000", vendorCode);
                 LOGGER.f(reason, zqlConfigurationException);
