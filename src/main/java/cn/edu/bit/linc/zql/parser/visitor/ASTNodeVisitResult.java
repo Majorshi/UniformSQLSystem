@@ -10,19 +10,19 @@ import java.util.ArrayList;
 public class ASTNodeVisitResult {
     private String value;
     private ArrayList<InnerSQLCommand> commands;
-    private ArrayList<Integer> dbIds;
+    private ArrayList<String> dbAliases;
 
     /**
      * 构造函数
      *
      * @param value    节点返回值，可为 null
      * @param commands 节点对应的 SQL 命令集合
-     * @param dbIds    命令对应的底层库 ID 列表
+     * @param dbAliases    命令对应的底层库的dbAlias
      */
-    public ASTNodeVisitResult(String value, ArrayList<InnerSQLCommand> commands, ArrayList<Integer> dbIds) {
+    public ASTNodeVisitResult(String value, ArrayList<InnerSQLCommand> commands, ArrayList<String> dbAliases) {
         this.value = value;
         this.commands = commands;
-        this.dbIds = dbIds;
+        this.dbAliases = dbAliases;
     }
 
     /**
@@ -30,8 +30,8 @@ public class ASTNodeVisitResult {
      *
      * @return 命令对应的底层库 ID 列表
      */
-    public ArrayList<Integer> getDbIds() {
-        return dbIds;
+    public ArrayList<String> getDbAliases() {
+        return dbAliases;
     }
 
     /**

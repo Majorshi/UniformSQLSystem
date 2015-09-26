@@ -1,6 +1,7 @@
 package cn.edu.bit.linc.zql.command;
 
 import cn.edu.bit.linc.zql.connections.ZQLSession;
+import cn.edu.bit.linc.zql.databases.MetaDatabase;
 import cn.edu.bit.linc.zql.exceptions.*;
 import cn.edu.bit.linc.zql.network.packets.*;
 import cn.edu.bit.linc.zql.parser.uniformSQLLexer;
@@ -20,6 +21,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -35,7 +37,8 @@ public class SQLCommandManager {
     private ResultSetPacket resultSetPacket; //结果集报文
     private ResultSetMetaData rsmd;     // ResultSetMetaData
     private ArrayList<Connection> connections = null;      // 到数据库的连接
-
+    private HashMap<String, Connection> connectionsMap = null;      // 到数据库的连接
+    private final static MetaDatabase metaDatabase = MetaDatabase.getInstance();
     /**
      * 构造器
      *
@@ -46,6 +49,7 @@ public class SQLCommandManager {
         this.sqlCommand = sqlCommand;
         this.session = session;
         connections = session.getConnections();
+        connectionsMap = session.getconnectionsMap();
     }
 
     public ResultSet getResultSet() {
@@ -171,13 +175,16 @@ public class SQLCommandManager {
         }
 
         ArrayList<InnerSQLCommand> commands = visitResult.getCommands();
-        ArrayList<Integer> dbIds = visitResult.getDbIds();
+        ArrayList<String> dbAliases = visitResult.getDbAliases();
 
         /* 通过连接池连接底层库 */
         for (int i = 0; i < commands.size(); ++i) {
-            int dbId = dbIds.get(i);
+            String dbAlias = dbAliases.get(i);
             InnerSQLCommand innerSQLCommand = commands.get(i);
-            Connection connection = connections.get(dbId);
+            if (dbAlias.equals(metaDatabase.getMetaDbName())) {
+                dbAlias = MetaDatabase.META_DB_ALIAS;
+            }
+            Connection connection = connectionsMap.get(dbAlias);
             Statement statement;
             try {
                 statement = connection.createStatement();
@@ -192,11 +199,11 @@ public class SQLCommandManager {
             /* 交付数据库（底层库 / 元数据库）执行 SQL 命令 */
             boolean isQuery;
             try {
-                LOGGER.d("在数据库 " + dbId + " 中执行指令 " + innerSQLCommand.getCommandStr());
+                LOGGER.d("在数据库 " + dbAlias + " 中执行指令 " + innerSQLCommand.getCommandStr());
                 isQuery = statement.execute(innerSQLCommand.getCommandStr());
             } catch (SQLException e) {
                 int vendorCode = ZQLErrorNumbers.ERR_INNER_EXEC;
-                String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{String.valueOf(dbId), innerSQLCommand.getCommandStr()});
+                String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{dbAlias, innerSQLCommand.getCommandStr()});
                 ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, e.getSQLState(), vendorCode);
                 zqlInnerDatabaseExecutionException.initCause(e);
                 throw zqlInnerDatabaseExecutionException;

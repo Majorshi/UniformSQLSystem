@@ -17,6 +17,7 @@ import java.beans.PropertyVetoException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * 连接池，用于获取到某指定底层库的连接
@@ -25,7 +26,7 @@ public class ConnectionPools {
     private static ConnectionPools connectionPools;
     private ComboPooledDataSource[] cpdsArray;
     private final static Logger LOGGER = LoggerFactory.getLogger(ConnectionPools.class);
-
+    public HashMap<String, ComboPooledDataSource> connectionsMap;
     /**
      * 构造函数，初始化连接池
      */
@@ -62,13 +63,14 @@ public class ConnectionPools {
         // 初始化连接池
         int size = innerDatabaseArray.size() + 1;
         cpdsArray = new ComboPooledDataSource[size];   // 第一个连接池连接到元数据库
-
+        connectionsMap = new HashMap<String, ComboPooledDataSource>();
         // 设置元数据库连接池
         cpdsArray[0] = getCPDS(metaDatabase);
-
+        connectionsMap.put(metaDatabase.getDbAlias(), cpdsArray[0]);
         // 设置底层库连接池
         for (int i = 0; i < innerDatabaseArray.size(); ++i) {
             cpdsArray[i + 1] = getCPDS(innerDatabaseArray.get(i));
+            connectionsMap.put(innerDatabaseArray.get(i).getDbAlias(), cpdsArray[i + 1]);
         }
     }
 

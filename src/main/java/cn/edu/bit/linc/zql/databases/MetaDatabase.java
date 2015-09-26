@@ -155,6 +155,48 @@ public class MetaDatabase extends Database {
      * 获取指定名字数据库所在的底层库
      *
      * @param dbName 数据库名
+     * @return 底层库 DbAlias，如果元数据库中没有记录，则返回""
+     */
+    public String getInnerDatabaseDbAlias(String dbName) throws ZQLMetaDatabaseConnectionException, ZQLMetaDatabaseExecutionException {
+        /* 连接元数据库并执行命令 */
+        Connection connection = null;
+        String sqlCommand = "";
+        try {
+            connection = ConnectionPools.getInstance().getConnection(0);
+            Statement statement = connection.createStatement();
+            sqlCommand = String.format(SELECT_DB_FORM_ZQL_DBS_SQL, metaDatabase.getMetaDbName(), dbName);
+            LOGGER.d("从元数据库中查询某数据库所在的底层库：" + sqlCommand);
+            ResultSet resultSet = statement.executeQuery(sqlCommand);
+            if (resultSet.next()) {
+                return resultSet.getString("Db_alias");
+            }
+        } catch (SQLException e) {
+            int vendorCode = ZQLErrorNumbers.ERR_META_EXEC;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{ZQLContext.metaDatabase.toString(), sqlCommand});
+            ZQLMetaDatabaseExecutionException zqlMetaDatabaseExecutionException = new ZQLMetaDatabaseExecutionException(reason, e.getSQLState(), vendorCode);
+            zqlMetaDatabaseExecutionException.initCause(e);
+            throw zqlMetaDatabaseExecutionException;
+        } finally {
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException e) {
+                    int vendorCode = ZQLErrorNumbers.ERR_META_CON_CLOSE;
+                    String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{ZQLContext.metaDatabase.toString()});
+                    ZQLMetaDatabaseConnectionException zqlMetaDatabaseConnectionException = new ZQLMetaDatabaseConnectionException(reason, e.getSQLState(), vendorCode);
+                    zqlMetaDatabaseConnectionException.initCause(e);
+                    LOGGER.e(reason, zqlMetaDatabaseConnectionException);
+                }
+            }
+        }
+        return "";
+    }
+
+
+    /**
+     * 获取指定名字数据库所在的底层库
+     *
+     * @param dbName 数据库名
      * @return 底层库 ID，如果元数据库中没有记录，则返回 -1
      */
     public int getInnerDatabaseId(String dbName) throws ZQLMetaDatabaseConnectionException, ZQLMetaDatabaseExecutionException {

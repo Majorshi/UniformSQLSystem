@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -19,6 +20,7 @@ public class ZQLSession {
     private Exception exception;
     private static final Logger LOGGER = LoggerFactory.getLogger(ZQLSession.class);
     private ArrayList<Connection> connections = new ArrayList<Connection>();      // 到数据库的连接
+    private HashMap<String, Connection> connectionsMap = new HashMap<String, Connection>();
     private int sessionId = 0;      // 会话编号
     private static final AtomicInteger COUNTER = new AtomicInteger(0);
 
@@ -29,6 +31,15 @@ public class ZQLSession {
      */
     public ArrayList<Connection> getConnections() {
         return connections;
+    }
+
+    /**
+     * 从连接池中获取当前会话到底层库连接的Map
+     *
+     * @return 当前会话到底层库中的连接的Map
+     */
+    public HashMap<String, Connection> getconnectionsMap() {
+        return connectionsMap;
     }
 
     /**
@@ -73,6 +84,7 @@ public class ZQLSession {
             try {
                 LOGGER.i("Session " + sessionId + ": 正在建立到数据库 " + databases.get(i) + " 的连接");
                 connections.add(connectionPools.getConnection(i));
+                connectionsMap.put(databases.get(i).getDbAlias(), connectionPools.getConnection(i));
                 LOGGER.i("Session " + sessionId + ": 成功连接到数据库 " + databases.get(i));
             } catch (SQLException e) {
                 ZQLConnectionException zqlConnectionException = new ZQLConnectionException("Session " + sessionId + ": 建立到数据库 " + databases.get(i) + " 的连接失败");

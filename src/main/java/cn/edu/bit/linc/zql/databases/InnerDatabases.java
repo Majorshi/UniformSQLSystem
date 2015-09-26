@@ -23,7 +23,7 @@ public class InnerDatabases {
 
     private ArrayList<InnerDatabase> innerDatabaseArray = new ArrayList<InnerDatabase>();  // 底层库数组，用于存储底层库的信息
     public final static SQLCommandBuilder sqlCommandBuilder;                   // SQL 命令构造器，用于构造到底层库的命令
-
+    private HashMap<String, InnerDatabase> innerDatabaseMap = new HashMap<String, InnerDatabase>();
     static {
         sqlCommandBuilder = new SQLCommandBuilder();
         sqlCommandBuilder.addAdapter(new MySQLCommandAdapter());
@@ -38,6 +38,16 @@ public class InnerDatabases {
     public ArrayList<InnerDatabase> getInnerDatabaseArray() {
         return new ArrayList<InnerDatabase>(innerDatabaseArray);
     }
+
+    /**
+     * 获取底层库连接信息Map
+     *
+     * @return 底层库连接信息的Map
+     */
+    public HashMap<String, InnerDatabase> getInnerDatabaseMap() {
+        return new HashMap<String, InnerDatabase>(innerDatabaseMap);
+    }
+
 
     /**
      * 构造函数
@@ -110,6 +120,7 @@ public class InnerDatabases {
                 }
                 InnerDatabase innerDatabase = new InnerDatabase(dbNo, dbType, dbAlias, dbHost, dbUser, dbPassword);
                 innerDatabaseArray.add(innerDatabase);
+                innerDatabaseMap.put(dbAlias, innerDatabase);
                 dbNo++;
             } else {
                 break;
@@ -121,21 +132,21 @@ public class InnerDatabases {
     /**
      * 获取特定数据列的类型
      *
-     * @param dbNo         底层库编号
+     * @param dbAlias         底层库编号
      * @param databaseName 数据库名
      * @param tableName    数据表名
      * @param columnName   数据列名
      * @return 数据列的类型
      */
-    public String getColumnType(int dbNo, String databaseName, String tableName, String columnName) throws ZQLInnerDatabaseExecutionException {
+    public String getColumnType(String dbAlias, String databaseName, String tableName, String columnName) throws ZQLInnerDatabaseExecutionException {
         /* 连接底层库并执行命令 */
         ConnectionPools connectionPools = ConnectionPools.getInstance();
         Connection connection = null;
         Statement statement = null;
         InnerSQLCommand command = null;
         try {
-            CommandAdapter adapterAdapter = CommandAdapter.getAdapterInstance(innerDatabaseArray.get(dbNo - 1).getDbType());
-            connection = connectionPools.getConnection(dbNo);
+            CommandAdapter adapterAdapter = CommandAdapter.getAdapterInstance(innerDatabaseMap.get(dbAlias).getDbType());
+            connection = connectionPools.connectionsMap.get(dbAlias).getConnection();
             statement = connection.createStatement();
             // USE db_name
             command = sqlCommandBuilder.useDatabase(adapterAdapter.dbType, databaseName);
@@ -148,7 +159,7 @@ public class InnerDatabases {
             }
         } catch (SQLException e) {
             int vendorCode = ZQLErrorNumbers.ERR_INNER_EXEC;
-            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{innerDatabaseArray.get(dbNo - 1).toString(), command.getCommandStr()});
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{innerDatabaseMap.get(dbAlias).toString(), command.getCommandStr()});
             ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, e.getSQLState(), vendorCode);
             zqlInnerDatabaseExecutionException.initCause(e);
             throw zqlInnerDatabaseExecutionException;
@@ -157,7 +168,7 @@ public class InnerDatabases {
                 connection.close();
             } catch (SQLException e) {
                 int vendorCode = ZQLErrorNumbers.ERR_INNER_CON_CLOSE;
-                String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{innerDatabaseArray.get(dbNo - 1).toString()});
+                String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{innerDatabaseMap.get(dbAlias).toString()});
                 ZQLMetaDatabaseConnectionException zqlMetaDatabaseConnectionException = new ZQLMetaDatabaseConnectionException(reason, e.getSQLState(), vendorCode);
                 zqlMetaDatabaseConnectionException.initCause(e);
                 LOGGER.e(reason, zqlMetaDatabaseConnectionException);
