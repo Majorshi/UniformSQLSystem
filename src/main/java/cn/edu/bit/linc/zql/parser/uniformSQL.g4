@@ -28,317 +28,317 @@ fragment Y_ :	'y' | 'Y';
 fragment Z_ :	'z' | 'Z';
 
 keyword
-: TRUE
-| FALSE
-| ALL
-| NOT
-| LIKE
-| IF
-| EXISTS
-| ASC
-| DESC
-| ORDER
-| GROUP
-| BY
-| HAVING
-| WHERE
-| FROM
-| AS
-| SELECT
-| DISTINCT
-| INSERT
-| OVERWRITE
-| OUTER
-| UNIQUEJOIN
-| PRESERVE
-| JOIN
-| LEFT
-| RIGHT
-| FULL
-| ON
-| PARTITION
-| PARTITIONS
-| TABLE
-| TABLES
-| COLUMNS
-| INDEX
-| INDEXES
-| REBUILD
-| FUNCTIONS
-| SHOW
-| MSCK
-| REPAIR
-| DIRECTORY
-| LOCAL
-| TRANSFORM
-| USING
-| CLUSTER
-| DISTRIBUTE
-| SORT
-| UNION
-| LOAD
-| EXPORT
-| IMPORT
-| DATA
-| INPATH
-| IS
-| NULL
-| CREATE
-| EXTERNAL
-| ALTER
-| CHANGE
-| COLUMN
-| FIRST
-| AFTER
-| DESCRIBE
-| DROP
-| RENAME
-| IGNORE
-| PROTECTION
-| TO
-| COMMENT
-| BOOLEAN
-| TINYINT
-| SMALLINT
-| INT
-| BIGINT
-| FLOAT
-| DOUBLE
-| DATE
-| DATETIME
-| TIMESTAMP
-| DECIMAL
-| STRING
-| VARCHAR
-| ARRAY
-| STRUCT
-| MAP
-| UNIONTYPE
-| REDUCE
-| PARTITIONED
-| CLUSTERED
-| SORTED
-| INTO
-| BUCKETS
-| ROW
-| ROWS
-| FORMAT
-| DELIMITED
-| FIELDS
-| TERMINATED
-| ESCAPED
-| COLLECTION
-| ITEMS
-| KEYS
-| KEY
-| LINES
-| STORED
-| FILEFORMAT
-| SEQUENCEFILE
-| TEXTFILE
-| RCFILE
-| ORCFILE
-| INPUTFORMAT
-| OUTPUTFORMAT
-| INPUTDRIVER
-| OUTPUTDRIVER
-| OFFLINE
-| ENABLE
-| DEFAULT
-| DISABLE
-| READONLY
-| LOCATION
-| TABLESAMPLE
-| BUCKET
-| OUT
-| OF
-| PERCENT
-| CAST
-| ADD
-| REPLACE
-| RLIKE
-| REGEXP
-| TEMPORARY
-| FUNCTION
-| MACRO
-| EXPLAIN
-| EXTENDED
-| FORMATTED
-| PRETTY
-| DEPENDENCY
-| LOGICAL
-| SERDE
-| WITH
-| DEFERRED
-| SERDEPROPERTIES
-| DBPROPERTIES
-| LIMIT
-| SET
-| UNSET
-| TBLPROPERTIES
-| IDXPROPERTIES
-| CASCADED
-| THEN
-| ELSE
-| END
-| MAPJOIN
-| STREAMTABLE
-| CLUSTERSTATUS
-| UTC
-| LONG
-| DELETE
-| FETCH
-| INTERSECT
-| VIEW
-| IN
-| DATABASE
-| DATABASES
-| MATERIALIZED
-| SCHEMA
-| SCHEMAS
-| GRANT
-| REVOKE
-| SSL
-| UNDO
-| LOCK
-| LOCKS
-| UNLOCK
-| SHARED
-| EXCLUSIVE
-| PROCEDURE
-| UNSIGNED
-| WHILE
-| READ
-| READS
-| PURGE
-| RANGE
-| ANALYZE
-| BEFORE
-| BETWEEN
-| BOTH
-| BINARY
-| CROSS
-| CONTINUE
-| CURSOR
-| TRIGGER
-| RECORDREADER
-| RECORDWRITER
-| LATERAL
-| TOUCH
-| ARCHIVE
-| UNARCHIVE
-| COMPUTE
-| STATISTICS
-| USE
-| OPTION
-| CONCATENATE
-| UPDATE
-| RESTRICT
-| CASCADE
-| SKEWED
-| ROLLUP
-| CUBE
-| DIRECTORIES
-| FOR
-| WINDOW
-| UNBOUNDED
-| PRECEDING
-| FOLLOWING
-| CURRENT
-| LESS
-| MORE
-| OVER
-| GROUPING
-| SETS
-| TRUNCATE
-| NOSCAN
-| PARTIALSCAN
-| USER
-| ROLE
-| INNER
-| EXCHANGE
-| IDENTIFIED
-| CHAR
-| ABS
-| ACOS
-| ASIN
-| ATAN
-| CEIL
-| COS
-| COT
-| EXP
-| FLOOR
-| LN
-| POW
-| RAND
-| ROUND
-| SIN
-| SQRT
-| TAN
-| LCASE
-| LOWER
-| LTRIM
-| RTRIM
-| CONCAT
-| SUBSTR
-| TRIM
-| UCASE
-| UPPER
-| INTERVAL
-| TO_DATE
-| DAY
-| HOUR
-| MINUTE
-| MONTH
-| SECOND
-| FROM_UNIXTIME
-| YEAR
-| DATE_ADD
-| DATE_SUB
-| COLLATE
-| AVG
-| COUNT
-| MAX
-| MIN
-| SUM
-| COALESCE
-| DUPLICATE
-| SERVER
-| ALIASES
-| ALIAS
-| VALUES
-| VALUE
-| LOW_PRIORITY
-| HIGH_PRIORITY
-| HASH
-| REFERENCES
-| TO_CHAR
-| DATE_FORMAT
-| SIGNED
-| INTEGER
-| LENGTH
-| REVERSE
-| IFNULL
-| DIVIDE
-| MOD
-| OR
-| AND
-| XOR
-| ARROW
-| EQ
-| NOT_EQ
-| LET
-| GET
-| SET_VAR
-| SHIFT_LEFT
-| SHIFT_RIGHT
-| CASE
-| WHEN
-| END
-| CHARACTER
-| HEX
-| CONV
-;
+ : TRUE
+ | FALSE
+ | ALL
+ | NOT
+ | LIKE
+ | IF
+ | EXISTS
+ | ASC
+ | DESC
+ | ORDER
+ | GROUP
+ | BY
+ | HAVING
+ | WHERE
+ | FROM
+ | AS
+ | SELECT
+ | DISTINCT
+ | INSERT
+ | OVERWRITE
+ | OUTER
+ | UNIQUEJOIN
+ | PRESERVE
+ | JOIN
+ | LEFT
+ | RIGHT
+ | FULL
+ | ON
+ | PARTITION
+ | PARTITIONS
+ | TABLE
+ | TABLES
+ | COLUMNS
+ | INDEX
+ | INDEXES
+ | REBUILD
+ | FUNCTIONS
+ | SHOW
+ | MSCK
+ | REPAIR
+ | DIRECTORY
+ | LOCAL
+ | TRANSFORM
+ | USING
+ | CLUSTER
+ | DISTRIBUTE
+ | SORT
+ | UNION
+ | LOAD
+ | EXPORT
+ | IMPORT
+ | DATA
+ | INPATH
+ | IS
+ | NULL
+ | CREATE
+ | EXTERNAL
+ | ALTER
+ | CHANGE
+ | COLUMN
+ | FIRST
+ | AFTER
+ | DESCRIBE
+ | DROP
+ | RENAME
+ | IGNORE
+ | PROTECTION
+ | TO
+ | COMMENT
+ | BOOLEAN
+ | TINYINT
+ | SMALLINT
+ | INT
+ | BIGINT
+ | FLOAT
+ | DOUBLE
+ | DATE
+ | DATETIME
+ | TIMESTAMP
+ | DECIMAL
+ | STRING
+ | VARCHAR
+ | ARRAY
+ | STRUCT
+ | MAP
+ | UNIONTYPE
+ | REDUCE
+ | PARTITIONED
+ | CLUSTERED
+ | SORTED
+ | INTO
+ | BUCKETS
+ | ROW
+ | ROWS
+ | FORMAT
+ | DELIMITED
+ | FIELDS
+ | TERMINATED
+ | ESCAPED
+ | COLLECTION
+ | ITEMS
+ | KEYS
+ | KEY
+ | LINES
+ | STORED
+ | FILEFORMAT
+ | SEQUENCEFILE
+ | TEXTFILE
+ | RCFILE
+ | ORCFILE
+ | INPUTFORMAT
+ | OUTPUTFORMAT
+ | INPUTDRIVER
+ | OUTPUTDRIVER
+ | OFFLINE
+ | ENABLE
+ | DEFAULT
+ | DISABLE
+ | READONLY
+ | LOCATION
+ | TABLESAMPLE
+ | BUCKET
+ | OUT
+ | OF
+ | PERCENT
+ | CAST
+ | ADD
+ | REPLACE
+ | RLIKE
+ | REGEXP
+ | TEMPORARY
+ | FUNCTION
+ | MACRO
+ | EXPLAIN
+ | EXTENDED
+ | FORMATTED
+ | PRETTY
+ | DEPENDENCY
+ | LOGICAL
+ | SERDE
+ | WITH
+ | DEFERRED
+ | SERDEPROPERTIES
+ | DBPROPERTIES
+ | LIMIT
+ | SET
+ | UNSET
+ | TBLPROPERTIES
+ | IDXPROPERTIES
+ | CASCADED
+ | THEN
+ | ELSE
+ | END
+ | MAPJOIN
+ | STREAMTABLE
+ | CLUSTERSTATUS
+ | UTC
+ | LONG
+ | DELETE
+ | FETCH
+ | INTERSECT
+ | VIEW
+ | IN
+ | DATABASE
+ | DATABASES
+ | MATERIALIZED
+ | SCHEMA
+ | SCHEMAS
+ | GRANT
+ | REVOKE
+ | SSL
+ | UNDO
+ | LOCK
+ | LOCKS
+ | UNLOCK
+ | SHARED
+ | EXCLUSIVE
+ | PROCEDURE
+ | UNSIGNED
+ | WHILE
+ | READ
+ | READS
+ | PURGE
+ | RANGE
+ | ANALYZE
+ | BEFORE
+ | BETWEEN
+ | BOTH
+ | BINARY
+ | CROSS
+ | CONTINUE
+ | CURSOR
+ | TRIGGER
+ | RECORDREADER
+ | RECORDWRITER
+ | LATERAL
+ | TOUCH
+ | ARCHIVE
+ | UNARCHIVE
+ | COMPUTE
+ | STATISTICS
+ | USE
+ | OPTION
+ | CONCATENATE
+ | UPDATE
+ | RESTRICT
+ | CASCADE
+ | SKEWED
+ | ROLLUP
+ | CUBE
+ | DIRECTORIES
+ | FOR
+ | WINDOW
+ | UNBOUNDED
+ | PRECEDING
+ | FOLLOWING
+ | CURRENT
+ | LESS
+ | MORE
+ | OVER
+ | GROUPING
+ | SETS
+ | TRUNCATE
+ | NOSCAN
+ | PARTIALSCAN
+ | USER
+ | ROLE
+ | INNER
+ | EXCHANGE
+ | IDENTIFIED
+ | CHAR
+ | ABS
+ | ACOS
+ | ASIN
+ | ATAN
+ | CEIL
+ | COS
+ | COT
+ | EXP
+ | FLOOR
+ | LN
+ | POW
+ | RAND
+ | ROUND
+ | SIN
+ | SQRT
+ | TAN
+ | LCASE
+ | LOWER
+ | LTRIM
+ | RTRIM
+ | CONCAT
+ | SUBSTR
+ | TRIM
+ | UCASE
+ | UPPER
+ | INTERVAL
+ | TO_DATE
+ | DAY
+ | HOUR
+ | MINUTE
+ | MONTH
+ | SECOND
+ | FROM_UNIXTIME
+ | YEAR
+ | DATE_ADD
+ | DATE_SUB
+ | COLLATE
+ | AVG
+ | COUNT
+ | MAX
+ | MIN
+ | SUM
+ | COALESCE
+ | DUPLICATE
+ | SERVER
+ | ALIASES
+ | ALIAS
+ | VALUES
+ | VALUE
+ | LOW_PRIORITY
+ | HIGH_PRIORITY
+ | HASH
+ | REFERENCES
+ | TO_CHAR
+ | DATE_FORMAT
+ | SIGNED
+ | INTEGER
+ | LENGTH
+ | REVERSE
+ | IFNULL
+ | DIVIDE
+ | MOD
+ | OR
+ | AND
+ | XOR
+ | ARROW
+ | EQ
+ | NOT_EQ
+ | LET
+ | GET
+ | SET_VAR
+ | SHIFT_LEFT
+ | SHIFT_RIGHT
+ | CASE
+ | WHEN
+ | END
+ | CHARACTER
+ | HEX
+ | CONV
+ ;
 
 
 TRUE : 	T_ R_ U_ E_ ;
@@ -665,14 +665,14 @@ LATIN1
 LATIN2
 LATIN5
 LATIN7
-MACCE
-| MACROMAN
-| SJIS
-| SWE7
-| TIS620
-| UCS2
-| UJIS
-| UTF8
+ MACCE
+	| MACROMAN
+	| SJIS
+	| SWE7
+	| TIS620
+	| UCS2
+	| UJIS
+	| UTF8
 */
 
 // basic token definition ------------------------------------------------------------
@@ -716,44 +716,44 @@ VARCHAR_NUM     : ('0'..'9')+;
 BINARY_NUM      : ('0'..'9')+;
 fragment HEX_DIGIT_FRAGMENT: ( 'a'..'f' | 'A'..'F' | '0'..'9' ) ;
 HEX_DIGIT:
-(  '0x'     (HEX_DIGIT_FRAGMENT)+  )
-|
-(  'X' '\'' (HEX_DIGIT_FRAGMENT)+ '\''  )
+	(  '0x'     (HEX_DIGIT_FRAGMENT)+  )
+	|
+	(  'X' '\'' (HEX_DIGIT_FRAGMENT)+ '\''  )
 ;
 
 /*
 BIT_NUM:
-(  '0b'    ('0'|'1')+  )
-|
-(  B_ '\'' ('0'|'1')+ '\''  )
+	(  '0b'    ('0'|'1')+  )
+	|
+	(  B_ '\'' ('0'|'1')+ '\''  )
 ;
 */
 
 REAL_NUMBER:
-(  INTEGER_NUM DOT INTEGER_NUM | INTEGER_NUM DOT | DOT INTEGER_NUM | INTEGER_NUM  )
-(  ('E'|'e') ( PLUS | MINUS )? INTEGER_NUM  )?
+	(  INTEGER_NUM DOT INTEGER_NUM | INTEGER_NUM DOT | DOT INTEGER_NUM | INTEGER_NUM  )
+	(  ('E'|'e') ( PLUS | MINUS )? INTEGER_NUM  )?
 ;
 
 TEXT_STRING:
-( N_ | ('_' U_ T_ F_ '8') )?
-(
-(  '\'' ( ('\\' '\\') | ('\'' '\'') | ('\\' '\'') | ~('\'') )* '\''  )
-|
-(  '\"' ( ('\\' '\\') | ('\"' '\"') | ('\\' '\"') | ~('\"') )* '\"'  )
-)
+	( N_ | ('_' U_ T_ F_ '8') )?
+	(
+		(  '\'' ( ('\\' '\\') | ('\'' '\'') | ('\\' '\'') | ~('\'') )* '\''  )
+		|
+		(  '\"' ( ('\\' '\\') | ('\"' '\"') | ('\\' '\"') | ~('\"') )* '\"'  )
+	)
 ;
 
 
 ID:
-( 'A'..'Z' | 'a'..'z' | '_' | '$' | '0'..'9' )+
+     ( 'A'..'Z' | 'a'..'z' | '_' | '$' | '0'..'9' )+
 ;
 
 LINE_COMMENT
-:   '//' ~[\r\n]* -> skip
-;
+    :   '//' ~[\r\n]* -> skip
+    ;
 
 BLOCK_COMMENT
-:   '/*' .*? '*/' -> skip
+    :   '/*' .*? '*/' -> skip
 ;
 
 
@@ -762,7 +762,7 @@ BLOCK_COMMENT
 
 /*
 USER_VAR:
-'@' (USER_VAR_SUBFIX1 | USER_VAR_SUBFIX2 | USER_VAR_SUBFIX3 | USER_VAR_SUBFIX4)
+	'@' (USER_VAR_SUBFIX1 | USER_VAR_SUBFIX2 | USER_VAR_SUBFIX3 | USER_VAR_SUBFIX4)
 ;
 fragment USER_VAR_SUBFIX1:	(  '`' (~'`' )+ '`'  ) ;
 fragment USER_VAR_SUBFIX2:	( '\'' (~'\'')+ '\'' ) ;
@@ -780,7 +780,7 @@ SL_COMMENT	: ( ('--'|'#') ~('\n'|'\r')* '\r'? '\n' ) -> skip ;
 
 Regex_Escaped_Unicode: ' ' .. '[' | ']' .. '~' | '\u00A0' .. '\uFFFF';
 delimited_statement:
-Regex_Escaped_Unicode
+    Regex_Escaped_Unicode
 ;
 
 
@@ -808,87 +808,87 @@ integer_types:
 
 // basic type definition -----------------------------------------------------------------------
 relational_op:
-EQ | LTH | GTH | NOT_EQ | LET | GET  ;
+	EQ | LTH | GTH | NOT_EQ | LET | GET  ;
 
 /*charset_name:
-ARMSCII8
-| ASCII
-| BIG5
-| BINARY
-| CP1250
-| CP1251
-| CP1256
-| CP1257
-| CP850
-| CP852
-| CP866
-| CP932
-| DEC8
-| EUCJPMS
-| EUCKR
-| GB2312
-| GBK
-| GEOSTD8
-| GREEK
-| HEBREW
-| HP8
-| KEYBCS2
-| KOI8R
-| KOI8U
-| LATIN1
-| LATIN2
-| LATIN5
-| LATIN7
-| MACCE
-| MACROMAN
-| SJIS
-| SWE7
-| TIS620
-| UCS2
-| UJIS
-| UTF8
+	  ARMSCII8
+	| ASCII
+	| BIG5
+	| BINARY
+	| CP1250
+	| CP1251
+	| CP1256
+	| CP1257
+	| CP850
+	| CP852
+	| CP866
+	| CP932
+	| DEC8
+	| EUCJPMS
+	| EUCKR
+	| GB2312
+	| GBK
+	| GEOSTD8
+	| GREEK
+	| HEBREW
+	| HP8
+	| KEYBCS2
+	| KOI8R
+	| KOI8U
+	| LATIN1
+	| LATIN2
+	| LATIN5
+	| LATIN7
+	| MACCE
+	| MACROMAN
+	| SJIS
+	| SWE7
+	| TIS620
+	| UCS2
+	| UJIS
+	| UTF8
 ;
 */
 cast_data_type:
-BINARY (INTEGER_NUM)?
-| CHAR (INTEGER_NUM)?
-| DATE
-| DATETIME
-| DECIMAL (LPAREN INTEGER_NUM (COMMA INTEGER_NUM)? RPAREN )?
-| SIGNED (INTEGER)?
-| UNSIGNED (INTEGER)?
+	BINARY (INTEGER_NUM)?
+	| CHAR (INTEGER_NUM)?
+	| DATE
+	| DATETIME
+	| DECIMAL (LPAREN INTEGER_NUM (COMMA INTEGER_NUM)? RPAREN )?
+	| SIGNED (INTEGER)?
+	| UNSIGNED (INTEGER)?
 ;
-//| TIME
+	//| TIME
 
 
 
 interval_unit:
-SECOND
-| MINUTE
-| HOUR
-| DAY
-| MONTH
-| YEAR
+	  SECOND
+	| MINUTE
+	| HOUR
+	| DAY
+	| MONTH
+	| YEAR
 
 
 //	| WEEK
 //	| QUARTER
 /*	| SECOND_MICROSECOND
-| MINUTE_MICROSECOND
-| MINUTE_SECOND
-| HOUR_MICROSECOND
-| HOUR_SECOND
-| HOUR_MINUTE
-| DAY_MICROSECOND
-| DAY_SECOND
-| DAY_MINUTE
-| DAY_HOUR
-| YEAR_MONTH */
+	| MINUTE_MICROSECOND
+	| MINUTE_SECOND
+	| HOUR_MICROSECOND
+	| HOUR_SECOND
+	| HOUR_MINUTE
+	| DAY_MICROSECOND
+	| DAY_SECOND
+	| DAY_MINUTE
+	| DAY_HOUR
+	| YEAR_MONTH */
 ;
 
 /*
 collation_names:
-LATIN1_GENERAL_CS | LATIN1_BIN
+	LATIN1_GENERAL_CS | LATIN1_BIN
 ;
 */
 
@@ -902,80 +902,80 @@ boolean_literal:	TRUE | FALSE ;
 //bit_literal:		BIT_NUM;
 
 literal_value:
-( string_literal | number_literal | hex_literal | boolean_literal  | NULL ) ;  /*bit_literal*/
+        ( string_literal | number_literal | hex_literal | boolean_literal  | NULL ) ;  /*bit_literal*/
 
 
 
 // function defintion -------------------------------------------------------------------------
 functionList:
-number_functions
-| char_functions
-| time_functions
-| other_functions
+	  number_functions
+	| char_functions
+	| time_functions
+	| other_functions
 //	| group_functions
 ;
 
 number_functions:
-ABS
-| ACOS
-| ASIN
-| ATAN
-| CEIL
-| COS
-| COT
-| EXP
-| FLOOR
-| LN
-| POW
-| RAND
-| ROUND
-| SIN
-| SQRT
-| TAN
+	  ABS
+	| ACOS
+	| ASIN
+	| ATAN
+	| CEIL
+	| COS
+	| COT
+	| EXP
+	| FLOOR
+	| LN
+	| POW
+	| RAND
+	| ROUND
+	| SIN
+	| SQRT
+	| TAN
 ;
 
 char_functions:
-LCASE
-| LOWER
-| LTRIM
-| RTRIM
-| CONCAT
-| SUBSTR
-| TRIM
-| UCASE
-| UPPER
-| TO_CHAR
-| LENGTH
-| REVERSE
-| HEX
-| CONV
+	  LCASE
+	| LOWER
+	| LTRIM
+	| RTRIM
+	| CONCAT
+	| SUBSTR
+	| TRIM
+	| UCASE
+	| UPPER
+	| TO_CHAR
+	| LENGTH
+	| REVERSE
+	| HEX
+	| CONV
 ;
 
 time_functions:
-TO_DATE
-| DAY
-| HOUR
-| MINUTE
-| MONTH
-| SECOND
-| FROM_UNIXTIME
-| YEAR
-| DATE_ADD
-| DATE_SUB
-| DATE_FORMAT
+	  TO_DATE
+	| DAY
+	| HOUR
+	| MINUTE
+	| MONTH
+	| SECOND
+	| FROM_UNIXTIME
+	| YEAR
+	| DATE_ADD
+	| DATE_SUB
+	| DATE_FORMAT
 ;
 
 other_functions:
-COALESCE
-|IFNULL
+    COALESCE
+    |IFNULL
 ;
 
 group_functions:
-AVG
-| COUNT
-| MAX
-| MIN
-| SUM
+      AVG
+	| COUNT
+	| MAX
+	| MIN
+	| SUM
 ;
 
 
@@ -1011,11 +1011,11 @@ principal_name      : any_name ;
 
 
 any_name
-: ID
-| keyword
-| string_literal
-| function_call
-;
+ : ID
+ | keyword
+ | string_literal
+ | function_call
+ ;
 
 
 
@@ -1023,11 +1023,11 @@ any_name
 
 // -------------------------priv_type ---------------------------------------------------------------
 priv_type:
-INSERT
-| SELECT
-| UPDATE
-| DELETE
-| ALL
+      INSERT
+    | SELECT
+    | UPDATE
+    | DELETE
+    | ALL
 ;
 
 // expression statement -------------------------------------------------------------------------------
@@ -1037,86 +1037,86 @@ exp_factor2:	exp_factor3 ( AND exp_factor3 )* ;
 exp_factor3:	(NOT)? exp_factor4 ;
 exp_factor4:	bool_primary ( IS (NOT)? (boolean_literal|NULL) )? ;
 bool_primary:
-( predicate relational_op predicate )
-| ( predicate relational_op ( ALL  )? subquery )
-| ( NOT? EXISTS subquery )
-| predicate
+	  ( predicate relational_op predicate )
+	| ( predicate relational_op ( ALL  )? subquery )
+	| ( NOT? EXISTS subquery )
+	| predicate
 ;
 predicate:
-( bit_expr (NOT)? IN (subquery | expression_list) )
-| ( bit_expr (NOT)? BETWEEN bit_expr AND predicate )
-| ( bit_expr (NOT)? LIKE simple_expr  )
-| ( bit_expr (NOT)? REGEXP bit_expr )
-| ( bit_expr )
+	  ( bit_expr (NOT)? IN (subquery | expression_list) )
+	| ( bit_expr (NOT)? BETWEEN bit_expr AND predicate )
+	| ( bit_expr (NOT)? LIKE simple_expr  )
+	| ( bit_expr (NOT)? REGEXP bit_expr )
+	| ( bit_expr )
 ;
 bit_expr:
-factor1 ( VERTBAR factor1 )? ;
+	factor1 ( VERTBAR factor1 )? ;
 factor1:
-factor2 ( BITAND factor2 )? ;
+	factor2 ( BITAND factor2 )? ;
 factor2:
-factor3 ( (SHIFT_LEFT|SHIFT_RIGHT) factor3 )? ;
+	factor3 ( (SHIFT_LEFT|SHIFT_RIGHT) factor3 )? ;
 factor3:
-factor4 ( (PLUS|MINUS) factor4 )* ;
+	factor4 ( (PLUS|MINUS) factor4 )* ;
 factor4:
-factor5 ( (ASTERISK|DIVIDE|MOD|POWER_OP) factor5 )* ;
+	factor5 ( (ASTERISK|DIVIDE|MOD|POWER_OP) factor5 )* ;
 factor5:
-factor6 ( (PLUS|MINUS) interval_expr )? ;
+	factor6 ( (PLUS|MINUS) interval_expr )? ;
 factor6:
-(PLUS | MINUS | NEGATION | BINARY) simple_expr
-| simple_expr ;
+	(PLUS | MINUS | NEGATION | BINARY) simple_expr
+	| simple_expr ;
 factor7:
-simple_expr ;
+	simple_expr ;
 simple_expr:
-literal_value
-| column_spec
-| function_call
-| expression_list
-| raw_expression_list
-| subquery
-| EXISTS subquery
-| case_when_statement
+	literal_value
+	| column_spec
+	| function_call
+	| expression_list
+	| raw_expression_list
+	| subquery
+	| EXISTS subquery
+	| case_when_statement
 ;
 
 
 function_call:
-(  functionList ( LPAREN (expression (COMMA expression)*)? RPAREN ) ?  )
-| (  CAST LPAREN expression AS cast_data_type RPAREN  )
-| (  group_functions LPAREN ( ALL | DISTINCT )?  (ASTERISK | bit_expr) RPAREN )     //fix count(*)
+	  (  functionList ( LPAREN (expression (COMMA expression)*)? RPAREN ) ?  )
+	| (  CAST LPAREN expression AS cast_data_type RPAREN  )
+	| (  group_functions LPAREN ( ALL | DISTINCT )?  (ASTERISK | bit_expr) RPAREN )     //fix count(*)
 ;
 
 case_when_statement:
-case_when_statement1 | case_when_statement2
+        case_when_statement1 | case_when_statement2
 ;
 case_when_statement1:
-CASE
-( WHEN expression THEN bit_expr )+
-( ELSE bit_expr )?
-END (alias)?
+        CASE
+        ( WHEN expression THEN bit_expr )+
+        ( ELSE bit_expr )?
+        END (alias)?
 ;
 case_when_statement2:
-CASE bit_expr
-( WHEN bit_expr THEN bit_expr )+
-( ELSE bit_expr )?
-END
+        CASE bit_expr
+        ( WHEN bit_expr THEN bit_expr )+
+        ( ELSE bit_expr )?
+        END
 ;
 
 
 column_spec:
-( table_spec DOT )? column_name ;
+	( table_spec DOT )? column_name ;
 
 //expresstion without Lparen or Rparen
 raw_expression_list:
-column_name (OR column_spec)+
-| column_name (AND column_name)+
+       column_name (OR column_spec)+
+     | column_name (AND column_name)+
 
 ;
 
 expression_list:
-LPAREN expression ( COMMA expression )* RPAREN ;
+	LPAREN expression ( COMMA expression )* RPAREN ;
 
 
 interval_expr:
-INTERVAL expression interval_unit
+	INTERVAL expression interval_unit
 ;
 
 
@@ -1125,45 +1125,45 @@ INTERVAL expression interval_unit
 
 // JOIN Syntax ----------------------------------------------------------------
 table_references:
-table_reference ( COMMA table_reference )*
+        table_reference ( COMMA table_reference )*
 ;
 table_reference:
-table_factor1 | table_atom
+	table_factor1 | table_atom
 ;
 table_factor1:
-table_factor2  ((CROSS)? (LEFT|RIGHT|FULL)? (OUTER)? JOIN table_atom (join_condition)? )*
+	table_factor2  ( (CROSS | INNER)? JOIN table_atom (join_condition)? )*
 ;
 
 table_factor2:
-table_factor3 (  (LEFT|RIGHT|FULL) (OUTER)? JOIN table_factor3 join_condition  )*
+	table_factor3 (  (LEFT|RIGHT|FULL) (OUTER)? JOIN table_factor3 join_condition  )*
 ;
 table_factor3:
-table_atom (alias)?  (( (LEFT|RIGHT|FULL) (OUTER)? )? JOIN table_atom )?
+	table_atom  (( (LEFT|RIGHT|FULL) (OUTER)? )? JOIN table_atom )?
 ;
 table_atom:
-( table_spec (alias)?)
-| ( subquery (alias)? )
-| ( LPAREN table_references RPAREN )
-|  ID
+	  ( table_spec (alias)?)
+	| ( subquery (alias)? )
+	| ( LPAREN table_references RPAREN )
+	|  ID
 ;
 join_condition:
-ON expression
+	  ON expression
 ;
 index_hint_list:
-index_hint (COMMA index_hint)*
+	index_hint (COMMA index_hint)*
 ;
 index_options:
-(INDEX | KEY) (  FOR ((JOIN) | (ORDER BY) | (GROUP BY))  )?
+	(INDEX | KEY) (  FOR ((JOIN) | (ORDER BY) | (GROUP BY))  )?
 ;
 index_hint:
-USE    index_options LPAREN (index_list)? RPAREN
-| IGNORE index_options LPAREN index_list RPAREN
+	  USE    index_options LPAREN (index_list)? RPAREN
+	| IGNORE index_options LPAREN index_list RPAREN
 ;
 index_list:
-index_name (COMMA index_name)*
+	index_name (COMMA index_name)*
 ;
 partition_clause:
-PARTITION LPAREN partition_names RPAREN
+	PARTITION LPAREN partition_names RPAREN
 ;
 partition_names:	partition_name (COMMA partition_name)* ;
 
@@ -1173,119 +1173,119 @@ partition_names:	partition_name (COMMA partition_name)* ;
 
 // SQL Statement Syntax -----------------------------------------
 root_statement:
-( data_manipulation_statements | data_definition_statements )
-(SEMI)?
+	( data_manipulation_statements | data_definition_statements )
+	(SEMI)?
 ;
 
 data_manipulation_statements:
-select_statement
-| insert_statement
-| update_statements
-| delete_statements
-| server_event_statement
+	  select_statement
+	| insert_statement
+	| update_statements
+	| delete_statements
+    | server_event_statement
 //	| load_data_statement
 ;
 
 data_definition_statements:
-create_statement
-| drop_statement
-| privilege_alter_statement
-| show_event_statement
-| set_event_statement
-| use_event_statement
+      create_statement
+    | drop_statement
+    | privilege_alter_statement
+	| show_event_statement
+	| set_event_statement
+	| use_event_statement
 //	| alter_database_statements
 ;
 
 create_statement:
-create_database_statement
-| create_user_statement
-| create_table_statement
-| create_view_statement
+      create_database_statement
+    | create_user_statement
+    | create_table_statement
+	| create_view_statement
 ;
 
 
 drop_statement:
-drop_database_statement
-| drop_user_statement
-| drop_table_statement
-| drop_view_statement
+      drop_database_statement
+	| drop_user_statement
+    | drop_table_statement
+    | drop_view_statement
 ;
 
 privilege_alter_statement:
-grant_privilege_statement
-| revoke_privilege_statement
-| alter_table_statement
-| alter_view_statement
+      grant_privilege_statement
+	| revoke_privilege_statement
+    | alter_table_statement
+	| alter_view_statement
 ;
 
 //DQL
 // select ------------------------------------
 select_statement:
-(LPAREN)?  select_expression (RPAREN)? (  UNION (ALL | DISTINCT)?  (LPAREN)? select_expression (RPAREN)? )*
+      (LPAREN)?  select_expression (RPAREN)? (  UNION (ALL | DISTINCT)?  (LPAREN)? select_expression (RPAREN)? )*
 ;
 
 select_expression:
-SELECT
-( ALL | DISTINCT  )?
-select_list
-(
-FROM table_references
-( where_clause )?
-( groupby_clause )?
-( having_clause )?
-) ?
-( orderby_clause )?
-( limit_clause )?
+	SELECT
+	( ALL | DISTINCT  )?
+	select_list
+	(
+		FROM table_references
+		( where_clause )?
+		( groupby_clause )?
+		( having_clause )?
+	) ?
+	( orderby_clause )?
+	( limit_clause )?
 ;
 
 where_clause:
-WHERE expression
+	WHERE expression
 ;
 
 groupby_clause:
-GROUP BY groupby_item (COMMA groupby_item)*
+	GROUP BY groupby_item (COMMA groupby_item)*
 ;
 
 groupby_item:	column_spec | INTEGER_NUM | bit_expr ;
 
 having_clause:
-HAVING expression
+	HAVING expression
 ;
 
 orderby_clause:
-ORDER BY orderby_item (COMMA orderby_item)*
+	ORDER BY orderby_item (COMMA orderby_item)*
 ;
 orderby_item:	groupby_item (ASC | DESC)? ;
 
 limit_clause:
-LIMIT ((offset COMMA)? row_count)
+	LIMIT ((offset COMMA)? row_count)
 ;
 offset:		INTEGER_NUM ;
 row_count:	INTEGER_NUM ;
 
 select_list:
-displayed_column (  COMMA displayed_column )*
+	  displayed_column (  COMMA displayed_column )*
 ;
 
 column_list:
-LPAREN column_spec (COMMA column_spec)* RPAREN
+	LPAREN column_spec (COMMA column_spec)* RPAREN
 ;
 
 subquery:
-LPAREN select_statement RPAREN
+	LPAREN select_statement RPAREN
 ;
 
 table_spec:
-( schema_name DOT )?  table_name
+	( schema_name DOT )?  table_name
 ;
 
 
 //-----------displayed_column------------------------
 displayed_column :
-ASTERISK
-| table_spec  DOT ASTERISK
-| ( column_spec (alias)? )
-| ( bit_expr (alias)? )
+       ASTERISK
+	| table_spec  DOT ASTERISK
+	| ( column_spec (alias)? )
+	| ( bit_expr (alias)? )
 ;
 
 
@@ -1296,20 +1296,20 @@ ASTERISK
 // insert --------------------------------
 
 insert_statement:
-insert_header
-(column_list)?
-(select_expression | value_list_clause)
-//	( insert_subfix )?
+		insert_header
+    	(column_list)?
+    	(select_expression | value_list_clause)
+    //	( insert_subfix )?
 ;
 
 insert_header:
-INSERT
-(INTO)? table_spec
-(partition_clause)?
+	INSERT
+	(INTO)? table_spec
+	(partition_clause)?
 ;
 
 /*insert_subfix:
-ON DUPLICATE KEY UPDATE column_spec EQ expression (COMMA column_spec EQ expression)*
+	ON DUPLICATE KEY UPDATE column_spec EQ expression (COMMA column_spec EQ expression)*
 ;*/
 
 
@@ -1328,75 +1328,75 @@ set_column_cluase:	column_spec EQ (expression|DEFAULT) ;
 //DCL
 // ----------------------------------------create databases--------------------------------------------------
 create_database_statement:
-CREATE (DATABASE | SCHEMA) (IF NOT EXISTS)? database_name   /*(SET charset_name)?*/
-//( create_specification (COMMA create_specification)* )*
+	CREATE (DATABASE | SCHEMA) (IF NOT EXISTS)? database_name   /*(SET charset_name)?*/
+	//( create_specification (COMMA create_specification)* )*
 ;
 
 
 // ----------------------------------------create table-------------------------------------------------------
 create_table_statement:
-create_table_statement1 | create_table_statement2
+	create_table_statement1 | create_table_statement2
 ;
 
 create_table_statement1:
-CREATE (TEMPORARY)? (EXTERNAL)? TABLE (IF NOT EXISTS)?  table_spec
-(LPAREN create_definition (COMMA create_definition)* RPAREN)?  (COMMENT TEXT_STRING)?
-( AS select_statement)?
+	CREATE (TEMPORARY)? (EXTERNAL)? TABLE (IF NOT EXISTS)?  table_spec
+	(LPAREN create_definition (COMMA create_definition)* RPAREN)?  (COMMENT TEXT_STRING)?
+	( AS select_statement)?
 ;
 
 /*
 create_table_statement2:
-CREATE (TEMPORARY)? (EXTERNAL)? TABLE (IF NOT EXISTS)? table_spec
-AS select_statement
+	CREATE (TEMPORARY)? (EXTERNAL)? TABLE (IF NOT EXISTS)? table_spec
+	AS select_statement
 ;*/
 
 create_table_statement2:
-CREATE (TEMPORARY)? (EXTERNAL)? TABLE (IF NOT EXISTS)? table_spec
-(LPAREN)? LIKE table_spec (RPAREN)?
+	CREATE (TEMPORARY)? (EXTERNAL)? TABLE (IF NOT EXISTS)? table_spec
+    (LPAREN)? LIKE table_spec (RPAREN)?
 ;
 
 create_definition:
-(  column_name column_definition  )
+	  (  column_name column_definition  )
 ;
 //	| (  (INDEX|KEY) (index_name)? (index_type)? LPAREN index_column_name (COMMA index_column_name)* RPAREN (index_option)*  )
 
 column_definition:
-column_data_type_header
-(COMMENT TEXT_STRING)?
+	column_data_type_header
+	(COMMENT TEXT_STRING)?
 //	(reference_definition)?    //需求目前没有该要求
 ;
 
 null_or_notnull:
-(NOT NULL) | NULL
+	(NOT NULL) | NULL
 ;
 
 column_data_type_header:
-(  TINYINT(LPAREN length RPAREN)?  (null_or_notnull)? )    // 目前需求没说支持(UNSIGNED)? 和 (DEFAULT number_literal)?
-| (  SMALLINT(LPAREN length RPAREN)?  (null_or_notnull)? )
-| (  INT(LPAREN length RPAREN)?   (null_or_notnull)? )
-| (  BIGINT(LPAREN length RPAREN)?   (null_or_notnull)? )
-| (  DOUBLE(LPAREN length COMMA number_literal RPAREN)?  (null_or_notnull)? )
-| (  FLOAT(LPAREN length COMMA number_literal RPAREN)?  (null_or_notnull)? )
-| (  DECIMAL(LPAREN length( COMMA number_literal)? RPAREN)?  (null_or_notnull)? )
-| (  DATE (null_or_notnull)?  )
-| (  TIMESTAMP (null_or_notnull)? )
-| (  DATETIME (null_or_notnull)? )
-| (  VARCHAR LPAREN varchar_length RPAREN  (null_or_notnull)? )
-| (  BINARY  (LPAREN binary_length RPAREN)? (null_or_notnull)? )
-| (  BOOLEAN (null_or_notnull)?  )
+	  (  TINYINT(LPAREN length RPAREN)?  (null_or_notnull)? )    // 目前需求没说支持(UNSIGNED)? 和 (DEFAULT number_literal)?
+	| (  SMALLINT(LPAREN length RPAREN)?  (null_or_notnull)? )
+	| (  INT(LPAREN length RPAREN)?   (null_or_notnull)? )
+	| (  BIGINT(LPAREN length RPAREN)?   (null_or_notnull)? )
+	| (  DOUBLE(LPAREN length COMMA number_literal RPAREN)?  (null_or_notnull)? )
+	| (  FLOAT(LPAREN length COMMA number_literal RPAREN)?  (null_or_notnull)? )
+	| (  DECIMAL(LPAREN length( COMMA number_literal)? RPAREN)?  (null_or_notnull)? )
+	| (  DATE (null_or_notnull)?  )
+	| (  TIMESTAMP (null_or_notnull)? )
+	| (  DATETIME (null_or_notnull)? )
+	| (  VARCHAR LPAREN varchar_length RPAREN  (null_or_notnull)? )
+	| (  BINARY  (LPAREN binary_length RPAREN)? (null_or_notnull)? )
+	| (  BOOLEAN (null_or_notnull)?  )
 ;
 
 index_column_name:
-column_name (LPAREN INTEGER_NUM RPAREN)? (ASC | DESC)?
+	column_name (LPAREN INTEGER_NUM RPAREN)? (ASC | DESC)?
 ;
 
 /*reference_definition:
-REFERENCES table_spec LPAREN index_column_name (COMMA index_column_name)* RPAREN
-(ON DELETE reference_option)?
-(ON UPDATE reference_option)?
+	REFERENCES table_spec LPAREN index_column_name (COMMA index_column_name)* RPAREN
+	(ON DELETE reference_option)?
+	(ON UPDATE reference_option)?
 ;
 reference_option:
-(RESTRICT) | (CASCADE) | (SET NULL)
+	(RESTRICT) | (CASCADE) | (SET NULL)
 ;*/
 
 length	:	INTEGER_NUM;
@@ -1407,163 +1407,163 @@ binary_length :     INTEGER_NUM;
 //---alter database------------------------------------------------------
 /*
 alter_database_statements:
-ALTER DATABASE database_name CHARACTER SET charset_name
+    ALTER DATABASE database_name CHARACTER SET charset_name
 ;
 */
 
 //---alter table------------------------------------------------------
 alter_table_statement:
-ALTER  TABLE  table_spec
-( alter_table_specification (COMMA alter_table_specification)* )?
+	ALTER  TABLE  table_spec
+	( alter_table_specification (COMMA alter_table_specification)* )?
 ;
 
 alter_table_specification:
-( RENAME TO table_spec )
-| ( CHANGE (COLUMN)? column_name column_name  )
+	  ( RENAME TO table_spec )
+	| ( CHANGE (COLUMN)? column_name column_name  )
 
 ;
 
 index_column_names:
-index_column_name (COMMA index_column_name)*;
+	index_column_name (COMMA index_column_name)*;
 
 index_type:
-USING ( HASH)
+	USING ( HASH)
 ;
 
 index_option:
-index_type
-| ( COMMENT TEXT_STRING )
+	   index_type
+	| ( COMMENT TEXT_STRING )
 ;
 
 column_definitions:
-column_name column_definition (COMMA column_name column_definition)*
+	column_name column_definition (COMMA column_name column_definition)*
 ;
 
 
 rename_table_statement:
-RENAME TABLE
-table_spec TO table_spec
-(COMMA table_spec TO table_spec)*
+	RENAME TABLE
+	table_spec TO table_spec
+	(COMMA table_spec TO table_spec)*
 ;
 
 
 //----drop database-----------------------------------------------------------------
 drop_database_statement:
-DROP (DATABASE | SCHEMA) (IF EXISTS)? database_name
+	DROP (DATABASE | SCHEMA) (IF EXISTS)? database_name
 ;
 
 //----drop table-----------------------------------------------------------------
 drop_table_statement:
-DROP TABLE (IF EXISTS)?
-table_spec
+	DROP TABLE (IF EXISTS)?
+	table_spec
 ;
 
 //----drop view-----------------------------------------------------------------
 drop_view_statement:
-DROP VIEW (IF EXISTS)?
-table_spec
+	DROP VIEW (IF EXISTS)?
+	table_spec
 ;
 
 /*:
-TRUNCATE (TABLE)? table_spec
+	TRUNCATE (TABLE)? table_spec
 ;
 */
 
 // ---------------------------- drop_uder_statement--------------------------------------
 drop_user_statement:
-DROP
-USER
-user_name
+    DROP
+    USER
+    user_name
 ;
 
 //----create view-----------------------------------------------------------------
 create_view_statement:
-CREATE
-create_view_body
+	CREATE
+	create_view_body
 ;
 create_view_body:
-VIEW (database_name DOT)? view_name (IF NOT EXISTS)? ( column_list )?
-AS select_statement
+	VIEW (database_name DOT)? view_name (IF NOT EXISTS)? ( column_list )?
+	AS select_statement
 ;
 
 //----alter view-----------------------------------------------------------------
 alter_view_statement:
-ALTER
-create_view_body
+	ALTER
+	create_view_body
 ;
 
 
 
 // ---------------------------- create_event_statement --------------------------------------
 create_user_statement:
-CREATE USER
-user_name
-IDENTIFIED BY TEXT_STRING
+	CREATE USER
+	user_name
+	IDENTIFIED BY TEXT_STRING
 ;
 
 
 
 // ---------------------------- grant_event_statement--------------------------------------
 grant_privilege_statement:
-GRANT
-priv_type (COMMA priv_type)*
-ON (table_spec | view_name)
-TO principal_specification (COMMA principal_specification)*
-(WITH GRANT OPTION)?
+       GRANT
+       priv_type (COMMA priv_type)*
+       ON (table_spec | view_name)
+       TO principal_specification (COMMA principal_specification)*
+       (WITH GRANT OPTION)?
 ;
 
 principal_specification:
-(USER)? user_name
+        (USER)? user_name
 ;
 
 
 // ---------------------------- revoke_event_statement--------------------------------------
 revoke_privilege_statement:
-REVOKE (GRANT OPTION FOR)?
-priv_type (COMMA priv_type)*
-ON (table_spec | view_name)
-FROM principal_specification ( COMMA principal_specification)*
+      REVOKE (GRANT OPTION FOR)?
+      priv_type (COMMA priv_type)*
+      ON (table_spec | view_name)
+      FROM principal_specification ( COMMA principal_specification)*
 ;
 
 
 // ---------------------------- show_event_statement--------------------------------------
 show_event_statement:
-SHOW show_specification;
+      SHOW show_specification;
 
 show_specification:
-CREATE (TABLE | VIEW) table_spec
-| COLUMNS FROM table_spec
-| (DATABASES | SCHEMAS) (LIKE TEXT_STRING)?
-| TABLES (IN database_name)? (TEXT_STRING)?
-| GRANT (principal_name | principal_specification)? ON (ALL | (TABLE)? table_spec)
-| SERVER ALIASES
-//  | VARIABLES LIKE TEXT_STRING    charset
+         CREATE (TABLE | VIEW) table_spec
+       | COLUMNS FROM table_spec
+       | (DATABASES | SCHEMAS) (LIKE TEXT_STRING)?
+       | TABLES (IN database_name)? (TEXT_STRING)?
+       | GRANT (principal_name | principal_specification)? ON (ALL | (TABLE)? table_spec)
+       | SERVER ALIASES
+     //  | VARIABLES LIKE TEXT_STRING    charset
 ;
 
 
 // ---------------------------- set_database_statement--------------------------------------
 set_event_statement:
-SET TABLE table_spec TO server_alias_name DOT database_name
+     SET TABLE table_spec TO server_alias_name DOT database_name
 ;
 
 
 // ---------------------------- use_database_statement--------------------------------------
 use_event_statement:
-USE database_name
+    USE database_name
 ;
 
 // ---------------------------- service_event_statement--------------------------------------
 server_event_statement:
-SERVER ALIAS server_alias_name root_statement
+    SERVER ALIAS server_alias_name root_statement
 ;
 
 //----------------------------update_statement--------------------------------------
 update_statements:
-UPDATE table_spec  set_columns_cluase where_clause
+        UPDATE table_spec  set_columns_cluase where_clause
 ;
 
 //------------------------------delete_statements-----------------------------------
 delete_statements:
-DELETE FROM table_spec (where_clause)?
+    DELETE FROM table_spec (where_clause)?
 ;
 
