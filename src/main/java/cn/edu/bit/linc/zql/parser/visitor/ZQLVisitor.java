@@ -785,6 +785,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
             return null;
         }
 
+        if (usedServerAlias) dbAlias = defaultdbAlias;
+
         // TODO: 数据库已经被删除
         if (dbAlias.length() == 0) {
             return new ASTNodeVisitResult(null, commands, dbAliases);
@@ -841,6 +843,9 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
                 session.setException(zqlInnerDatabaseExecutionException);
                 return null;
             }
+            InnerSQLCommand useCommand = sqlCommandBuilder.useDatabase(Database.DBType.MySQL,dbName);
+            commands.add(useCommand);
+            dbAliases.add(dbAlias);
         }
         /* 更新 Session */
         session.setDatabase(dbName);
@@ -944,6 +949,60 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         commands.add(metaDbCommand);
         dbAliases.add(metaDatabase.getMetaDbName());
 
+        /* 返回结果 */
+        return new ASTNodeVisitResult(null, commands, dbAliases);
+    }
+    /**
+     * 创建表格 Create_table_statement2
+     *
+     * @param ctx 节点上下文
+     * @return 节点访问结果
+     */
+    @Override
+    public ASTNodeVisitResult visitCreate_table_statement2(uniformSQLParser.Create_table_statement2Context ctx) {
+        ArrayList<InnerSQLCommand> commands = new ArrayList<InnerSQLCommand>();
+        ArrayList<String> dbAliases = new ArrayList<String>();
+        commandStack.add("CREATE LIKE");
+        /* 获取子节点数据 */
+        String temporary = ctx.TEMPORARY() == null ? "" : "TEMPORARY";
+        String external = ctx.EXTERNAL() == null ? "" : "EXTERNAL";
+        String checkExists = ctx.IF() == null ? "" : "IF NOT EXISTS";
+        String tableName = visit(ctx.table_spec(0).table_name()).getValue();
+        String databaseName = (ctx.table_spec(0).schema_name() != null ? visit(ctx.table_spec(0).schema_name()).getValue() :
+                (session.getDatabase() != null ? session.getDatabase() : null));
+        if (databaseName == null) {
+            int vendorCode = ZQLErrorNumbers.ERR_INNER_NO_USE;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+            ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, "HY000", vendorCode);
+            session.setException(zqlInnerDatabaseExecutionException);
+            return null;
+        }
+        // 获取数据库所在的底层库
+        String dbAlias;
+        try {
+            dbAlias = metaDatabase.getInnerDatabaseDbAlias(databaseName);
+        } catch (SQLException e) {
+            session.setException(e);
+            return null;
+        }
+        Database.DBType dbType = innerDatabasesMap.get(dbAlias).getDbType();
+        /* 底层库命令 */
+
+        ASTNodeVisitResult whateverResult = visitChildrenNodes(ctx.children);
+        if (whateverResult != null) {
+            String sql = whateverResult.getValue();
+            InnerSQLCommand innerDbCommand = sqlCommandBuilder.defaultSQL(dbType, sql);
+            commands.add(innerDbCommand);
+            dbAliases.add(dbAlias);
+            /* 元数据库命令 */
+            InnerSQLCommand metaDbCommand = sqlCommandBuilder.createTableMateDb(Database.DBType.MySQL, metaDatabase.getMetaDbName(),
+                    databaseName, tableName, session.getUserName(),
+                    new java.sql.Timestamp(Calendar.getInstance().getTime().getTime()));
+            commands.add(metaDbCommand);
+            dbAliases.add(metaDatabase.getMetaDbName());
+        }
+
+        if (commandStack.size() > 1) commandStack.remove(commandStack.size() - 1);
         /* 返回结果 */
         return new ASTNodeVisitResult(null, commands, dbAliases);
     }
@@ -1261,6 +1320,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
                 keywordFlag = true;
             } else {
                 ASTNodeVisitResult whateverResult = visit(ctx.children.get(i));
+                if (whateverResult == null) System.out.println(ctx.children.get(i).getClass() + "return NULL");
                 if (whateverResult.getCommands().size() != 0) {
                     valueStr += whateverResult.getCommands().get(0).getCommandStr();
                     if (whateverResult.getDbAliases().size() != 0) {
@@ -2895,12 +2955,13 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
             if (ctx.DOT() != null) {
                 valueStr += ctx.DOT();
             }
-        } else {
-            dbAliases = null;
-            if (session.getDatabase() != null) {
-                valueStr += session.getDatabase() + ".";
-            }
         }
+//        else {
+//            dbAliases = null;
+//            if (session.getDatabase() != null) {
+//                valueStr += session.getDatabase() + ".";
+//            }
+//        }
         if (ctx.table_name() != null) {
             ASTNodeVisitResult table_nameResult = visit(ctx.table_name());
             if (table_nameResult.getValue() != null) {

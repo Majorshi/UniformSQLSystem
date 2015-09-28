@@ -1559,7 +1559,7 @@ server_event_statement:
 
 //----------------------------update_statement--------------------------------------
 update_statements:
-        UPDATE table_spec  set_columns_cluase where_clause
+        UPDATE table_spec  set_columns_cluase (where_clause)?
 ;
 
 //------------------------------delete_statements-----------------------------------
