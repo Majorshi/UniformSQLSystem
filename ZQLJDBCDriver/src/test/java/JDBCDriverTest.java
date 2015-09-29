@@ -24,10 +24,10 @@ public class JDBCDriverTest {
 
         Driver drv = new UniformSQLDriver();
 
-        Assert.assertTrue(drv.acceptsURL("jdbc:zql:local:./working/db/test"));
+        Assert.assertTrue(drv.acceptsURL("jdbc:zql://local:./working/db/test"));
         TestCase.assertFalse(drv.acceptsURL("local:./working/db/test"));
 
-        Connection conn = DriverManager.getConnection("jdbc:zql://127.0.0.1:9527", "wyq", "123456");
+        Connection conn = DriverManager.getConnection("jdbc:zql://127.0.0.1:9527", "root", "root");
         Statement stat = conn.createStatement();
         ResultSet rs = stat.executeQuery("SHOW TABLES");
         Assert.assertNotNull(rs);
@@ -51,7 +51,7 @@ public class JDBCDriverTest {
     @Test
     public void statementTest() throws SQLException, ClassNotFoundException {
         Class.forName("cn.edu.bit.linc.zql.jdbc.UniformSQLDriver");
-        Connection conn = DriverManager.getConnection("jdbc:zql://127.0.0.1:9527", "ihainan", "12345");
+        Connection conn = DriverManager.getConnection("jdbc:zql://127.0.0.1:9527", "root", "root");
         System.out.println(conn.getMetaData().getUserName());
         Statement stat = conn.createStatement();
         Assert.assertNotNull(stat);
@@ -68,5 +68,5 @@ public class JDBCDriverTest {
         stat.close();
         conn.close();
     }
-
+    
 }

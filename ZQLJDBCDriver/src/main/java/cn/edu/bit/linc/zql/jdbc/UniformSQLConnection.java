@@ -4,7 +4,6 @@ import cn.edu.bit.linc.zql.network.client.UniformSQLClient;
 import cn.edu.bit.linc.zql.network.client.UniformSQLClientSocketHandler;
 import cn.edu.bit.linc.zql.network.client.UniformSQLClientSocketHandlerFactory;
 
-import javax.xml.validation.Schema;
 import java.io.IOException;
 import java.sql.*;
 import java.util.Map;
