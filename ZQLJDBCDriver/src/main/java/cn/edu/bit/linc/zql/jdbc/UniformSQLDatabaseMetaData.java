@@ -1,6 +1,10 @@
 package cn.edu.bit.linc.zql.jdbc;
 
+import cn.edu.bit.linc.zql.network.client.RowData;
+
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by wyq on 2015/9/12.
@@ -9,6 +13,8 @@ public class UniformSQLDatabaseMetaData implements DatabaseMetaData {
 
     protected final UniformSQLConnection    connection;
     protected String                        username;
+    private int                             MAJOR_VERSION = 1;
+    private int                             MINOR_VERSION = 2;
 
     public UniformSQLDatabaseMetaData(UniformSQLConnection connection, String username) {
         this.connection = connection;
@@ -116,7 +122,7 @@ public class UniformSQLDatabaseMetaData implements DatabaseMetaData {
     }
 
     public String getIdentifierQuoteString() throws SQLException {
-        return null;
+        return " ";
     }
 
     public String getSQLKeywords() throws SQLException {
@@ -496,15 +502,60 @@ public class UniformSQLDatabaseMetaData implements DatabaseMetaData {
     }
 
     public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String[] types) throws SQLException {
-        return null;
+        List<RowData> results = new ArrayList<RowData>();
+        Statement stat = connection.createStatement();
+        ResultSet tables = stat.executeQuery("SHOW TABLES");
+        if (tableNamePattern == null || tableNamePattern.equals("%")){
+            while (tables.next()){
+                RowData row = new RowData();
+                row.add("TABLE_CAT", catalog);
+                row.add("TABLE_SCHEM", catalog == null ? connection.getSchema() : catalog);
+                row.add("TABLE_NAME", tables.getString("Tb"));
+                row.add("TABLE_TYPE", "TABLE");
+                row.add("REMARKS",  null);
+                row.add("TYPE_NAME",  null);
+                row.add("REF_GENERATION",  null);
+                results.add(row);
+            }
+        }
+        else{
+            while (tables.next()){
+                if(tables.getString("Tb").equals(tableNamePattern)) {
+                    RowData row = new RowData();
+                    row.add("TABLE_CAT", catalog);
+                    row.add("TABLE_SCHEM", catalog == null ? connection.getSchema() : catalog);
+                    row.add("TABLE_NAME", tables.getString("Tb"));
+                    row.add("TABLE_TYPE", "TABLE");
+                    row.add("REMARKS", null);
+                    row.add("TYPE_NAME", null);
+                    row.add("REF_GENERATION", null);
+                    results.add(row);
+                    break;
+                }
+            }
+        }
+
+        return new UniformSQLResultSet(new UniformSQLStatement(connection), results, ResultSet.TYPE_FORWARD_ONLY,
+                ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
     }
 
     public ResultSet getSchemas() throws SQLException {
-        return null;
+        List<RowData> results = new ArrayList<RowData>();
+        RowData row = new RowData();
+        row.add("TABLE_SCHEM", connection.getSchema());
+        row.add("TABLE_CATALOG", connection.getSchema());
+        results.add(row);
+        return new UniformSQLResultSet(new UniformSQLStatement(connection), results, ResultSet.TYPE_FORWARD_ONLY,
+                ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
     }
 
     public ResultSet getCatalogs() throws SQLException {
-        return null;
+        List<RowData> results = new ArrayList<RowData>();
+        RowData row = new RowData();
+        row.add("TABLE_CAT", connection.getSchema());
+        results.add(row);
+        return new UniformSQLResultSet(new UniformSQLStatement(connection), results, ResultSet.TYPE_FORWARD_ONLY,
+                ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
     }
 
     public ResultSet getTableTypes() throws SQLException {
@@ -608,7 +659,7 @@ public class UniformSQLDatabaseMetaData implements DatabaseMetaData {
     }
 
     public Connection getConnection() throws SQLException {
-        return null;
+        return connection;
     }
 
     public boolean supportsSavepoints() throws SQLException {
@@ -648,11 +699,11 @@ public class UniformSQLDatabaseMetaData implements DatabaseMetaData {
     }
 
     public int getDatabaseMajorVersion() throws SQLException {
-        return 0;
+        return MAJOR_VERSION;
     }
 
     public int getDatabaseMinorVersion() throws SQLException {
-        return 0;
+        return MINOR_VERSION;
     }
 
     public int getJDBCMajorVersion() throws SQLException {

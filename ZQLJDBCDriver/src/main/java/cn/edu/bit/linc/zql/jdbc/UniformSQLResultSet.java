@@ -91,7 +91,8 @@ public class UniformSQLResultSet implements ResultSet {
     }
 
     public String getString(int columnIndex) throws SQLException {
-        return null;
+        String str = (String)getObject(columnIndex);
+        return str;
     }
 
     public boolean getBoolean(int columnIndex) throws SQLException {
@@ -155,7 +156,7 @@ public class UniformSQLResultSet implements ResultSet {
     }
 
     public String getString(String columnLabel) throws SQLException {
-        return null;
+        return (String)getObject(columnLabel);
     }
 
     public boolean getBoolean(String columnLabel) throws SQLException {

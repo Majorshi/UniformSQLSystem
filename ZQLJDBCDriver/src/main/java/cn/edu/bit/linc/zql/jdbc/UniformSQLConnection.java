@@ -4,6 +4,7 @@ import cn.edu.bit.linc.zql.network.client.UniformSQLClient;
 import cn.edu.bit.linc.zql.network.client.UniformSQLClientSocketHandler;
 import cn.edu.bit.linc.zql.network.client.UniformSQLClientSocketHandlerFactory;
 
+import javax.xml.validation.Schema;
 import java.io.IOException;
 import java.sql.*;
 import java.util.Map;
@@ -18,6 +19,7 @@ public class UniformSQLConnection implements Connection {
     private static UniformSQLClient client;
     private boolean                 closed;
     private String                  username;
+    private String                  schema;
 
     /**
      * 构造函数，建立和数据库服务端的连接
@@ -27,9 +29,19 @@ public class UniformSQLConnection implements Connection {
     public UniformSQLConnection(String url, Properties info) {
 
         //url 在DriverManager中已经判断是否为空了，这里不需要再验证一次
-        System.out.println("url     : " +  url);
+        System.out.println("url     : " + url);
 
-        String[] strs = url.replace("jdbc:zql://","").split(":");
+        String tmp = url.replace("jdbc:zql://","");
+        String[] strs;
+        if(tmp.indexOf("/") > 0) {
+            strs = tmp.substring(0, tmp.indexOf("/")).split(":");
+            schema = tmp.substring(tmp.indexOf("/") + 1);
+            System.out.println("schema  : " + schema);
+        }
+        else{
+            strs = tmp.split(":");
+        }
+
         if(strs.length < 2) {
             System.out.println("url is error！");
             return;
@@ -261,7 +273,7 @@ public class UniformSQLConnection implements Connection {
     }
 
     public String getSchema() throws SQLException {
-        return null;
+        return schema;
     }
 
     public void abort(Executor executor) throws SQLException {
