@@ -424,13 +424,6 @@ public class uniformSQLBaseVisitor<T> extends AbstractParseTreeVisitor<T> implem
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitFactor7(uniformSQLParser.Factor7Context ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
 	@Override public T visitSimple_expr(uniformSQLParser.Simple_exprContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}

@@ -360,12 +360,6 @@ public interface uniformSQLVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitFactor6(uniformSQLParser.Factor6Context ctx);
 	/**
-	 * Visit a parse tree produced by {@link uniformSQLParser#factor7}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitFactor7(uniformSQLParser.Factor7Context ctx);
-	/**
 	 * Visit a parse tree produced by {@link uniformSQLParser#simple_expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

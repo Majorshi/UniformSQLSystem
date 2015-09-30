@@ -596,7 +596,15 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
             /* 查看数据表 */
             /* 获取子节点数据 */
             if (!usedServerAlias) {
-                String inDatabase = (specificationContext.IN() != null) ? "Db = '" + (visit(specificationContext.database_name()).getValue()) + "'" : "true";
+                String inDatabase = "";
+                if (specificationContext.IN() != null) {
+                    inDatabase = "Db = '" + (visit(specificationContext.database_name()).getValue()) + "'";
+                } else {
+                    if (session.getDatabase() != null) {
+                        inDatabase = "Db = '" + (session.getDatabase()) + "'";
+                    }
+                }
+                if (inDatabase.length() == 0) inDatabase = "true";
                 String like = (specificationContext.children.size() >= 4) ?
                         "tb LIKE " + specificationContext.children.get(3).getText() : "true";
 
@@ -1065,13 +1073,6 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      */
     @Override
     public ASTNodeVisitResult visitColumn_data_type_header(uniformSQLParser.Column_data_type_headerContext ctx) {
-//        String value = ctx.getChild(0).getText();
-//        if (value.equals("VARCHAR")) {
-//            value += "(" + visit(ctx.getChild(2)).getValue() + ")";
-//        } else if (value.equals("DECIMAL")) {
-//            value += "(" + visit(ctx.getChild(2)).getValue() + "," + visit(ctx.getChild(4)).getValue() + ")";
-//        }
-//        return new ASTNodeVisitResult(value, null, null);
         return visitChildrenNodes(ctx.children);
     }
 
@@ -1083,8 +1084,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      */
     @Override
     public ASTNodeVisitResult visitColumn_name(uniformSQLParser.Column_nameContext ctx) {
-        String value = ctx.any_name().getText();
-        return new ASTNodeVisitResult(value, null, null);
+        return visitChildrenNodes(ctx.children);
     }
 
     /**
@@ -2474,7 +2474,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      */
     @Override
     public ASTNodeVisitResult visitAny_name(uniformSQLParser.Any_nameContext ctx) {
-        return new ASTNodeVisitResult(ctx.getText(), null, null);
+        return visitChildrenNodes(ctx.children);
     }
 
     /**
@@ -2645,8 +2645,83 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         ASTNodeVisitResult whateverResult = visit(ctx.children.get(0));
         if (whateverResult.getValue() != null) {
             valueStr += whateverResult.getValue();
+            Database.DBType type = null;
+            if (usedServerAlias) {
+                type = innerDatabasesMap.get(defaultdbAlias).getDbType();
+            }
+            for (uniformSQLParser.Table_specContext node : tableSpecNodes) {
+                String dbName = "";
+                if (node.schema_name() != null) {
+                    ASTNodeVisitResult nameResult = visit(node.schema_name());
+                    if (nameResult != null && nameResult.getValue() != null) {
+                        dbName = nameResult.getValue();
+                        String dbAlias;
+                        try {
+                            dbAlias = metaDatabase.getInnerDatabaseDbAlias(dbName);
+                        } catch (SQLException e) {
+                            session.setException(e);
+                            return null;
+                        }
+                        type = innerDatabasesMap.get(dbAlias).getDbType();
+                        break;
+                    }
+                }
+            }
+            if (type == null) {
+                if (session.getDatabase() != null) {
+                    String dbAlias;
+                    try {
+                        dbAlias = metaDatabase.getInnerDatabaseDbAlias(session.getDatabase());
+                    } catch (SQLException e) {
+                        session.setException(e);
+                        return null;
+                    }
+                    type = innerDatabasesMap.get(dbAlias).getDbType();
+                } else {
+                    type = innerDatabasesMap.get(innerDatabasesMap.keySet().toArray()[0]).getDbType();
+                }
+            }
+            if (ctx.number_functions() != null) {
+                if (type == Database.DBType.Hive) {
+                    if (ctx.number_functions().COT() != null) {
+                        //替换为1/TAN
+                        valueStr = " 1 / TAN ";
+                    }
+                }
+            } else if (ctx.char_functions() != null) {
+
+            } else if (ctx.time_functions() != null) {
+                if (type == Database.DBType.MySQL) {
+                    if (ctx.time_functions().TO_DATE() != null) {
+                        valueStr = "STR_TO_DATE";
+                    }
+                }
+
+            } else if (ctx.other_functions() != null) {
+
+            }
         }
         return new ASTNodeVisitResult(valueStr, null, null);
+    }
+
+    @Override
+    public ASTNodeVisitResult visitNumber_functions(uniformSQLParser.Number_functionsContext ctx) {
+        return visitChildrenNodes(ctx.children);
+    }
+
+    @Override
+    public ASTNodeVisitResult visitChar_functions(uniformSQLParser.Char_functionsContext ctx) {
+        return visitChildrenNodes(ctx.children);
+    }
+
+    @Override
+    public ASTNodeVisitResult visitTime_functions(uniformSQLParser.Time_functionsContext ctx) {
+        return visitChildrenNodes(ctx.children);
+    }
+
+    @Override
+    public ASTNodeVisitResult visitOther_functions(uniformSQLParser.Other_functionsContext ctx) {
+        return visitChildrenNodes(ctx.children);
     }
 
     /**
