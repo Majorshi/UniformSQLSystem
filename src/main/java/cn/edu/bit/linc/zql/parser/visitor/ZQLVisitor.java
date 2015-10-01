@@ -38,6 +38,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
     private final static HashMap<String, InnerDatabase> innerDatabasesMap = innerDatabase.getInnerDatabaseMap();
     private final static MetaDatabase metaDatabase = MetaDatabase.getInstance();
     private final ZQLSession session;
+    private ASTNodeVisitResult finalResult = null;
     public ArrayList<uniformSQLParser.Table_specContext> tableSpecNodes = new ArrayList<uniformSQLParser.Table_specContext>();
     public HashMap<uniformSQLParser.Table_specContext, String> commandType = new HashMap<uniformSQLParser.Table_specContext, String>();
     public ArrayList<String> commandStack = new ArrayList<String>();
@@ -61,6 +62,111 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         }
         return null;
     }
+
+    public ASTNodeVisitResult checkIfStrideDb() {
+        if (usedServerAlias) return finalResult;
+        boolean isSrideDB = false;
+        ArrayList<String> databaseNames = new ArrayList<String>();
+        ArrayList<String> nodedbIds = new ArrayList<String>();
+        if (tableSpecNodes.size() > 0) {
+            for (int i = 0; i < tableSpecNodes.size(); i++) {
+                uniformSQLParser.Table_specContext node = tableSpecNodes.get(i);
+                if (node.schema_name() != null) {
+                    String databaseName = visit(node.schema_name()).getValue();
+                    if (!databaseNames.contains(databaseName)) {
+                        databaseNames.add(databaseName);
+                    }
+                }
+            }
+            if (databaseNames.size() > 1) {
+                //涉及到多个数据库，判断是否存在多个底层库
+                for (int i = 0; i < databaseNames.size(); i++) {
+                    String databaseName = databaseNames.get(i);
+                    String dbAlias;
+                    try {
+                        dbAlias = metaDatabase.getInnerDatabaseDbAlias(databaseName);
+                    } catch (ZQLMetaDatabaseConnectionException e) {
+                        int vendorCode = ZQLErrorNumbers.ERR_META_CON_OPEN;
+                        String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+                        ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, e.getSQLState(), vendorCode);
+                        session.setException(zqlInnerDatabaseExecutionException);
+                        return null;
+                    } catch (ZQLMetaDatabaseExecutionException e) {
+                        int vendorCode = ZQLErrorNumbers.ERR_META_EXEC;
+                        String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+                        ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, e.getSQLState(), vendorCode);
+                        session.setException(zqlInnerDatabaseExecutionException);
+                        return null;
+                    }
+                    if (!nodedbIds.contains(dbAlias)) {
+                        nodedbIds.add(dbAlias);
+                    }
+                }
+                if (nodedbIds.size() > 1) {
+                    isSrideDB = true;
+                }
+            }
+            //TODO: 判断权限
+            for (int i = 0; i < databaseNames.size(); i++) {
+
+            }
+        }
+        if (isSrideDB) {
+            //跨库
+            if (commandStack.size() > 0) {
+                String rootCommand = commandStack.get(0);
+                if (rootCommand.equals("SELECT")) {
+                    for (int i = 0; i < tableSpecNodes.size(); i++) {
+                        uniformSQLParser.Table_specContext node = tableSpecNodes.get(i);
+                        String databaseName = session.getDatabase();
+                        if (node.schema_name() != null) {
+                            databaseName = visit(node.schema_name()).getValue();
+                        }
+                        String tableName = visit(node.table_name()).getValue();
+                        String dbAlias;
+                        try {
+                            dbAlias = metaDatabase.getInnerDatabaseDbAlias(databaseName);
+                        } catch (ZQLMetaDatabaseConnectionException e) {
+                            int vendorCode = ZQLErrorNumbers.ERR_META_CON_OPEN;
+                            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+                            ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, e.getSQLState(), vendorCode);
+                            session.setException(zqlInnerDatabaseExecutionException);
+                            return null;
+                        } catch (ZQLMetaDatabaseExecutionException e) {
+                            int vendorCode = ZQLErrorNumbers.ERR_META_EXEC;
+                            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+                            ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, e.getSQLState(), vendorCode);
+                            session.setException(zqlInnerDatabaseExecutionException);
+                            return null;
+                        }
+                        try {
+                            HashMap<String, String> columnTypes = innerDatabase.getColumnTypeInTable(dbAlias, databaseName, tableName);
+                            String columnString = "";
+                            String tempTableName = tableName + System.currentTimeMillis();
+                            for (String columnName : columnTypes.keySet()) {
+                                String columnType = columnTypes.get(columnName);
+                                if (columnString.length() != 0) columnString += ",";
+                                columnString += columnName + " " + columnType;
+                            }
+                            InnerSQLCommand innerDbCommand = sqlCommandBuilder.createTable(Database.DBType.MySQL, "", "", "", "tempDB", tempTableName,
+                                    columnString, "", "");
+//                            commands.add(innerDbCommand);
+                        } catch (ZQLInnerDatabaseExecutionException e) {
+                            int vendorCode = ZQLErrorNumbers.ERR_INNER_EXEC;
+                            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+                            ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, e.getSQLState(), vendorCode);
+                            session.setException(zqlInnerDatabaseExecutionException);
+                            return null;
+                        }
+                    }
+                } else {
+                    //INSERT || UPDATE
+                }
+            }
+        }
+        return finalResult;
+    }
+
 
     /**
      * 获取用户名
@@ -103,85 +209,10 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         if (result.getDbAliases() != null) {
             dbAlias = result.getDbAliases();
         }
-//        boolean isSrideDB = false;
-//        ArrayList<String> databaseNames = new ArrayList<String>();
-//        ArrayList<Integer> nodedbIds = new ArrayList<Integer>();
-//        if (tableSpecNodes.size() > 0) {
-//            for (int i = 0; i < tableSpecNodes.size(); i++) {
-//                uniformSQLParser.Table_specContext node = tableSpecNodes.get(i);
-//                if (node.schema_name() != null) {
-//                    String databaseName = visit(node.schema_name()).getValue();
-//                    if (!databaseNames.contains(databaseName)) {
-//                        databaseNames.add(databaseName);
-//                    }
-//                }
-//            }
-//            if (databaseNames.size() > 1) {
-//                涉及到多个数据库，判断是否存在多个底层库
-//                for (int i = 0; i < databaseNames.size(); i++) {
-//                    String databaseName = databaseNames.get(i);
-//                    int dbId;
-//                    try {
-//                        dbId = metaDatabase.getInnerDatabaseId(databaseName);
-//                    } catch (MetaDatabaseOperationsException e) {
-//                        session.setErrorMessage(e.getMessage());
-//                        return null;
-//                    }
-//                    if (!nodedbIds.contains(dbId)) {
-//                        nodedbIds.add(dbId);
-//                    }
-//                }
-//                if (nodedbIds.size() > 1) {
-//                    isSrideDB = true;
-//                }
-//            }
-//            //TODO: 判断权限
-//            for (int i = 0; i < databaseNames.size(); i++) {
-//
-//            }
-//        }
-//        if (isSrideDB) {
-//            //跨库
-//            if (commandStack.size() > 0) {
-//                String rootCommand = commandStack.get(0);
-//                if (rootCommand.equals("SELECT")) {
-//                    for (int i = 0; i < tableSpecNodes.size(); i++) {
-//                        uniformSQLParser.Table_specContext node = tableSpecNodes.get(i);
-//                        String databaseName = session.getDatabase();
-//                        if (node.schema_name() != null) {
-//                            databaseName = visit(node.schema_name()).getValue();
-//                        }
-//                        String tableName = visit(node.table_name()).getValue();
-//                        int dbId;
-//                        try {
-//                            dbId = metaDatabase.getInnerDatabaseId(databaseName);
-//                        } catch (MetaDatabaseOperationsException e) {
-//                            session.setErrorMessage(e.getMessage());
-//                            return null;
-//                        }
-//                        try {
-//                            HashMap<String, String> columnTypes = innerDatabase.getColumnTypeInTable(dbId, databaseName, tableName);
-//                            String columnString = "";
-//                            String tempTableName = tableName + System.currentTimeMillis();
-//                            for (String columnName : columnTypes.keySet()) {
-//                                String columnType = columnTypes.get(columnName);
-//                                if (columnString.length() != 0) columnString += ",";
-//                                columnString += columnName + " " + columnType;
-//                            }
-//                            InnerSQLCommand innerDbCommand = sqlCommandBuilder.createTable(Database.DBType.MySQL, "", "", "", "tempDB", tempTableName,
-//                                    columnString, "", "");
-////                            commands.add(innerDbCommand);
-//                        } catch (ZQLCommandExecutionError e) {
-//                            session.setErrorMessage(e.getMessage());
-//                            return null;
-//                        }
-//
-//                    }
-//                } else {
-//
-//                }
-//            }
-//        }
+        if (!usedServerAlias) {
+            finalResult = new ASTNodeVisitResult(null, commands, dbAlias);
+            return finalResult;
+        }
         return new ASTNodeVisitResult(null, commands, dbAlias);
     }
 
@@ -1712,7 +1743,8 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         }
 
         /* 返回结果 */
-        return new ASTNodeVisitResult(null, commands, dbAliases);
+        finalResult = new ASTNodeVisitResult(null, commands, dbAliases);
+        return finalResult;
     }
 
     /**

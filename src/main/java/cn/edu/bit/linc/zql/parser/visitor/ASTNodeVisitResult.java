@@ -51,4 +51,5 @@ public class ASTNodeVisitResult {
     public ArrayList<InnerSQLCommand> getCommands() {
         return commands;
     }
+
 }

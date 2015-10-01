@@ -177,15 +177,15 @@ public class InnerDatabases {
         return "INT";
     }
 
-    public HashMap<String, String> getColumnTypeInTable(int dbNo, String databaseName, String tableName) throws ZQLInnerDatabaseExecutionException {
+    public HashMap<String, String> getColumnTypeInTable(String dbAlias, String databaseName, String tableName) throws ZQLInnerDatabaseExecutionException {
         /* 连接底层库并执行命令 */
         ConnectionPools connectionPools = ConnectionPools.getInstance();
         Connection connection = null;
         Statement statement = null;
         InnerSQLCommand command = null;
         try {
-            CommandAdapter adapterAdapter = CommandAdapter.getAdapterInstance(innerDatabaseArray.get(dbNo - 1).getDbType());
-            connection = connectionPools.getConnection(dbNo);
+            CommandAdapter adapterAdapter = CommandAdapter.getAdapterInstance(innerDatabaseMap.get(dbAlias).getDbType());
+            connection = connectionPools.connectionsMap.get(dbAlias).getConnection();
             statement = connection.createStatement();
             // USE db_name
             command = sqlCommandBuilder.useDatabase(adapterAdapter.dbType, databaseName);
@@ -200,7 +200,7 @@ public class InnerDatabases {
             return types;
         } catch (SQLException e) {
             int vendorCode = ZQLErrorNumbers.ERR_INNER_EXEC;
-            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{innerDatabaseArray.get(dbNo - 1).toString(), command.getCommandStr()});
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{innerDatabaseMap.get(dbAlias).toString(), command.getCommandStr()});
             ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, e.getSQLState(), vendorCode);
             zqlInnerDatabaseExecutionException.initCause(e);
             throw zqlInnerDatabaseExecutionException;
@@ -209,7 +209,7 @@ public class InnerDatabases {
                 statement.close();
             } catch (SQLException e) {
                 int vendorCode = ZQLErrorNumbers.ERR_INNER_EXEC;
-                String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{innerDatabaseArray.get(dbNo - 1).toString(), command.getCommandStr()});
+                String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{innerDatabaseMap.get(dbAlias).toString(), command.getCommandStr()});
                 ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, e.getSQLState(), vendorCode);
                 zqlInnerDatabaseExecutionException.initCause(e);
                 throw zqlInnerDatabaseExecutionException;
@@ -219,7 +219,7 @@ public class InnerDatabases {
                 connection.close();
             } catch (SQLException e) {
                 int vendorCode = ZQLErrorNumbers.ERR_INNER_CON_CLOSE;
-                String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{innerDatabaseArray.get(dbNo - 1).toString()});
+                String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{innerDatabaseMap.get(dbAlias).toString()});
                 ZQLMetaDatabaseConnectionException zqlMetaDatabaseConnectionException = new ZQLMetaDatabaseConnectionException(reason, e.getSQLState(), vendorCode);
                 zqlMetaDatabaseConnectionException.initCause(e);
                 LOGGER.e(reason, zqlMetaDatabaseConnectionException);

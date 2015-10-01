@@ -161,7 +161,8 @@ public class SQLCommandManager {
 
         /* 遍历语法树 */
         ZQLVisitor visitor = new ZQLVisitor(session);
-        visitResult = visitor.visit(tree);
+        visitor.visit(tree);
+        visitResult = visitor.checkIfStrideDb();
         session.setException(null);
 
         if (visitResult == null) {
