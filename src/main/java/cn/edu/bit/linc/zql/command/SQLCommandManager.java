@@ -160,10 +160,10 @@ public class SQLCommandManager {
         }
 
         /* 遍历语法树 */
+        session.setException(null);
         ZQLVisitor visitor = new ZQLVisitor(session);
         visitor.visit(tree);
         visitResult = visitor.checkIfStrideDb();
-        session.setException(null);
 
         if (visitResult == null) {
             if (session.getException() != null) {

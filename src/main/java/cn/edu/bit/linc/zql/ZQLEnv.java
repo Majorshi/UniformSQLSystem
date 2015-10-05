@@ -28,6 +28,9 @@ public class ZQLEnv {
     public final static String META_DB_PASSWORD = "metadb.password";
     public final static String META_DB_DBNAME = "metadb.dbname";
 
+    public final static String META_DB_TEMPDBNAME = "metadb.tempdbname";
+
+
     /* 底层库相关 */
     public final static String INNER_DB_DEFAULT = "innerdb.dafault.innerdb";
 

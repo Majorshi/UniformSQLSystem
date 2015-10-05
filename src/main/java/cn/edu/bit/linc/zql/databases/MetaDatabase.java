@@ -31,6 +31,8 @@ public class MetaDatabase extends Database {
     public final static String META_DB_ALIAS = "db_meta";       // 元数据库的别名固定为 db_meta
     public final static DBType META_DB_TYPE = DBType.MySQL;     // 元数据的数据库类型固定为 MySQL
     private static MetaDatabase metaDatabase = null;            // 元数据库实例
+    private static String temp_db_name = "";
+    public final static String TEMP_DB_DEFAULT_NAME = "temp_db";
 
     /**
      * 获取元数据库中，存储元数据的数据库的名字
@@ -42,6 +44,16 @@ public class MetaDatabase extends Database {
     }
 
     /**
+     * 获取元数据库中临时数据库的名字
+     *
+     * @return 存储元数据的数据库的名字
+     */
+    public String getTempDbName() {
+        return temp_db_name;
+    }
+
+
+    /**
      * 构造函数
      *
      * @param dbHost     数据库地址
@@ -49,9 +61,10 @@ public class MetaDatabase extends Database {
      * @param dbPassword 数据库用户密码
      * @param metaDbName 元数据库中，存储元数据的数据库的名字
      */
-    private MetaDatabase(String dbHost, String dbUser, String dbPassword, String metaDbName) {
+    private MetaDatabase(String dbHost, String dbUser, String dbPassword, String metaDbName, String tempdbName) {
         super(META_DB_ID, META_DB_TYPE, META_DB_ALIAS, dbHost, dbUser, dbPassword);
         this.metaDbName = metaDbName;
+        this.temp_db_name = tempdbName == null ? TEMP_DB_DEFAULT_NAME : tempdbName;
     }
 
     /**
@@ -78,12 +91,16 @@ public class MetaDatabase extends Database {
         String user = ZQLEnv.get(ZQLEnv.META_DB_USERNAME);
         String password = ZQLEnv.get(ZQLEnv.META_DB_PASSWORD);
         String dbName = ZQLEnv.get(ZQLEnv.META_DB_DBNAME);
-        metaDatabase = new MetaDatabase(host, user, password, dbName);
+        String tempdbName = ZQLEnv.get(ZQLEnv.META_DB_TEMPDBNAME);
+        metaDatabase = new MetaDatabase(host, user, password, dbName, tempdbName);
         LOGGER.i("从配置文件中读取得到元数据库 " + metaDatabase + " 的信息");
     }
 
 
     private final static String CREATE_META_DB_SQL = "CREATE DATABASE IF NOT EXISTS %s";
+    //临时数据库
+    private final static String CREATE_TEMP_DB_SQL = "CREATE DATABASE IF NOT EXISTS %s";
+
     private final static String CREATE_ZQL_USERS_TB_SQL = "CREATE TABLE IF NOT EXISTS %s.zql_users (User char(64) PRIMARY KEY, Password char(41)) ENGINE=InnoDB";
     private final static String CREATE_ZQL_INNER_DBS_TB_SQL = "CREATE TABLE IF NOT EXISTS %s.zql_inner_dbs " +
             "(Inner_db_id INT(10), Db_alias CHAR(64), PRIMARY KEY(Inner_db_id, Db_alias)) ENGINE=InnoDB";
@@ -115,6 +132,9 @@ public class MetaDatabase extends Database {
             connection = ConnectionPools.getInstance().getConnection(0);
             Statement statement = connection.createStatement();
             statement.execute(String.format(CREATE_META_DB_SQL, metaDatabase.getMetaDbName()));
+            //临时数据库创建
+            statement.execute(String.format(CREATE_TEMP_DB_SQL, metaDatabase.getTempDbName()));
+
             statement.execute(String.format(CREATE_ZQL_INNER_DBS_TB_SQL, metaDatabase.getMetaDbName()));
             for (InnerDatabase innerDatabase : InnerDatabases.getInstance().getInnerDatabaseArray()) {
                 statement.execute(String.format(INSERT_INTO_INNER_DBS_TB_SQL, metaDatabase.getMetaDbName(),

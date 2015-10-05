@@ -22,6 +22,39 @@ import java.util.*;
  * 抽象语法树访问器
  */
 public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
+
+    public class tableNode {
+        public String tableName;
+        public String tableAlias;   //针对类似 TABLE a 的情况
+        public String databaseName;
+        public String innerDbAlias;
+        public boolean isSubQueryTable;
+        public tableNode (String tableName, String tableAlias, String databaseName, String innerDbAlias, boolean isSubQueryTable) {
+            this.tableName = tableName;
+            this.tableAlias = tableAlias;
+            this.databaseName = databaseName;
+            this.innerDbAlias = innerDbAlias;
+            this.isSubQueryTable = isSubQueryTable;
+        }
+
+        public boolean equals (tableNode node) {
+            String tableName = this.tableName == null ? "" : this.tableName;
+            String tableAlias = this.tableAlias == null ? "" : this.tableAlias;
+            String databaseName = this.databaseName == null ? "" : this.databaseName;
+            String innerDbAlias = this.innerDbAlias == null ? "" : this.innerDbAlias;
+            String nodetableName = node.tableName == null ? "" : node.tableName;
+            String nodetableAlias = node.tableAlias == null ? "" : node.tableAlias;
+            String nodedatabaseName = node.databaseName == null ? "" : node.databaseName;
+            String nodeinnerDbAlias = node.innerDbAlias == null ? "" : node.innerDbAlias;
+            if (!tableName.equals(nodetableName)) return false;
+            if (!tableAlias.equals(nodetableAlias)) return false;
+            if (!databaseName.equals(nodedatabaseName)) return false;
+            if (!innerDbAlias.equals(nodeinnerDbAlias)) return false;
+            if (this.isSubQueryTable != node.isSubQueryTable) return false;
+            return true;
+        }
+    }
+
     /**
      * 命令生成器
      */
@@ -38,12 +71,20 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
     private final static HashMap<String, InnerDatabase> innerDatabasesMap = innerDatabase.getInnerDatabaseMap();
     private final static MetaDatabase metaDatabase = MetaDatabase.getInstance();
     private final ZQLSession session;
+
+    private boolean isStriding = false;
+    private String strideTempDbName = "";
+    private String strideTempDbAlias = "";
+    HashMap<String, String> tableTempName = new HashMap<String, String>();  //旧表名对应新表名
+    private static uniformSQLParser.Root_statementContext rootStatement;    //用于跨库第二次反向生成
+
     private ASTNodeVisitResult finalResult = null;
     public ArrayList<uniformSQLParser.Table_specContext> tableSpecNodes = new ArrayList<uniformSQLParser.Table_specContext>();
     public HashMap<uniformSQLParser.Table_specContext, String> commandType = new HashMap<uniformSQLParser.Table_specContext, String>();
     public ArrayList<String> commandStack = new ArrayList<String>();
     public boolean usedServerAlias = false;
     public String defaultdbAlias = "";
+    public HashMap<String, tableNode> tableAliasMap = new HashMap<String, tableNode>();
     public ZQLVisitor(ZQLSession session) {
         this.session = session;
     }
@@ -65,107 +106,170 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
 
     public ASTNodeVisitResult checkIfStrideDb() {
         if (usedServerAlias) return finalResult;
+        if (commandStack.size() == 0) return finalResult;
         boolean isSrideDB = false;
-        ArrayList<String> databaseNames = new ArrayList<String>();
+        ArrayList<String> innerDBs = new ArrayList<String>();
         ArrayList<String> nodedbIds = new ArrayList<String>();
-        if (tableSpecNodes.size() > 0) {
-            for (int i = 0; i < tableSpecNodes.size(); i++) {
-                uniformSQLParser.Table_specContext node = tableSpecNodes.get(i);
-                if (node.schema_name() != null) {
-                    String databaseName = visit(node.schema_name()).getValue();
-                    if (!databaseNames.contains(databaseName)) {
-                        databaseNames.add(databaseName);
-                    }
-                }
-            }
-            if (databaseNames.size() > 1) {
-                //涉及到多个数据库，判断是否存在多个底层库
-                for (int i = 0; i < databaseNames.size(); i++) {
-                    String databaseName = databaseNames.get(i);
-                    String dbAlias;
-                    try {
-                        dbAlias = metaDatabase.getInnerDatabaseDbAlias(databaseName);
-                    } catch (ZQLMetaDatabaseConnectionException e) {
-                        int vendorCode = ZQLErrorNumbers.ERR_META_CON_OPEN;
-                        String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
-                        ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, e.getSQLState(), vendorCode);
-                        session.setException(zqlInnerDatabaseExecutionException);
-                        return null;
-                    } catch (ZQLMetaDatabaseExecutionException e) {
-                        int vendorCode = ZQLErrorNumbers.ERR_META_EXEC;
-                        String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
-                        ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, e.getSQLState(), vendorCode);
-                        session.setException(zqlInnerDatabaseExecutionException);
-                        return null;
-                    }
-                    if (!nodedbIds.contains(dbAlias)) {
-                        nodedbIds.add(dbAlias);
-                    }
-                }
-                if (nodedbIds.size() > 1) {
-                    isSrideDB = true;
-                }
-            }
-            //TODO: 判断权限
-            for (int i = 0; i < databaseNames.size(); i++) {
-
-            }
-        }
-        if (isSrideDB) {
-            //跨库
-            if (commandStack.size() > 0) {
-                String rootCommand = commandStack.get(0);
-                if (rootCommand.equals("SELECT")) {
-                    for (int i = 0; i < tableSpecNodes.size(); i++) {
-                        uniformSQLParser.Table_specContext node = tableSpecNodes.get(i);
-                        String databaseName = session.getDatabase();
-                        if (node.schema_name() != null) {
-                            databaseName = visit(node.schema_name()).getValue();
-                        }
-                        String tableName = visit(node.table_name()).getValue();
-                        String dbAlias;
-                        try {
-                            dbAlias = metaDatabase.getInnerDatabaseDbAlias(databaseName);
-                        } catch (ZQLMetaDatabaseConnectionException e) {
-                            int vendorCode = ZQLErrorNumbers.ERR_META_CON_OPEN;
-                            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
-                            ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, e.getSQLState(), vendorCode);
-                            session.setException(zqlInnerDatabaseExecutionException);
-                            return null;
-                        } catch (ZQLMetaDatabaseExecutionException e) {
-                            int vendorCode = ZQLErrorNumbers.ERR_META_EXEC;
-                            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
-                            ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, e.getSQLState(), vendorCode);
-                            session.setException(zqlInnerDatabaseExecutionException);
-                            return null;
-                        }
-                        try {
-                            HashMap<String, String> columnTypes = innerDatabase.getColumnTypeInTable(dbAlias, databaseName, tableName);
-                            String columnString = "";
-                            String tempTableName = tableName + System.currentTimeMillis();
-                            for (String columnName : columnTypes.keySet()) {
-                                String columnType = columnTypes.get(columnName);
-                                if (columnString.length() != 0) columnString += ",";
-                                columnString += columnName + " " + columnType;
-                            }
-                            InnerSQLCommand innerDbCommand = sqlCommandBuilder.createTable(Database.DBType.MySQL, "", "", "", "tempDB", tempTableName,
-                                    columnString, "", "");
-//                            commands.add(innerDbCommand);
-                        } catch (ZQLInnerDatabaseExecutionException e) {
-                            int vendorCode = ZQLErrorNumbers.ERR_INNER_EXEC;
-                            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
-                            ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, e.getSQLState(), vendorCode);
-                            session.setException(zqlInnerDatabaseExecutionException);
-                            return null;
-                        }
+        ArrayList<tableNode> tableNodeArrayList = new ArrayList<tableNode>();
+        //对table_spec节点去重，计算出最终需要操作的数据表
+        for (uniformSQLParser.Table_specContext node : tableSpecNodes) {
+            String dbName = node.schema_name() == null? null : visit(node.schema_name()).getValue();
+            String tableName = visit(node.table_name()).getValue();
+            String dbAlias = null;
+            String tableAlias = null;
+            boolean isSubQuery = false;
+            if (dbName == null) {
+                //dbName为null的情况有多种：1、alias的表 2、表在当前USE的数据库内
+                tableNode tbNode = tableAliasMap.get(tableName);
+                if (tbNode != null) {
+                    //alias的表
+                    isSubQuery = tbNode.isSubQueryTable;
+                    if (!isSubQuery) {
+                        //存在源头表
+                        tableAlias = visit(node.table_name()).getValue();
+                        tableName = tbNode.tableName;
+                        dbName = tbNode.databaseName;
                     }
                 } else {
-                    //INSERT || UPDATE
+                    if (session.getDatabase() != null) {
+                        dbName = session.getDatabase();
+                    } else {
+                        // TODO: Error NO USE DATABASE
+                        continue;
+                    }
                 }
             }
+            if (!isSubQuery) {
+                try {
+                    dbAlias = metaDatabase.getInnerDatabaseDbAlias(dbName);
+                } catch (ZQLMetaDatabaseConnectionException e) {
+                    int vendorCode = ZQLErrorNumbers.ERR_META_CON_OPEN;
+                    String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+                    ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, e.getSQLState(), vendorCode);
+                    session.setException(zqlInnerDatabaseExecutionException);
+                    return null;
+                } catch (ZQLMetaDatabaseExecutionException e) {
+                    int vendorCode = ZQLErrorNumbers.ERR_META_EXEC;
+                    String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+                    ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, e.getSQLState(), vendorCode);
+                    session.setException(zqlInnerDatabaseExecutionException);
+                    return null;
+                }
+            }
+            if (dbAlias != null && dbAlias.length() != 0) {
+                if (!innerDBs.contains(dbAlias)) innerDBs.add(dbAlias);
+            }
+            tableNode newNode = new tableNode(tableName, tableAlias, dbName, dbAlias ,isSubQuery);
+            boolean flag = false;
+            for (tableNode oldNode : tableNodeArrayList) {
+                if (oldNode.equals(newNode)) {
+                    flag = true;
+                    break;
+                }
+            }
+            if (!flag) tableNodeArrayList.add(newNode);
+        }
+
+        if (innerDBs.size() > 1) {
+            isSrideDB = true;
+        }
+
+        //TODO: 判断权限
+
+        if (isSrideDB) {
+            isStriding = true;
+            ArrayList<InnerSQLCommand> commands = new ArrayList<InnerSQLCommand>();
+            ArrayList<String> dbAliases = new ArrayList<String>();
+            String replaceDbAlias = "";
+            String rootCommand = commandStack.get(0);
+            if (rootCommand.equals("SELECT")) {
+                strideTempDbAlias = metaDatabase.getMetaDbName();
+                strideTempDbName = metaDatabase.getTempDbName();
+                InnerSQLCommand useDbCommand = sqlCommandBuilder.useDatabase(Database.DBType.MySQL, metaDatabase.getTempDbName());
+                commands.add(useDbCommand);
+                dbAliases.add(metaDatabase.getMetaDbName());
+                for (tableNode tbNode : tableNodeArrayList) {
+                    if (tbNode.tableName == null || tbNode.databaseName == null || tbNode.innerDbAlias == null) continue;
+                    try {
+                        ArrayList<HashMap<String, String>> columnTypes = innerDatabase.getColumnTypeInTable(tbNode.innerDbAlias, tbNode.databaseName, tbNode.tableName);
+                        String columnString = "";
+                        String tempTableName = tbNode.databaseName + "_" + tbNode.tableName + System.currentTimeMillis();
+                        tableTempName.put(tbNode.tableName, tempTableName);
+                        for (HashMap<String, String> column : columnTypes) {
+                            String columnType = column.get("fieldType");
+                            if (columnString.length() != 0) columnString += ",";
+                            columnString += column.get("fieldName") + " " + columnType;
+                        }
+
+                        InnerSQLCommand innerDbCommand = sqlCommandBuilder.createTable(Database.DBType.MySQL, "", "", "", metaDatabase.getTempDbName(), tempTableName,
+                                columnString, "", "");
+                        commands.add(innerDbCommand);
+                        dbAliases.add(metaDatabase.getMetaDbName());
+
+                        ArrayList<HashMap<String, String>> tableData = innerDatabase.getDataFromTableWithColumns(tbNode.innerDbAlias, tbNode.databaseName, tbNode.tableName, null);
+                        if (tableData.isEmpty()) continue;  //数据表为空，则只保留建表语句
+                        //拼接INTO tableName (columns_list)
+                        String intoStr = "INTO " + tempTableName + " (";
+                        String columns_list = "";
+                        for (HashMap<String, String> column : columnTypes) {
+                            if (columns_list.length() != 0) columns_list += ",";
+                            columns_list += column.get("fieldName");
+                        }
+                        intoStr += columns_list + ")";
+                        String valuesStr = "";
+                        boolean rowStart = true;
+                        for (HashMap<String, String> row : tableData) {
+                            if (valuesStr.length() != 0) valuesStr += ",";
+                            valuesStr += "(";
+                            rowStart = true;
+                            for (HashMap<String, String> column : columnTypes) {
+                                if (!rowStart) {
+                                    valuesStr += ",";
+                                } else {
+                                    rowStart = false;
+                                }
+                                valuesStr += "'" + row.get(column.get("fieldName")).replaceAll("'","''") + "'";
+                            }
+                            valuesStr += ")";
+                        }
+                        InnerSQLCommand insertCommand = sqlCommandBuilder.insert(Database.DBType.MySQL, intoStr, "VALUES", valuesStr);
+                        commands.add(insertCommand);
+                        dbAliases.add(metaDatabase.getMetaDbName());
+                    } catch (ZQLInnerDatabaseExecutionException e) {
+                        int vendorCode = ZQLErrorNumbers.ERR_INNER_EXEC;
+                        String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+                        ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, e.getSQLState(), vendorCode);
+                        session.setException(zqlInnerDatabaseExecutionException);
+                        return null;
+                    }
+                }
+                //TODO: 替换表名、数据库名，重新反向生成SQL
+                ASTNodeVisitResult rebuildSQLResult = visit(rootStatement);
+                if (rebuildSQLResult != null) {
+                    for (InnerSQLCommand cm : rebuildSQLResult.getCommands()) {
+                        commands.add(cm);
+                        dbAliases.add(strideTempDbAlias);
+                    }
+                }
+                for (String tempTableName : tableTempName.values()) {
+                    InnerSQLCommand dropCommand = sqlCommandBuilder.dropTable(Database.DBType.MySQL, "IF EXISTS", tempTableName);
+                    commands.add(dropCommand);
+                    dbAliases.add(metaDatabase.getMetaDbName());
+                }
+            } else {
+                //INSERT || UPDATE || CREATE LIKE
+
+
+
+            }
+
+            ASTNodeVisitResult strideResult = new ASTNodeVisitResult(null, commands, dbAliases);
+            return strideResult;
         }
         return finalResult;
     }
+
+
 
 
     /**
@@ -200,6 +304,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      */
     @Override
     public ASTNodeVisitResult visitRoot_statement(uniformSQLParser.Root_statementContext ctx) {
+        rootStatement = ctx;
         ArrayList<InnerSQLCommand> commands = new ArrayList<InnerSQLCommand>();
         ArrayList<String> dbAlias = new ArrayList<String>();
         ASTNodeVisitResult result = visitChildrenNodes(ctx.children);
@@ -675,7 +780,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
                 session.setException(e);
                 return null;
             }
-
+            //TODO: 是否涉及跨库？
             /* 底层库命令 */
             Database.DBType dbType = innerDatabasesMap.get(dbAlias).getDbType();
             InnerSQLCommand innerDbCommand = sqlCommandBuilder.showCreateTable(dbType, session.getDatabase() + "." + tableName);
@@ -1128,13 +1233,6 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
     public ASTNodeVisitResult visitDrop_table_statement(uniformSQLParser.Drop_table_statementContext ctx) {
         ArrayList<InnerSQLCommand> commands = new ArrayList<InnerSQLCommand>();
         ArrayList<String> dbAliases = new ArrayList<String>();
-        if (session.getDatabase() == null) {
-            int vendorCode = ZQLErrorNumbers.ERR_INNER_NO_USE;
-            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
-            ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, "HY000", vendorCode);
-            session.setException(zqlInnerDatabaseExecutionException);
-            return null;
-        }
 
         /* 获取子节点数据 */
         //TODO: 9月9日g4改动后可能会有点问题，待修正
@@ -1145,6 +1243,15 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         if (ctx.table_spec().schema_name() != null) {
             databaseName = visit(ctx.table_spec().schema_name()).getValue();
         }
+
+        if (databaseName == null) {
+            int vendorCode = ZQLErrorNumbers.ERR_INNER_NO_USE;
+            String reason = ZQLExceptionUtils.getMessage(vendorCode, new String[]{});
+            ZQLInnerDatabaseExecutionException zqlInnerDatabaseExecutionException = new ZQLInnerDatabaseExecutionException(reason, "HY000", vendorCode);
+            session.setException(zqlInnerDatabaseExecutionException);
+            return null;
+        }
+
         /* 获取数据库所在底层库 */
         String dbAlias;
         try {
@@ -1272,6 +1379,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
     @Override
     public ASTNodeVisitResult visitTable_name(uniformSQLParser.Table_nameContext ctx) {
         String value = ctx.any_name().getText();
+        if (isStriding && tableTempName.get(value) != null) value = tableTempName.get(value);
         return new ASTNodeVisitResult(value, null, null);
     }
 
@@ -1308,6 +1416,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
     @Override
     public ASTNodeVisitResult visitSchema_name(uniformSQLParser.Schema_nameContext ctx) {
         String value = ctx.any_name().getText();
+        if (isStriding && strideTempDbName.length() != 0) value = strideTempDbName;
         return new ASTNodeVisitResult(value, null, null);
     }
 
@@ -1394,6 +1503,7 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
             return null;
         }
         if (dbAlias.length() == 0) dbAlias = innerDatabasesMap.get(innerDatabasesMap.keySet().toArray()[0]).getDbAlias();
+        if (isStriding && strideTempDbAlias.length() != 0) dbAlias = strideTempDbAlias;
         Database.DBType dbType = innerDatabasesMap.get(dbAlias).getDbType();
 
         // SELECT ITEMS
@@ -1813,21 +1923,20 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
      */
     @Override
     public ASTNodeVisitResult visitTable_atom(uniformSQLParser.Table_atomContext ctx) {
-//        if (ctx.table_spec() == null) {
+        if (ctx.alias() != null) {
+            String alias = visit(ctx.alias()).getValue();
+            while (alias.startsWith(" ")) alias = alias.substring(1);
+            if (ctx.table_spec() != null) {
+                String dbName = ctx.table_spec().schema_name() == null ? null : visit(ctx.table_spec().schema_name()).getValue();
+                if (dbName == null) dbName = session.getDatabase() == null ? null : session.getDatabase();
+                String tableName = visit(ctx.table_spec().table_name()).getValue();
+                tableAliasMap.put(alias, new tableNode(tableName, alias, dbName, null, false));
+            }
+            if (ctx.subquery() != null) {
+                tableAliasMap.put(alias, new tableNode(null, alias, null, null, true));
+            }
+        }
         return visitChildrenNodes(ctx.children);
-//        }
-//        String valueStr = "";
-//        ASTNodeVisitResult whateverResult = visit(ctx.table_spec());
-//        if (whateverResult.getValue() != null) {
-//            valueStr += whateverResult.getValue();
-//        }
-//        if (ctx.alias() != null) {
-//            ASTNodeVisitResult aliasResult = visit(ctx.alias());
-//            if (aliasResult.getValue() != null) {
-//                valueStr += " " + aliasResult.getValue();
-//            }
-//        }
-//        return new ASTNodeVisitResult(valueStr, null, null);
     }
 
     @Override
@@ -1860,7 +1969,6 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
         if (ctx.table_spec().schema_name() != null) {
             databaseName = visit(ctx.table_spec().schema_name()).getValue();
         }
-
         /* 获取子节点数据 */
         ASTNodeVisitResult visitSchemaNameNodeResult = visit(ctx.table_spec().table_name());
         String tableName = visitSchemaNameNodeResult.getValue();
@@ -1873,7 +1981,9 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
             session.setException(e);
             return null;
         }
-
+        if (dbAlias.length() == 0) {
+            //TODO: ERROR INNER DATABASE NOT FOUND
+        }
         Database.DBType dbType = innerDatabasesMap.get(dbAlias).getDbType();
 
         ASTNodeVisitResult visitWhereClauseResult = visit(ctx.where_clause());
@@ -2945,7 +3055,6 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
             return null;
         }
         if (dbAlias.length() == 0) dbAlias = innerDatabasesMap.get(innerDatabasesMap.keySet().toArray()[0]).getDbAlias();
-        Database.DBType dbType = innerDatabasesMap.get(dbAlias).getDbType();
 
         String insert_headerStr = "";
         if (ctx.insert_header() != null) {
@@ -2986,6 +3095,9 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
 
         String insert_subfixStr = "";
 
+        if (dbAliases.size() != 0) dbAlias = dbAliases.get(0);
+        if (isStriding) dbAlias = strideTempDbAlias;
+        Database.DBType dbType = innerDatabasesMap.get(dbAlias).getDbType();
         /* 底层库命令 */
         InnerSQLCommand innerDbCommand = sqlCommandBuilder.insert(dbType, insert_headerStr, column_listStr, select_expressionStr + value_list_clauseStr, insert_subfixStr);
         commands.add(innerDbCommand);
@@ -3041,38 +3153,42 @@ public class ZQLVisitor extends uniformSQLBaseVisitor<ASTNodeVisitResult> {
     public ASTNodeVisitResult visitTable_spec(uniformSQLParser.Table_specContext ctx) {
         ArrayList<String> dbAliases = new ArrayList<String>();
         String valueStr = "";
-//        tableSpecNodes.add(ctx);
+        tableSpecNodes.add(ctx);
 //        commandType.put(ctx,commandStack.get(commandStack.size() - 1));
         if (ctx.schema_name() != null) {
             //databasename
-            ASTNodeVisitResult schema_nameResult = visit(ctx.schema_name());
-            String database = session.getDatabase();
-            if (schema_nameResult.getValue() != null) {
-                valueStr += schema_nameResult.getValue();
-                database = schema_nameResult.getValue();
-            }
-            String dbAlias;
-            try {
-                dbAlias = metaDatabase.getInnerDatabaseDbAlias(database);
-            } catch (SQLException e) {
-                session.setException(e);
-                return null;
-            }
-            dbAliases.add(dbAlias);
-            if (ctx.DOT() != null) {
-                valueStr += ctx.DOT();
+            if (!isStriding) {
+                ASTNodeVisitResult schema_nameResult = visit(ctx.schema_name());
+                String database = session.getDatabase();
+                if (schema_nameResult.getValue() != null) {
+                    valueStr += schema_nameResult.getValue();
+                    database = schema_nameResult.getValue();
+                }
+                String dbAlias;
+                try {
+                    dbAlias = metaDatabase.getInnerDatabaseDbAlias(database);
+                } catch (SQLException e) {
+                    session.setException(e);
+                    return null;
+                }
+                dbAliases.add(dbAlias);
+                if (ctx.DOT() != null) {
+                    valueStr += ctx.DOT();
+                }
+            } else {
+                valueStr += strideTempDbName + ".";
+                dbAliases.add(strideTempDbAlias);
             }
         }
-//        else {
-//            dbAliases = null;
-//            if (session.getDatabase() != null) {
-//                valueStr += session.getDatabase() + ".";
-//            }
-//        }
         if (ctx.table_name() != null) {
             ASTNodeVisitResult table_nameResult = visit(ctx.table_name());
             if (table_nameResult.getValue() != null) {
-                valueStr += table_nameResult.getValue();
+                if (!isStriding || tableTempName.get(table_nameResult.getValue()) == null) {
+                    valueStr += table_nameResult.getValue();
+                } else {
+                    //跨库
+                    valueStr += tableTempName.get(table_nameResult.getValue());
+                }
             }
         }
 
