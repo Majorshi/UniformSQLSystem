@@ -287,6 +287,7 @@ public class InnerDatabases {
             while (resultSet.next()) {
                 HashMap<String, String> row = new HashMap<String, String>();
                 for (String columnName : columnNameArray) {
+
                     row.put(columnName, resultSet.getString(columnName));
                 }
                 result.add(row);

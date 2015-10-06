@@ -13,7 +13,7 @@ public abstract class CommandAdapter {
 
     /* 数据类型映射 - 当前以 MySQL 为准 */
     public Map<String, String> TYPE_MAP = new HashMap<String, String>();
-
+    public Map<String, String> RE_TYPE_MAP = new HashMap<String, String>();
     /**
      * 根据数据库类型获取对应的适配器实例
      *
@@ -42,6 +42,21 @@ public abstract class CommandAdapter {
         TYPE_MAP.put("VARCHAR", "VARCHAR");  // TODO: 长度限制
         TYPE_MAP.put("BOOLEAN", "ENUM('true', 'false')");
         TYPE_MAP.put("BINARY", "BLOB");
+    }
+
+    {
+        RE_TYPE_MAP.put("TINYINT", "TINYINT");
+        RE_TYPE_MAP.put("SMALLINT", "SMALLINT");
+        RE_TYPE_MAP.put("INT", "INT");
+        RE_TYPE_MAP.put("BIGINT", "BIGINT");
+        RE_TYPE_MAP.put("FLOAT", "FLOAT");
+        RE_TYPE_MAP.put("DOUBLE", "DOUBLE");
+        RE_TYPE_MAP.put("DECIMAL", "DECIMAL");
+        RE_TYPE_MAP.put("TIMESTAMP", "TIMESTAMP");
+        RE_TYPE_MAP.put("DATE", "DATE");
+        RE_TYPE_MAP.put("VARCHAR", "VARCHAR");  // TODO: 长度限制
+        RE_TYPE_MAP.put("ENUM", "BOOLEAN");
+        RE_TYPE_MAP.put("BLOB", "BINARY");
     }
 
     /* 当前以 MySQL 语法为准 */
